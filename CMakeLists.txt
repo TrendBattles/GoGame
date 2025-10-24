@@ -1,12 +1,13 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.16)
+project(GoGame LANGUAGES CXX)
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}")
+set(CMAKE_CXX_STANDARD 17)
 
-project(GoGame)
+add_executable(GoGame src/main.cpp)
 
-add_executable(GoGame ./src/main.cpp)
+set(SFML_DIR "${CMAKE_SOURCE_DIR}/SFML/lib/cmake/SFML")
 
-include_directories("${CMAKE_SOURCE_DIR}\\SFML\\include")
-link_directories("${CMAKE_SOURCE_DIR}\\SFML\\lib")
+target_compile_definitions(GoGame PRIVATE PROJECT_DIR="${CMAKE_SOURCE_DIR}/")
 
-target_link_libraries(GoGame PRIVATE sfml-audio sfml-graphics sfml-main sfml-network sfml-system sfml-window)
+find_package(SFML 3 REQUIRED COMPONENTS Audio Graphics Network Window System)
+target_link_libraries(GoGame PRIVATE SFML::Audio SFML::Graphics SFML::Network SFML::Window SFML::System)
