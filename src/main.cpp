@@ -2,8 +2,6 @@
 #include <iostream>
 #include <filesystem>
 
-const std::string project_dir = PROJECT_DIR;
-
 int main() {
 
 	sf::RenderWindow window = sf::RenderWindow(sf::VideoMode({ 600, 600 }), "Go");
