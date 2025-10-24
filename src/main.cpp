@@ -8,6 +8,7 @@ int main(int argv, char* args[]) {
 
 	sf::RenderWindow window = sf::RenderWindow(sf::VideoMode({ 600, 600 }), "Go");
 
+	
 	if (window.isOpen() == false) {
 		std::cerr << "Error creating window" << std::endl;
 		return EXIT_FAILURE;
