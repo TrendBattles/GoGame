@@ -1,7 +1,7 @@
 #include <SFML/Graphics.hpp>
 #include <Render.hpp>
 
-void gameLoop();
+void appLoop();
 
 int main(int argv, char* args[]) {
 	if (Window::init() == false) {
@@ -9,7 +9,7 @@ int main(int argv, char* args[]) {
 	}
 
 	while (appWindow.isOpen()) {
-		gameLoop();
+		appLoop();
 	}
 
 	return EXIT_SUCCESS;

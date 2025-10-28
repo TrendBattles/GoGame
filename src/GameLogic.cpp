@@ -2,7 +2,7 @@
 #include <iostream>
 #include <filesystem>
 
-void gameLoop() {
+void appLoop() {
 	const std::filesystem::path board_path = std::filesystem::absolute(std::string(PROJECT_DIR) + "assets/board/board.png");
 
 	Texture _tex_board(board_path.string());
