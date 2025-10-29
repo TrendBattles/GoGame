@@ -13,7 +13,8 @@ target_include_directories(GoGame PRIVATE
 target_sources(GoGame PRIVATE 
 	"src/Texture.cpp"
 	"src/GameLogic.cpp"
-  "src/Render.cpp")
+  "src/Render.cpp" 
+  "src/Helper.cpp")
 
 
 set(SFML_DIR "${CMAKE_SOURCE_DIR}/SFML/lib/cmake/SFML")

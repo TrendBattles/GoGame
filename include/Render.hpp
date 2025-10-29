@@ -9,7 +9,7 @@ extern sf::RenderWindow appWindow;
 namespace Window {
 	bool init(int width, int height);
 
-	void addObject(Texture _target, sf::Vector2f position);
+	void addObject(Texture _target, sf::Vector2f position, double opacity);
 }
 
 #endif

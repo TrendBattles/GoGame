@@ -42,8 +42,8 @@ sf::Vector2f Texture::getScale() {
 	return scale;
 }
 
-void Texture::draw(sf::Vector2f position) {
-	Window::addObject(*this, position);
+void Texture::draw(sf::Vector2f position, float opacity) {
+	Window::addObject(*this, position, opacity);
 }
 
 bool Texture::getCentered() {

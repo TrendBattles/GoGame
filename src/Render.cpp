@@ -14,7 +14,7 @@ bool Window::init(int width, int height) {
 	return true;
 }
 
-void Window::addObject(Texture _target, sf::Vector2f position) {
+void Window::addObject(Texture _target, sf::Vector2f position, double opacity) {
 	sf::Texture _tex_get = _target.getTexture();
 	sf::Vector2f sprite_scale = _target.getScale();
 	bool centered = _target.getCentered();
@@ -22,6 +22,10 @@ void Window::addObject(Texture _target, sf::Vector2f position) {
 	sf::Sprite obj(_tex_get);
 	obj.setPosition(position);
 	obj.setScale(sprite_scale);
+	
+	sf::Color color = obj.getColor();
+	color.a = round(color.a * opacity);
+	obj.setColor(color);
 	if (centered) {
 		sf::Vector2i size = _target.getSize();
 		obj.setOrigin(sf::Vector2f(0.5 * size.x, 0.5 * size.y));
