@@ -15,6 +15,7 @@ target_sources(GoGame PRIVATE
 	"src/GameLogic.cpp"
   "src/Render.cpp")
 
+
 set(SFML_DIR "${CMAKE_SOURCE_DIR}/SFML/lib/cmake/SFML")
 
 #ensure the folder for accessing assets

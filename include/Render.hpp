@@ -7,9 +7,9 @@
 extern sf::RenderWindow appWindow;
 
 namespace Window {
-	bool init();
+	bool init(int width, int height);
 
-	void addObject(Texture _target);
+	void addObject(Texture _target, sf::Vector2f position);
 }
 
 #endif
