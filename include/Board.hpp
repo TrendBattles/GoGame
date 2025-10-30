@@ -8,23 +8,36 @@
 
 class Board {
 public:
-	Board() {}
+	Board();
 	
 	void loadBoard(const std::string _str_source = "");
+	void loadPieces();
+
 	void setSize(int _i_row, int _i_column);
 	std::pair <int, int> getSize();
 
 	void drawBoard();
 	void drawState();
+	void placeAt(sf::Vector2f mouse_pos = sf::Vector2f{ 0, 0 });
+	void drawShadow(sf::Vector2f mouse_pos = sf::Vector2f { 0, 0 });
 	
 	void setState(int x, int y, int c);
 	int getState(int x, int y);
 	bool emptyCell(int x, int y);
+
+	void setTurn(bool who);
+	bool getTurn();
 private:
 	Texture surface;
+	Texture pieces[2];
 
 	std::vector <std::string> state;
 	int row = -1, column = -1;
+	bool current_turn;
+
+	sf::Vector2f PIECE_SCALE;
+	sf::Vector2f offset;
+	sf::Vector2f gapX, gapY;
 };
 
 #endif
