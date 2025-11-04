@@ -95,11 +95,6 @@ void Board::drawShadow(sf::Vector2f mouse_pos) {
 	}
 }
 
-void Board::placePieceAt(int x, int y) {
-	setState(x, y, current_turn);
-	current_turn = 1 ^ current_turn;
-}
-
 void Board::setState(int x, int y, int c) {
 	/*
 		This updates the board state (including rules)
