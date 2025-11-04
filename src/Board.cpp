@@ -230,6 +230,9 @@ bool Board::possibleToPlace(int x, int y, bool turn) {
 
 	std::vector <std::pair <int, int>> captured = capturedPositions(x, y, turn);
 
+	std::string current_state = state_list[state_pointer];
+	current_state[x * column + y] = turn + '0';
+
 	if (captured.empty()) {
 		const int delta_x[4] = { -1, +1, 0, 0 };
 		const int delta_y[4] = { 0, 0, -1, +1 };
@@ -239,15 +242,17 @@ bool Board::possibleToPlace(int x, int y, bool turn) {
 
 		for (std::pair <int, int> point : component) {
 			for (int iter = 0; iter < 4; ++iter) {
-				any_liberty |= (int)emptyCell(point.first + delta_x[iter], point.second + delta_y[iter]);
+				int adj_x = point.first + delta_x[iter];
+				int adj_y = point.second + delta_y[iter];
+
+				if (outsideBoard(adj_x, adj_y)) continue;
+
+				any_liberty |= current_state[adj_x * column + adj_y] == '.';
 			}
 		}
 		
 		return any_liberty;
 	}
-
-	std::string current_state = state_list[state_pointer];
-	current_state[x * column + y] = turn + '0';
 
 	for (std::pair <int, int> point : captured) {
 		current_state[point.first * column + point.second] = '.';
