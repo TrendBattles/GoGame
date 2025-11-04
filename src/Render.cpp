@@ -11,6 +11,7 @@ bool Window::init(int width, int height) {
 		return false;
 	}
 
+	appWindow.setFramerateLimit(60);
 	return true;
 }
 
