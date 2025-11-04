@@ -5,10 +5,7 @@
 #include <iostream>
 #include <filesystem>
 
-const sf::Vector2f PIECE_SCALE = sf::Vector2f(0.4, 0.4);
 const int COLUMN = 9, ROW = 9;
-const sf::Vector2f offset(40, 40);
-const sf::Vector2f gapX(65, 0), gapY(0, 65);
 
 Board go_board;
 
@@ -99,7 +96,12 @@ void appStart() {
 }
 
 int pollEvent() { // if window is closed, return 0
+	bool alreadyClick = mouse_state == MouseState::CLICK;
+	bool hasEvent = false;
+
 	while (const std::optional event = appWindow.pollEvent()) {
+		hasEvent = true;
+
 		if (event->is <sf::Event::Closed>()) {
 			std::cerr << "Closing the window" << std::endl;
 			appWindow.close();
@@ -107,13 +109,18 @@ int pollEvent() { // if window is closed, return 0
 			return 0;
 		}
 		else if (event->is <sf::Event::MouseButtonPressed>()) {
-			if (mouse_state == MouseState::RELEASE) mouse_state = MouseState::CLICK;
-			else if (mouse_state == MouseState::CLICK) mouse_state = MouseState::HOLD;
+			mouse_state = MouseState::CLICK;
 		}
 		else if (event->is <sf::Event::MouseButtonReleased>()) {
+			alreadyClick = false;
 			mouse_state = MouseState::RELEASE;
 		}
 	}
+
+	if (alreadyClick && hasEvent) {
+		mouse_state = MouseState::HOLD;
+	}
+
 	return 1;
 }
 

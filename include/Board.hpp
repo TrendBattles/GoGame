@@ -24,16 +24,28 @@ public:
 	void setState(int x, int y, int c);
 	int getState(int x, int y);
 	bool emptyCell(int x, int y);
+	bool outsideBoard(int x, int y);
 
 	void setTurn(bool who);
 	bool getTurn();
+	
+	std::vector <std::pair <int, int>> findComponent(int x, int y, int cell_id);
+
+	bool KORule(int x, int y, bool turn);
+	bool existCapture(int x, int y, bool turn);
+	bool possibleToPlace(int x, int y, bool turn);
+
+
 private:
 	Texture surface;
 	Texture pieces[2];
 
 	std::vector <std::string> state;
+
 	int row = -1, column = -1;
 	bool current_turn;
+
+	std::pair <int, int> single_cell_capture;
 
 	sf::Vector2f PIECE_SCALE;
 	sf::Vector2f offset;
