@@ -74,6 +74,11 @@ void Board::tryPlacingAt(sf::Vector2f mouse_pos) {
 	}
 }
 
+void Board::placePieceAt(int x, int y) {
+	setState(x, y, current_turn);
+	current_turn = 1 ^ current_turn;
+}
+
 void Board::drawShadow(sf::Vector2f mouse_pos) {
 	const float RADIUS = 25;
 
