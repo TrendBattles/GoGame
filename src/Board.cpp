@@ -195,6 +195,7 @@ std::vector <std::pair <int, int>> Board::capturedPositions(int x, int y, bool t
 	for (int iter = 0; iter < 4; ++iter) {
 		int new_x = x + delta_x[iter], new_y = y + delta_y[iter];
 		if (getState(new_x, new_y) != (1 ^ turn)) continue;
+		if (marked[new_x][new_y]) continue;
 
 		std::vector <std::pair <int, int>> candidates = findComponent(new_x, new_y, 1 ^ turn);
 		int any_liberty = false;
