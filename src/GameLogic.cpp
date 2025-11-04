@@ -134,7 +134,7 @@ void appLoop() {
 	go_board.drawBoard();
 
 	if (mouse_state == MouseState::CLICK) {
-		go_board.placeAt(get_mouse_position());
+		go_board.tryPlacingAt(get_mouse_position());
 	}
 
 	if (mouse_state == MouseState::RELEASE) {
