@@ -57,7 +57,7 @@ void Board::drawState() {
 	}
 }
 
-void Board::tryPlacingAt(sf::Vector2f mouse_pos) {
+int Board::tryPlacingAt(sf::Vector2f mouse_pos) {
 	const float RADIUS = 25;
 
 	for (int r = 0; r < row; ++r) {
@@ -65,14 +65,27 @@ void Board::tryPlacingAt(sf::Vector2f mouse_pos) {
 			sf::Vector2f cur_pos = board_offset + offset + gapX * float(c) + gapY * float(r);
 			if (dist(cur_pos, mouse_pos) > RADIUS) continue;
 
-			if (!possibleToPlace(r, c, current_turn)) continue;
+			if (!possibleToPlace(r, c, current_turn)) {
+				std::cerr << "getState: " << getState(r, c) << "\n";
+				if (getState(r, c) == -1) return 2;
+				return -1;
+			}
 
-			std::cout << r << " " << c << "\n";
+			// check if there were capture, really inefficient.
+			std::string tmp = state_list.back();
 			placePieceAt(r, c);
-
 			pieces[current_turn].draw(cur_pos);
+
+			std::string cur = state_list.back();
+			int cnt = 0;
+			for (int i = 0; i < (int)tmp.size(); ++i)
+				cnt += (cur[i] != tmp[i]);
+
+			if (cnt > 1) return 1;
+			return 0;
 		}
 	}
+	return -1;
 }
 
 void Board::placePieceAt(int x, int y) {

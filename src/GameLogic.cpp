@@ -1,7 +1,15 @@
+/*
+
+Log:
+- Added the functionality that tell me when I place the piece, what action was it (move, capture, illegal).
+
+*/
+
 #include <Render.hpp>
 #include <Helper.hpp>
 #include <Board.hpp>
 #include <Menu.hpp>
+#include <MediaPlayer.hpp>
 
 #include <iostream>
 #include <filesystem>
@@ -9,6 +17,7 @@
 const int COLUMN = 9, ROW = 9;
 
 Board go_board;
+MediaPlayer sound_board;
 
 enum MouseState {
 	RELEASE = 0,
@@ -39,6 +48,8 @@ void load_texture() {
 }
 
 void appStart() {
+	sound_board.init();
+	sound_board.play_background_music();
 	load_texture();
 	mouse_state = MouseState::RELEASE;
 	current_scene = GameScene::MENU;
@@ -59,6 +70,7 @@ int pollEvent() { // if window is closed, return 0
 			return 0;
 		}
 		else if (event->is <sf::Event::MouseButtonPressed>()) {
+			std::cerr << "Mouse clicked" << "\n";
 			mouse_state = MouseState::CLICK;
 		}
 		else if (event->is <sf::Event::MouseButtonReleased>()) {
@@ -67,7 +79,7 @@ int pollEvent() { // if window is closed, return 0
 		}
 	}
 
-	if (alreadyClick && hasEvent) {
+	if (alreadyClick) {
 		mouse_state = MouseState::HOLD;
 	}
 
@@ -95,8 +107,13 @@ void handle_menu() {
 void handle_game_scene() {
 	go_board.drawBoard();
 
+	std::cerr << "Mouse state: " << mouse_state << "\n";
 	if (mouse_state == MouseState::CLICK) {
-		go_board.tryPlacingAt(get_mouse_position());
+		int cur = go_board.tryPlacingAt(get_mouse_position());
+		if (cur != -1) {
+			sound_board.play_audio((SoundEffect)cur);
+		}
+		mouse_state == MouseState::HOLD;
 	}
 
 	if (mouse_state == MouseState::RELEASE) {

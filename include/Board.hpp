@@ -18,7 +18,7 @@ public:
 
 	void drawBoard();
 	void drawState();
-	void tryPlacingAt(sf::Vector2f mouse_pos = sf::Vector2f{ 0, 0 });
+	int tryPlacingAt(sf::Vector2f mouse_pos = sf::Vector2f{ 0, 0 });
 	void drawShadow(sf::Vector2f mouse_pos = sf::Vector2f{ 0, 0 });
 
 	void setState(int x, int y, int c);
