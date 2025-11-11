@@ -6,7 +6,7 @@ void appStart();
 void appLoop();
 
 int main(int argv, char* args[]) {
-	if (Window::init(600, 600) == false) {
+	if (Window::init(1000, 600) == false) {
 		return EXIT_FAILURE;
 	}
 

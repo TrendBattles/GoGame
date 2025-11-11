@@ -7,6 +7,7 @@
 Board::Board() {
 	PIECE_SCALE = sf::Vector2f(0.4, 0.4);
 	offset = sf::Vector2f(40, 40);
+	board_offset = sf::Vector2f(200, 0);
 	gapX = sf::Vector2f(65, 0);
 	gapY = sf::Vector2f(0, 65);
 
@@ -40,7 +41,7 @@ std::pair <int, int> Board::getSize() {
 }
 
 void Board::drawBoard() {
-	surface.draw();
+	surface.draw(board_offset);
 }
 
 void Board::drawState() {
@@ -50,7 +51,7 @@ void Board::drawState() {
 
 			int piece_type = getState(r, c);
 
-			sf::Vector2f cur_pos = offset + gapX * float(c) + gapY * float(r);
+			sf::Vector2f cur_pos = board_offset + offset + gapX * float(c) + gapY * float(r);
 			pieces[piece_type].draw(cur_pos);
 		}
 	}
@@ -61,7 +62,7 @@ void Board::tryPlacingAt(sf::Vector2f mouse_pos) {
 
 	for (int r = 0; r < row; ++r) {
 		for (int c = 0; c < column; ++c) {
-			sf::Vector2f cur_pos = offset + gapX * float(c) + gapY * float(r);
+			sf::Vector2f cur_pos = board_offset + offset + gapX * float(c) + gapY * float(r);
 			if (dist(cur_pos, mouse_pos) > RADIUS) continue;
 
 			if (!possibleToPlace(r, c, current_turn)) continue;
@@ -84,7 +85,7 @@ void Board::drawShadow(sf::Vector2f mouse_pos) {
 
 	for (int r = 0; r < row; ++r) {
 		for (int c = 0; c < column; ++c) {
-			sf::Vector2f cur_pos = offset + gapX * float(c) + gapY * float(r);
+			sf::Vector2f cur_pos = board_offset + offset + gapX * float(c) + gapY * float(r);
 			if (dist(cur_pos, mouse_pos) > RADIUS) continue;
 
 			if (!possibleToPlace(r, c, current_turn)) continue;

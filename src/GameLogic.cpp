@@ -1,6 +1,7 @@
 #include <Render.hpp>
 #include <Helper.hpp>
 #include <Board.hpp>
+#include <Menu.hpp>
 
 #include <iostream>
 #include <filesystem>
@@ -15,7 +16,13 @@ enum MouseState {
 	HOLD = 2
 };
 
-// 0 means black, 1 means white
+enum GameScene {
+	MENU = 0,
+	GAME = 1
+};
+
+GameScene current_scene;
+Menu menu;
 int mouse_state;
 
 sf::Vector2f get_mouse_position() {
@@ -31,68 +38,11 @@ void load_texture() {
 	go_board.loadPieces();
 }
 
-//void draw_board_state() {
-//	for (int r = 0; r < ROW; ++r) {
-//		for (int c = 0; c < COLUMN; ++c) {
-//			if (go_board.emptyCell(r, c)) continue;
-//
-//			int piece_type = go_board.getState(r, c);
-//			 
-//			sf::Vector2f cur_pos = offset + gapX * float(c) + gapY * float(r);
-//			pieces[piece_type].draw(cur_pos);
-//		}
-//	}
-//}
-
-
-//void handle_move() { 
-//	// IF mouse_state = 1: when hovering a cell, place one there.
-//	// Then switch to mouse_state = 2 (holding mode), where it won't do anything until you RELEASE
-//
-//	if (mouse_state != MouseState::CLICK) return;
-//
-//	mouse_state = MouseState::HOLD;
-//
-//	const float RADIUS = 25;
-//	sf::Vector2f mouse_pos = get_mouse_position();
-//
-//	for (int r = 0; r < ROW; ++r) {
-//		for (int c = 0; c < COLUMN; ++c) {
-//			if (!go_board.emptyCell(r, c)) continue;
-//
-//			sf::Vector2f cur_pos = offset + gapX * float(c) + gapY * float(r);
-//			if (dist(cur_pos, mouse_pos) <= RADIUS) {
-//				std::cout << r << " " << c << "\n";
-//				
-//				go_board.setState(r, c, current_turn);
-//				
-//				current_turn = 1 ^ current_turn;
-//				
-//				return;
-//			}
-//		}
-//	}
-//}
-//
-//void draw_shadow() { // when hovering over a cell, you can see it's shadow.
-//	const float RADIUS = 25;
-//	sf::Vector2f mouse_pos = get_mouse_position();
-//
-//	for (int r = 0; r < ROW; ++r) {
-//		for (int c = 0; c < COLUMN; ++c) {
-//			if (!go_board.emptyCell(r, c)) continue;
-//
-//			sf::Vector2f cur_pos = offset + gapX * float(c) + gapY * float(r);
-//			if (dist(cur_pos, mouse_pos) <= RADIUS) {
-//				pieces[current_turn].draw(cur_pos, 0.6);
-//			}
-//		}
-//	}
-//}
-
 void appStart() {
 	load_texture();
 	mouse_state = MouseState::RELEASE;
+	current_scene = GameScene::MENU;
+	menu.init();
 }
 
 int pollEvent() { // if window is closed, return 0
@@ -124,13 +74,18 @@ int pollEvent() { // if window is closed, return 0
 	return 1;
 }
 
-void appLoop() {
-	if (pollEvent() == 0) {
-		return;
-	}
+void handle_menu() {
+	// drawing the background
 
-	appWindow.clear(sf::Color::White);
+	// drawing the logo
+	menu.draw_game_text(appWindow);
 
+	// drawing the buttons
+	menu.draw_button(appWindow);
+	
+}
+
+void handle_game_scene() {
 	go_board.drawBoard();
 
 	if (mouse_state == MouseState::CLICK) {
@@ -142,6 +97,23 @@ void appLoop() {
 	}
 
 	go_board.drawState();
+}
+
+void appLoop() {
+	if (pollEvent() == 0) {
+		return;
+	}
+
+	appWindow.clear(sf::Color(112, 59, 59));
+
+	switch (current_scene) {
+		case GameScene::MENU:
+			handle_menu();
+			break;
+		case GameScene::GAME:
+			handle_game_scene();
+			break;
+	}
 
 	appWindow.display();
 }

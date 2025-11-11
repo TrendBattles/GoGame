@@ -44,7 +44,7 @@ private:
 	bool current_turn;
 
 	sf::Vector2f PIECE_SCALE;
-	sf::Vector2f offset;
+	sf::Vector2f offset, board_offset;
 	sf::Vector2f gapX, gapY;
 
 	void placePieceAt(int x, int y);
