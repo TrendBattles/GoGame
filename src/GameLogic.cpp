@@ -83,6 +83,13 @@ void handle_menu() {
 	// drawing the buttons
 	menu.draw_button(appWindow);
 	
+	if (mouse_state == MouseState::CLICK) {
+		int new_signal = menu.tryClickingAt(get_mouse_position());
+		if (new_signal == 0) {
+			current_scene = GameScene::GAME;
+		}
+		mouse_state = MouseState::HOLD;
+	}
 }
 
 void handle_game_scene() {

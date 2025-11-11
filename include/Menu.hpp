@@ -9,6 +9,7 @@ public:
 	void init();
 	void draw_game_text(sf::RenderWindow &appwindow);
 	void draw_button(sf::RenderWindow& appwindow);
+	int tryClickingAt(sf::Vector2f mousepos);
 
 private:
 	sf::Font font;

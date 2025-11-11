@@ -62,3 +62,13 @@ void Menu::draw_button(sf::RenderWindow& appwindow) {
 		appwindow.draw(cur_text);
 	}
 }
+
+int Menu::tryClickingAt(sf::Vector2f mouse_pos) {
+	for (int i = 0; i < (int)btn_list.size(); ++i) {
+		sf::Vector2f cur_pos = btn_offset + btn_gap * float(i);
+		if (abs(cur_pos.x - mouse_pos.x) <= btn_size.x * 0.5
+			&& abs(cur_pos.y - mouse_pos.y) <= btn_size.y * 0.5)
+			return i;
+	}
+	return -1;
+}
