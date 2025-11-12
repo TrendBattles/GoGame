@@ -23,10 +23,9 @@ void OptionMenu::init() {
 	sound_volume = 5;
 }
 
-void setCenter(sf::Text& text) {
+void OptionMenu::setCenter(sf::Text& text) {
 	sf::FloatRect bounds = text.getLocalBounds();
 	text.setOrigin(bounds.size * 0.5f);;
-
 }
 
 void OptionMenu::draw_volume_button(sf::RenderWindow& appwindow) {
@@ -69,10 +68,21 @@ void OptionMenu::draw_volume_button(sf::RenderWindow& appwindow) {
 			appwindow.draw(rect);
 		}
 	}
-
-
 }
 
+
+void OptionMenu::draw_back_button(sf::RenderWindow& appwindow) {
+	// draw the text
+	sf::Text back_button(font);
+	back_button.setString("GO BACK");
+
+	back_button.setCharacterSize(25);
+	back_button.setFillColor(ui_color);
+	back_button.setPosition(sf::Vector2f(20, 20));
+
+	appwindow.draw(back_button);
+
+}
 
 int OptionMenu::tryClickingAt(sf::Vector2f mouse_pos) {
 	for (int r = 0; r <= 1; ++r) {
@@ -94,6 +104,9 @@ int OptionMenu::tryClickingAt(sf::Vector2f mouse_pos) {
 			}
 		}
 	}
+
+	if (mouse_pos.x >= 0 && mouse_pos.x <= 150 && mouse_pos.y >= 0 && mouse_pos.y <= 40) 
+		return 1;
 	return -1;
 }
 

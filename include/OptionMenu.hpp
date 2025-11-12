@@ -8,6 +8,7 @@ struct OptionMenu {
 public:
 	void init();
 	void draw_volume_button(sf::RenderWindow& appwindow);
+	void draw_back_button(sf::RenderWindow& appwindow);
 	int tryClickingAt(sf::Vector2f mousepos);
 
 	int getMusicVolume();
@@ -23,6 +24,8 @@ private:
 
 	int music_volume;
 	int sound_volume;
+
+	void setCenter(sf::Text& text);
 };
 
 #endif

@@ -10,6 +10,7 @@ Log:
 #include <Board.hpp>
 #include <Menu.hpp>
 #include <OptionMenu.hpp>
+#include <AboutMenu.hpp>
 #include <MediaPlayer.hpp>
 
 #include <iostream>
@@ -29,12 +30,14 @@ enum MouseState {
 enum GameScene {
 	MENU = 0,
 	GAME = 1,
-	OPTION = 2
+	OPTION = 2,
+	ABOUT = 3
 };
 
 GameScene current_scene;
 Menu menu;
 OptionMenu optionmenu;
+AboutMenu aboutmenu;
 int mouse_state;
 
 sf::Vector2f get_mouse_position() {
@@ -56,8 +59,10 @@ void appStart() {
 	load_texture();
 	mouse_state = MouseState::RELEASE;
 	current_scene = GameScene::MENU;
+
 	menu.init();
 	optionmenu.init();
+	aboutmenu.init();
 }
 
 int pollEvent() { // if window is closed, return 0
@@ -102,6 +107,8 @@ void handle_menu() {
 			case 1:
 				current_scene = GameScene::OPTION;
 				break;
+			case 2:
+				current_scene = GameScene::ABOUT;
 		}
 		
 		mouse_state = MouseState::HOLD;
@@ -111,11 +118,35 @@ void handle_menu() {
 
 void handle_option_menu() {
 	optionmenu.draw_volume_button(appWindow);
+	optionmenu.draw_back_button(appWindow);
 	sound_board.setAudioVolume(optionmenu.getSoundVolume() * 20);
 	sound_board.setMusicVolume(optionmenu.getMusicVolume() * 20);
 
 	if (mouse_state == MouseState::CLICK) {
 		int signal = optionmenu.tryClickingAt(get_mouse_position());
+		switch (signal) {
+			case 0:
+				break;
+			case 1:
+				current_scene = GameScene::MENU;
+				break;
+		}
+	}
+}
+
+void handle_about_menu() {
+	aboutmenu.draw_back_button(appWindow);
+	aboutmenu.draw_UI(appWindow);
+
+	if (mouse_state == MouseState::CLICK) {
+		int signal = aboutmenu.tryClickingAt(get_mouse_position());
+		switch (signal) {
+		case 0:
+			break;
+		case 1:
+			current_scene = GameScene::MENU;
+			break;
+		}
 	}
 }
 
@@ -151,6 +182,9 @@ void appLoop() {
 			break;
 		case GameScene::OPTION:
 			handle_option_menu();
+			break;
+		case GameScene::ABOUT:
+			handle_about_menu();
 			break;
 	}
 
