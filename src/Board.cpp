@@ -5,27 +5,8 @@
 
 
 Board::Board() {
-	PIECE_SCALE = sf::Vector2f(0.4, 0.4);
-	offset = sf::Vector2f(40, 40);
-	board_offset = sf::Vector2f(200, 0);
-	gapX = sf::Vector2f(65, 0);
-	gapY = sf::Vector2f(0, 65);
-
 	current_turn = 0;
 	state_pointer = 0;
-}
-
-void Board::loadBoard(const std::string _str_source) {
-	surface.load(_str_source);
-}
-void Board::loadPieces() {
-	const std::filesystem::path CHESS_PIECE = std::filesystem::absolute(std::string(PROJECT_DIR) + "assets/go_pieces.png");
-	
-	for (int i = 0; i < 2; ++i) {
-		pieces[i] = Texture(CHESS_PIECE.string(), sf::IntRect({ 100 * i, 0 }, { 100, 100 }));
-		pieces[i].setScale(PIECE_SCALE);
-		pieces[i].setCentered(true);
-	}
 }
 
 void Board::setSize(int _i_row, int _i_column) {
@@ -40,73 +21,9 @@ std::pair <int, int> Board::getSize() {
 	return std::make_pair(row, column);
 }
 
-void Board::drawBoard() {
-	surface.draw(board_offset);
-}
-
-void Board::drawState() {
-	for (int r = 0; r < row; ++r) {
-		for (int c = 0; c < column; ++c) {
-			if (emptyCell(r, c)) continue;
-
-			int piece_type = getState(r, c);
-
-			sf::Vector2f cur_pos = board_offset + offset + gapX * float(c) + gapY * float(r);
-			pieces[piece_type].draw(cur_pos);
-		}
-	}
-}
-
-int Board::tryPlacingAt(sf::Vector2f mouse_pos) {
-	const float RADIUS = 25;
-
-	for (int r = 0; r < row; ++r) {
-		for (int c = 0; c < column; ++c) {
-			sf::Vector2f cur_pos = board_offset + offset + gapX * float(c) + gapY * float(r);
-			if (dist(cur_pos, mouse_pos) > RADIUS) continue;
-
-			if (!possibleToPlace(r, c, current_turn)) {
-				std::cerr << "getState: " << getState(r, c) << "\n";
-				if (getState(r, c) == -1) return 2;
-				return -1;
-			}
-
-			// check if there were capture, really inefficient.
-			std::string tmp = state_list.back();
-			placePieceAt(r, c);
-			pieces[current_turn].draw(cur_pos);
-
-			std::string cur = state_list.back();
-			int cnt = 0;
-			for (int i = 0; i < (int)tmp.size(); ++i)
-				cnt += (cur[i] != tmp[i]);
-
-			if (cnt > 1) return 1;
-			return 0;
-		}
-	}
-	return -1;
-}
-
 void Board::placePieceAt(int x, int y) {
 	setState(x, y, current_turn);
 	current_turn = 1 ^ current_turn;
-}
-
-void Board::drawShadow(sf::Vector2f mouse_pos) {
-	const float RADIUS = 25;
-
-	for (int r = 0; r < row; ++r) {
-		for (int c = 0; c < column; ++c) {
-			sf::Vector2f cur_pos = board_offset + offset + gapX * float(c) + gapY * float(r);
-			if (dist(cur_pos, mouse_pos) > RADIUS) continue;
-
-			if (!possibleToPlace(r, c, current_turn)) continue;
-
-			pieces[current_turn].draw(cur_pos, 0.6);
-			return;
-		}
-	}
 }
 
 void Board::setState(int x, int y, int c) {
@@ -229,10 +146,9 @@ std::vector <std::pair <int, int>> Board::capturedPositions(int x, int y, bool t
 	return subset;
 }
 
-bool Board::possibleToPlace(int x, int y, bool turn) {
+bool Board::possibleToPlace(int x, int y) {
+	bool turn = current_turn;
 	if (!emptyCell(x, y)) return false;
-	
-
 	/*
 		When is a position possible to place a specific color ?
 		
@@ -271,6 +187,9 @@ bool Board::possibleToPlace(int x, int y, bool turn) {
 	for (std::pair <int, int> point : captured) {
 		current_state[point.first * column + point.second] = '.';
 	}
-
 	return state_pointer == 0 || current_state != state_list[state_pointer - 1];
+}
+
+std::string Board::getState() {
+	return state_list.back();
 }

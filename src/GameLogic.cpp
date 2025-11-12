@@ -7,18 +7,17 @@ Log:
 
 #include <Render.hpp>
 #include <Helper.hpp>
-#include <Board.hpp>
 #include <Menu.hpp>
 #include <OptionMenu.hpp>
 #include <AboutMenu.hpp>
 #include <MediaPlayer.hpp>
+#include <GameUI.hpp>
 
 #include <iostream>
 #include <filesystem>
 
 const int COLUMN = 9, ROW = 9;
 
-Board go_board;
 MediaPlayer sound_board;
 
 enum MouseState {
@@ -35,9 +34,11 @@ enum GameScene {
 };
 
 GameScene current_scene;
+
 Menu menu;
 OptionMenu optionmenu;
 AboutMenu aboutmenu;
+GameUI gameui;
 int mouse_state;
 
 sf::Vector2f get_mouse_position() {
@@ -48,9 +49,6 @@ void load_texture() {
 	const std::filesystem::path BOARD_PATH = std::filesystem::absolute(std::string(PROJECT_DIR) + "assets/board.png");
 	const std::filesystem::path CHESS_PIECE = std::filesystem::absolute(std::string(PROJECT_DIR) + "assets/go_pieces.png");
 
-	go_board.loadBoard(BOARD_PATH.string());
-	go_board.setSize(ROW, COLUMN);
-	go_board.loadPieces();
 }
 
 void appStart() {
@@ -63,6 +61,7 @@ void appStart() {
 	menu.init();
 	optionmenu.init();
 	aboutmenu.init();
+	gameui.init();
 }
 
 int pollEvent() { // if window is closed, return 0
@@ -151,7 +150,23 @@ void handle_about_menu() {
 }
 
 void handle_game_scene() {
-	go_board.drawBoard();
+	gameui.draw_back_button(appWindow);
+	gameui.draw_UI(appWindow);
+
+	if (mouse_state == MouseState::CLICK) {
+		int signal = gameui.tryClickingAt(get_mouse_position());
+		if (signal != -1) {
+			if (signal == 10) {
+				current_scene = GameScene::MENU;
+			}
+			else {
+				sound_board.play_audio((SoundEffect)signal);
+			}
+		}
+	}
+	gameui.drawShadow(appWindow, get_mouse_position());
+	/*
+	gameui.drawBoard();
 	if (mouse_state == MouseState::CLICK) {
 		int cur = go_board.tryPlacingAt(get_mouse_position());
 		if (cur != -1) {
@@ -163,7 +178,7 @@ void handle_game_scene() {
 	if (mouse_state == MouseState::RELEASE) {
 		go_board.drawShadow(get_mouse_position());
 	}
-	go_board.drawState();
+	go_board.drawState();*/
 }
 
 void appLoop() {

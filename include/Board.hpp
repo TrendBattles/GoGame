@@ -9,17 +9,8 @@
 class Board {
 public:
 	Board();
-
-	void loadBoard(const std::string _str_source = "");
-	void loadPieces();
-
 	void setSize(int _i_row, int _i_column);
 	std::pair <int, int> getSize();
-
-	void drawBoard();
-	void drawState();
-	int tryPlacingAt(sf::Vector2f mouse_pos = sf::Vector2f{ 0, 0 });
-	void drawShadow(sf::Vector2f mouse_pos = sf::Vector2f{ 0, 0 });
 
 	void setState(int x, int y, int c);
 	int getState(int x, int y);
@@ -32,22 +23,16 @@ public:
 	std::vector <std::pair <int, int>> findComponent(int x, int y, int cell_id);
 	std::vector <std::pair <int, int>> capturedPositions(int x, int y, bool turn);
 
-	bool possibleToPlace(int x, int y, bool turn);
-private:
-	Texture surface;
-	Texture pieces[2];
+	bool possibleToPlace(int x, int y);
+	void placePieceAt(int x, int y);
 
+	std::string getState();
+private:
 	std::vector <std::string> state_list;
 	int state_pointer;
 
 	int row = -1, column = -1;
 	bool current_turn;
-
-	sf::Vector2f PIECE_SCALE;
-	sf::Vector2f offset, board_offset;
-	sf::Vector2f gapX, gapY;
-
-	void placePieceAt(int x, int y);
 };
 
 #endif
