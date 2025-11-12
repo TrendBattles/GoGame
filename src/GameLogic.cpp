@@ -9,6 +9,7 @@ Log:
 #include <Helper.hpp>
 #include <Board.hpp>
 #include <Menu.hpp>
+#include <OptionMenu.hpp>
 #include <MediaPlayer.hpp>
 
 #include <iostream>
@@ -27,11 +28,13 @@ enum MouseState {
 
 enum GameScene {
 	MENU = 0,
-	GAME = 1
+	GAME = 1,
+	OPTION = 2
 };
 
 GameScene current_scene;
 Menu menu;
+OptionMenu optionmenu;
 int mouse_state;
 
 sf::Vector2f get_mouse_position() {
@@ -54,6 +57,7 @@ void appStart() {
 	mouse_state = MouseState::RELEASE;
 	current_scene = GameScene::MENU;
 	menu.init();
+	optionmenu.init();
 }
 
 int pollEvent() { // if window is closed, return 0
@@ -70,7 +74,6 @@ int pollEvent() { // if window is closed, return 0
 			return 0;
 		}
 		else if (event->is <sf::Event::MouseButtonPressed>()) {
-			std::cerr << "Mouse clicked" << "\n";
 			mouse_state = MouseState::CLICK;
 		}
 		else if (event->is <sf::Event::MouseButtonReleased>()) {
@@ -87,27 +90,37 @@ int pollEvent() { // if window is closed, return 0
 }
 
 void handle_menu() {
-	// drawing the background
-
-	// drawing the logo
 	menu.draw_game_text(appWindow);
-
-	// drawing the buttons
 	menu.draw_button(appWindow);
 	
 	if (mouse_state == MouseState::CLICK) {
 		int new_signal = menu.tryClickingAt(get_mouse_position());
-		if (new_signal == 0) {
-			current_scene = GameScene::GAME;
+		switch (new_signal) {
+			case 0:
+				current_scene = GameScene::GAME;
+				break;
+			case 1:
+				current_scene = GameScene::OPTION;
+				break;
 		}
+		
 		mouse_state = MouseState::HOLD;
+	}
+}
+
+
+void handle_option_menu() {
+	optionmenu.draw_volume_button(appWindow);
+	sound_board.setAudioVolume(optionmenu.getSoundVolume() * 20);
+	sound_board.setMusicVolume(optionmenu.getMusicVolume() * 20);
+
+	if (mouse_state == MouseState::CLICK) {
+		int signal = optionmenu.tryClickingAt(get_mouse_position());
 	}
 }
 
 void handle_game_scene() {
 	go_board.drawBoard();
-
-	std::cerr << "Mouse state: " << mouse_state << "\n";
 	if (mouse_state == MouseState::CLICK) {
 		int cur = go_board.tryPlacingAt(get_mouse_position());
 		if (cur != -1) {
@@ -119,7 +132,6 @@ void handle_game_scene() {
 	if (mouse_state == MouseState::RELEASE) {
 		go_board.drawShadow(get_mouse_position());
 	}
-
 	go_board.drawState();
 }
 
@@ -136,6 +148,9 @@ void appLoop() {
 			break;
 		case GameScene::GAME:
 			handle_game_scene();
+			break;
+		case GameScene::OPTION:
+			handle_option_menu();
 			break;
 	}
 

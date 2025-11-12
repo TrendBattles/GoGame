@@ -15,8 +15,10 @@ public:
 
 	void init();
 	void play_background_music();
-	
 	void play_audio(SoundEffect cur_song);
+
+	void setMusicVolume(int volume);
+	void setAudioVolume(int volume);
 private:
 	sf::Music background_music;
 	std::vector<sf::SoundBuffer> audio_buffer_list;
