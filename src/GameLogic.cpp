@@ -45,16 +45,15 @@ sf::Vector2f get_mouse_position() {
 	return convertToFloat(sf::Mouse::getPosition(appWindow));
 }
 
-void load_texture() {
-	const std::filesystem::path BOARD_PATH = std::filesystem::absolute(std::string(PROJECT_DIR) + "assets/board.png");
-	const std::filesystem::path CHESS_PIECE = std::filesystem::absolute(std::string(PROJECT_DIR) + "assets/go_pieces.png");
-
-}
+//void load_texture() {
+//	const std::filesystem::path BOARD_PATH = std::filesystem::absolute(std::string(PROJECT_DIR) + "assets/board.png");
+//	const std::filesystem::path CHESS_PIECE = std::filesystem::absolute(std::string(PROJECT_DIR) + "assets/go_pieces.png");
+//}
 
 void appStart() {
 	sound_board.init();
 	sound_board.play_background_music();
-	load_texture();
+	//load_texture();
 	mouse_state = MouseState::RELEASE;
 	current_scene = GameScene::MENU;
 
@@ -109,8 +108,6 @@ void handle_menu() {
 			case 2:
 				current_scene = GameScene::ABOUT;
 		}
-		
-		mouse_state = MouseState::HOLD;
 	}
 }
 

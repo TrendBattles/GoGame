@@ -5,7 +5,7 @@
 void OptionMenu::init() {
 
 	const std::filesystem::path FONT_PATH =
-		std::filesystem::absolute(std::string(PROJECT_DIR) + "assets/chinese.otf");
+		std::filesystem::absolute(std::string(PROJECT_DIR) + "assets/Font/chinese.otf");
 	font.openFromFile(FONT_PATH.c_str());
 
 	horizontal_offset = sf::Vector2f(500, 0);

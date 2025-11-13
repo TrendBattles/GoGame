@@ -4,10 +4,10 @@
 
 void AboutMenu::init() {
 	const std::filesystem::path CHINESE_FONT_PATH =
-		std::filesystem::absolute(std::string(PROJECT_DIR) + "assets/chinese.otf");
+		std::filesystem::absolute(std::string(PROJECT_DIR) + "assets/Font/chinese.otf");
 	chinese_font.openFromFile(CHINESE_FONT_PATH.c_str());
 	const std::filesystem::path ENGLISH_FONT_PATH =
-		std::filesystem::absolute(std::string(PROJECT_DIR) + "assets/english.otf");
+		std::filesystem::absolute(std::string(PROJECT_DIR) + "assets/Font/english.otf");
 	english_font.openFromFile(ENGLISH_FONT_PATH.c_str());
 
 	horizontal_offset = sf::Vector2f(500, 0);

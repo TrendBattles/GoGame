@@ -4,7 +4,7 @@
 
 void MediaPlayer::init() {
 	const std::filesystem::path BACKGROUND_SONG =
-		std::filesystem::absolute(std::string(PROJECT_DIR) + "assets/GameOST.ogg");
+		std::filesystem::absolute(std::string(PROJECT_DIR) + "assets/Sound/GameOST.ogg");
 	if (!background_music.openFromFile(BACKGROUND_SONG.c_str())) {
 		exit(1);
 	}
@@ -12,11 +12,11 @@ void MediaPlayer::init() {
 
 
 	const std::filesystem::path MOVE_SOUND =
-		std::filesystem::absolute(std::string(PROJECT_DIR) + "assets/Move.ogg");
+		std::filesystem::absolute(std::string(PROJECT_DIR) + "assets/Sound/Move.ogg");
 	const std::filesystem::path CAPTURE_SOUND =
-		std::filesystem::absolute(std::string(PROJECT_DIR) + "assets/Capture.ogg");
+		std::filesystem::absolute(std::string(PROJECT_DIR) + "assets/Sound/Capture.ogg");
 	const std::filesystem::path ILLEGAL_SOUND =
-		std::filesystem::absolute(std::string(PROJECT_DIR) + "assets/IllegalMove.ogg");
+		std::filesystem::absolute(std::string(PROJECT_DIR) + "assets/Sound/IllegalMove.ogg");
 
 	audio_buffer_list.emplace_back(sf::SoundBuffer(MOVE_SOUND.c_str()));
 	audio_buffer_list.emplace_back(sf::SoundBuffer(CAPTURE_SOUND.c_str()));

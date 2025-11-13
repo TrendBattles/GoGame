@@ -6,18 +6,18 @@
 
 void GameUI::init() {
 	const std::filesystem::path CHINESE_FONT_PATH =
-		std::filesystem::absolute(std::string(PROJECT_DIR) + "assets/chinese.otf");
+		std::filesystem::absolute(std::string(PROJECT_DIR) + "assets/Font/chinese.otf");
 	chinese_font.openFromFile(CHINESE_FONT_PATH.c_str());
 	const std::filesystem::path ENGLISH_FONT_PATH =
-		std::filesystem::absolute(std::string(PROJECT_DIR) + "assets/english.otf");
+		std::filesystem::absolute(std::string(PROJECT_DIR) + "assets/Font/english.otf");
 	english_font.openFromFile(ENGLISH_FONT_PATH.c_str());
 
 	ui_color = sf::Color::White;
 
 	const std::filesystem::path BOARD_PATH =
-		std::filesystem::absolute(std::string(PROJECT_DIR) + "assets/board.png");
+		std::filesystem::absolute(std::string(PROJECT_DIR) + "assets/Board/board.png");
 	const std::filesystem::path PIECE_PATH =
-		std::filesystem::absolute(std::string(PROJECT_DIR) + "assets/go_pieces.png");
+		std::filesystem::absolute(std::string(PROJECT_DIR) + "assets/Board/go_pieces.png");
 
 
 	chessboard.loadFromFile(BOARD_PATH.c_str());
@@ -35,7 +35,6 @@ void GameUI::init() {
 	gapY = sf::Vector2f(0, 65);
 
 	board.setSize(9, 9);
-	
 }
 
 void GameUI::setCenter(sf::Text& text) {
