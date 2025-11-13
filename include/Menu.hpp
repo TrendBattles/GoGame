@@ -2,7 +2,6 @@
 #define MENU_HPP
 
 #include <SFML/Graphics.hpp>
-#include <Texture.hpp>
 
 struct Menu {
 public:

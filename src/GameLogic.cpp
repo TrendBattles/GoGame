@@ -5,17 +5,16 @@ Log:
 
 */
 
-#include <Render.hpp>
 #include <Helper.hpp>
 #include <Menu.hpp>
 #include <OptionMenu.hpp>
 #include <AboutMenu.hpp>
 #include <MediaPlayer.hpp>
 #include <GameUI.hpp>
-
 #include <iostream>
 #include <filesystem>
 
+extern sf::RenderWindow appWindow;
 const int COLUMN = 9, ROW = 9;
 
 MediaPlayer sound_board;

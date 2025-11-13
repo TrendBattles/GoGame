@@ -3,7 +3,6 @@
 
 #include <SFML/Graphics.hpp>
 #include <Board.hpp>
-#include <Texture.hpp>
 
 struct GameUI {
 public:

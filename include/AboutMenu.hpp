@@ -2,9 +2,8 @@
 #define ABOUTMENU_HPP
 
 #include <SFML/Graphics.hpp>
-#include <Texture.hpp>
 
-struct AboutMenu {
+class AboutMenu {
 public:
 	void init();
 	void draw_UI(sf::RenderWindow& appwindow);

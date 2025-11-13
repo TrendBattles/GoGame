@@ -2,7 +2,6 @@
 #define BOARD_HPP
 
 #include <SFML/Graphics.hpp>
-#include <Texture.hpp>
 #include <vector>
 #include <utility>
 

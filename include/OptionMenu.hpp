@@ -2,9 +2,8 @@
 #define OPTIONMENU_HPP
 
 #include <SFML/Graphics.hpp>
-#include <Texture.hpp>
 
-struct OptionMenu {
+class OptionMenu {
 public:
 	void init();
 	void draw_volume_button(sf::RenderWindow& appwindow);
