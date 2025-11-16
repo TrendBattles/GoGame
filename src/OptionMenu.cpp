@@ -90,6 +90,7 @@ int OptionMenu::tryClickingAt(sf::Vector2f mouse_pos) {
 			sf::Vector2f cur_pos =
 				vertical_offset + horizontal_offset + button_gap * float(c) + gap * float(r);
 			sf::Vector2f diff = cur_pos - mouse_pos;
+
 			if (abs(diff.x) <= volume_btn_size.x * 0.5f && 
 				abs(diff.y) <= volume_btn_size.y * 0.5f) {
 				switch (r) {

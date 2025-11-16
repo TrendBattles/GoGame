@@ -21,17 +21,24 @@ public:
 	
 	std::vector <std::pair <int, int>> findComponent(int x, int y, int cell_id);
 	std::vector <std::pair <int, int>> capturedPositions(int x, int y, bool turn);
-
+	
 	bool possibleToPlace(int x, int y);
 	void placePieceAt(int x, int y);
 
 	std::string getState();
+
+	bool undo();
+	bool redo();
+	bool pass();
+
+	void resign();
 private:
 	std::vector <std::string> state_list;
 	int state_pointer;
 
 	int row = -1, column = -1;
 	bool current_turn;
+	bool already_passed, playing;
 };
 
 #endif

@@ -5,6 +5,7 @@
 
 
 sf::Vector2f convertToFloat(sf::Vector2i cur);
+sf::Vector2f convertToFloat(sf::Vector2u cur);
 
 double sqr(double x);
 double squareDist(sf::Vector2f a);

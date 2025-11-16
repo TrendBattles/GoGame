@@ -8,6 +8,9 @@ double sqr(double x) {
 sf::Vector2f convertToFloat(sf::Vector2i cur) {
 	return sf::Vector2f((float)cur.x, (float)cur.y);
 }
+sf::Vector2f convertToFloat(sf::Vector2u cur) {
+	return sf::Vector2f((float)cur.x, (float)cur.y);
+}
 
 
 

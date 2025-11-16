@@ -7,6 +7,8 @@
 Board::Board() {
 	current_turn = 0;
 	state_pointer = 0;
+	already_passed = false;
+	playing = true;
 }
 
 void Board::setSize(int _i_row, int _i_column) {
@@ -24,6 +26,8 @@ std::pair <int, int> Board::getSize() {
 void Board::placePieceAt(int x, int y) {
 	setState(x, y, current_turn);
 	current_turn = 1 ^ current_turn;
+
+	already_passed = false;
 }
 
 void Board::setState(int x, int y, int c) {
@@ -190,6 +194,39 @@ bool Board::possibleToPlace(int x, int y) {
 	return state_pointer == 0 || current_state != state_list[state_pointer - 1];
 }
 
+//Full board state at the pointer
 std::string Board::getState() {
-	return state_list.back();
+	return state_list[state_pointer];
+}
+
+bool Board::undo() {
+	if (state_pointer > 0) {
+		--state_pointer;
+		return true;
+	}
+	return false;
+}
+bool Board::redo() {
+	if (state_pointer + 1 < (int)state_list.size()) {
+		++state_pointer;
+		return true;
+	}
+	return false;
+}
+
+bool Board::pass() {
+	//End-scoring?
+	if (already_passed) {
+		std::cerr << "Ending the game\n";
+
+		return true;
+	}
+
+	current_turn = 1 ^ current_turn;
+	already_passed = true;
+	return false;
+}
+
+void Board::resign() {
+	std::cerr << "Player " << current_turn + 1 << " won by resignation\n";
 }

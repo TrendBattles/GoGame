@@ -100,6 +100,7 @@ void handle_menu() {
 		switch (new_signal) {
 			case 0:
 				current_scene = GameScene::GAME;
+				gameui.resetGame();
 				break;
 			case 1:
 				current_scene = GameScene::OPTION;
@@ -148,6 +149,7 @@ void handle_about_menu() {
 void handle_game_scene() {
 	gameui.draw_back_button(appWindow);
 	gameui.draw_UI(appWindow);
+	gameui.draw_game_buttons(appWindow);
 
 	if (mouse_state == MouseState::CLICK) {
 		int signal = gameui.tryClickingAt(get_mouse_position());

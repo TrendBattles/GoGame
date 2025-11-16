@@ -13,7 +13,7 @@ void handle_game_scene();
 void appLoop();
 
 int main(int argv, char* args[]) {
-	int width = 1000, height = 600;
+	int width = 1000, height = 800;
 
 	appWindow = sf::RenderWindow(sf::VideoMode(sf::Vector2u(width, height)), "Go",
 		sf::Style::Titlebar | sf::Style::Close);
