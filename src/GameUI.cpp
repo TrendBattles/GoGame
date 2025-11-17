@@ -112,13 +112,12 @@ void GameUI::draw_game_buttons(sf::RenderWindow& appWindow) {
 
 	origin.x += functional_buttons[0].getSize().x * 0.75f * 2 + 20 * 2;
 
-	//Pass + Resign button
-	auto Specific_Draw = [&](const std::string label) -> void {
-		sf::Vector2f buttonSize(155, 75);
-
+	//Pass, resign, save, load button
+	sf::Vector2f buttonSize(155, 75);
+	auto Specific_Draw = [&](const std::string label, sf::Vector2f topLeft) -> void {
 		sf::RectangleShape passButton(buttonSize);
 		passButton.setFillColor(sf::Color(67, 70, 75));
-		passButton.setPosition(origin);
+		passButton.setPosition(topLeft);
 
 		sf::Text passText(chinese_font);
 		passText.setString(label);
@@ -129,17 +128,17 @@ void GameUI::draw_game_buttons(sf::RenderWindow& appWindow) {
 		
 
 		passText.setOrigin(textSize * 0.5f);
-		passText.setPosition(origin + buttonSize * 0.5f);
+		passText.setPosition(topLeft + buttonSize * 0.5f);
 		passText.move({ 0, -10.f });
 
 		appWindow.draw(passButton);
 		appWindow.draw(passText);
-
-		origin += sf::Vector2f(buttonSize.x + 20, 0);
 	};
 
-	Specific_Draw("PASS");
-	Specific_Draw("RESIGN");
+	Specific_Draw("PASS", origin);
+	Specific_Draw("SAVE", origin + sf::Vector2f(0, buttonSize.y + 20));
+	Specific_Draw("RESIGN", origin + sf::Vector2f(buttonSize.x + 20, 0));
+	Specific_Draw("LOAD", origin + buttonSize + sf::Vector2f(20, 20));
 }
 
 int GameUI::tryClickingAt(sf::Vector2f mouse_pos) {
@@ -193,17 +192,34 @@ int GameUI::tryClickingAt(sf::Vector2f mouse_pos) {
 		return 2;
 	}
 
-	//Pass
+	//Pass, Resign, Save, Load
+	
 	origin.x += functional_buttons[0].getSize().x * 0.75f * 2 + 20 * 2;
-	if (origin.x <= mouse_pos.x && mouse_pos.x <= origin.x + 175 && origin.y <= mouse_pos.y && origin.y <= mouse_pos.y + 75) {
+
+	sf::Vector2f buttonSize(155, 75);
+
+	if (origin.x <= mouse_pos.x && mouse_pos.x <= origin.x + buttonSize.x && origin.y <= mouse_pos.y && mouse_pos.y <= origin.y + buttonSize.y) {
 		board.pass();
 
 		return -1;
 	}
 
-	origin += sf::Vector2f(175 + 20, 0);
-	if (origin.x <= mouse_pos.x && mouse_pos.x <= origin.x + 175 && origin.y <= mouse_pos.y && origin.y <= mouse_pos.y + 75) {
+	/*if (origin.x <= mouse_pos.x && mouse_pos.x <= origin.x + buttonSize.x && origin.y + buttonSize.y + 20 <= mouse_pos.y && mouse_pos.y <= origin.y + 2 * buttonSize.y + 20) {
+		board.saveGame();
+
+		return -1;
+	}*/
+
+	origin += sf::Vector2f(buttonSize.x + 20, 0);
+
+	if (origin.x <= mouse_pos.x && mouse_pos.x <= origin.x + buttonSize.x && origin.y <= mouse_pos.y && mouse_pos.y <= origin.y + buttonSize.y) {
 		board.resign();
+
+		return -1;
+	}
+
+	if (origin.x <= mouse_pos.x && mouse_pos.x <= origin.x + buttonSize.x && origin.y + buttonSize.y + 20 <= mouse_pos.y && mouse_pos.y <= origin.y + 2 * buttonSize.y + 20) {
+		board.loadGame();
 
 		return -1;
 	}
@@ -261,6 +277,7 @@ bool GameUI::annouceEndGame() {
 			std::cout << "Player " << (score[0] < score[1]) + 1 << " wins\n";
 		}
 	}
-
+	
+	board.saveGame();
 	return true;
 }

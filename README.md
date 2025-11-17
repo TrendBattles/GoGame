@@ -15,14 +15,14 @@ Textures: Bao
 Placing: Thanh, improved by Bao
 
 Game rules, functional buttons: Bao
+Saving PGNs, Loading PGNs: Bao
+
 
 Work needed to be done next ❎:
 
 -Gameplay:
 
 End-scoring
-
-Saving PGNs, Loading PGNs
 
 -UI:
 

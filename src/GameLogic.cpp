@@ -151,7 +151,7 @@ void handle_game_scene() {
 	gameui.draw_UI(appWindow);
 	gameui.draw_game_buttons(appWindow);
 
-	gameui.annouceEndGame();
+	//gameui.annouceEndGame();
 
 	if (mouse_state == MouseState::CLICK) {
 		int signal = gameui.tryClickingAt(get_mouse_position());

@@ -2,6 +2,7 @@
 #include <Helper.hpp>
 #include <iostream>
 #include <vector>
+#include <fstream>
 
 
 Board::Board() {
@@ -55,6 +56,8 @@ void Board::setState(int x, int y, int c) {
 	}
 
 	state_list[state_pointer].back() = '0';
+
+	saveGame();
 }
 
 
@@ -226,6 +229,8 @@ bool Board::undo() {
 		current_turn = 1 ^ current_turn;
 		--state_pointer;
 
+		saveGame();
+
 		std::cerr << "Player " << (getTurn() + 1) << "'s turn\n";
 		std::cerr << (getPassState() ? "Already passed\n" : "No pass\n");
 		return true;
@@ -236,6 +241,8 @@ bool Board::redo() {
 	if (state_pointer + 1 < (int)state_list.size()) {
 		current_turn = 1 ^ current_turn;
 		++state_pointer;
+
+		saveGame();
 
 		std::cerr << "Player " << (getTurn() + 1) << "'s turn\n";
 		std::cerr << (getPassState() ? "Already passed\n" : "No pass\n");
@@ -250,14 +257,18 @@ bool Board::pass() {
 		std::cerr << "Ending the game\n";
 		playing = false;
 
+		getScore();
+		saveGame();
+
 		return true;
 	}
 
 	state_list.erase(state_list.begin() + state_pointer + 1, state_list.end());
 	state_list.push_back(state_list.back());
 	state_list.back().back() = '1';
-
 	state_pointer = (int) state_list.size() - 1;
+
+	saveGame();
 
 	current_turn = 1 ^ current_turn;
 
@@ -272,6 +283,8 @@ void Board::resign() {
 	
 	score[current_turn ^ 1] = 0x3f3f3f3f;
 	score[current_turn] = 0;
+
+	saveGame();
 }
 
 std::array <int, 2> Board::getScore() {
@@ -357,4 +370,83 @@ std::array <int, 2> Board::getScore() {
 
 
 	return score;
+}
+
+void Board::saveGame() {
+	const std::string fileName = std::string(PROJECT_DIR) + "assets/gopgn.txt";
+	std::ofstream fout(fileName);
+
+	/*
+		Saving games for future uses
+	*/
+
+	if (!fout.is_open()) {
+		std::cerr << "Error: Can't save game\n";
+		return;
+	}
+		
+	/*
+		stack size - pointer
+		state_list
+	*/
+	fout << (int)state_list.size() << ' ' << state_pointer << '\n';
+	for (std::string st : state_list) fout << st << '\n';
+
+	fout << score[0] << ' ' << score[1] << '\n';
+
+	fout.close();
+	//std::cerr << "Saved successfully\n";
+}
+
+void Board::loadGame() {
+	const std::string fileName = std::string(PROJECT_DIR) + "assets/gopgn.txt";
+	std::ifstream fin(fileName);
+
+	/*
+		Loading games
+	*/
+
+	system("cls");
+
+	if (!fin.is_open() || fin.eof()) {
+		std::cerr << "Error: Can't load game\n";
+		return;
+	}
+
+	std::cerr << "Loaded successfully\n";
+	
+	int stackSize; fin >> stackSize >> state_pointer;
+	state_list.assign(stackSize, "");
+
+	for (int i = 0; i < stackSize; ++i) {
+		fin >> state_list[i];
+	}
+	fin >> score[0] >> score[1];
+
+	current_turn = stackSize % 2;
+
+	if (score[0] == -1 || score[1] == -1) {
+		std::cerr << "Player " << (getTurn() + 1) << "'s turn\n";
+		std::cerr << (getPassState() ? "Already passed\n" : "No pass\n");
+
+		return;
+	}
+
+	if (score[0] == 0x3f3f3f3f) {
+		std::cout << "Player 1 won by resignation\n";
+	}
+	else if (score[1] == 0x3f3f3f3f) {
+		std::cout << "Player 2 won by resignation\n";
+	}
+	else {
+		std::cout << "Player 1: " << score[0] << '\n';
+		std::cout << "Player 2: " << score[1] << '\n';
+
+		if (score[0] == score[1]) {
+			std::cout << "Draw\n";
+		}
+		else {
+			std::cout << "Player " << (score[0] < score[1]) + 1 << " wins\n";
+		}
+	}
 }
