@@ -27,6 +27,8 @@ public:
 
 	std::string getState();
 
+	bool isInGame();
+
 	bool undo();
 	bool redo();
 	bool pass();

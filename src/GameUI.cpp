@@ -139,6 +139,12 @@ void GameUI::draw_game_buttons(sf::RenderWindow& appWindow) {
 }
 
 int GameUI::tryClickingAt(sf::Vector2f mouse_pos) {
+	//Go back
+	if (mouse_pos.x >= 0 && mouse_pos.x <= 150 && mouse_pos.y >= 0 && mouse_pos.y <= 40)
+		return 10;
+
+	if (!board.isInGame()) return -1;
+
 	const float RADIUS = 25;
 
 	for (int r = 0; r < board.getSize().first; ++r) {
@@ -165,10 +171,6 @@ int GameUI::tryClickingAt(sf::Vector2f mouse_pos) {
 		}
 	}
 
-	//Go back
-	if (mouse_pos.x >= 0 && mouse_pos.x <= 150 && mouse_pos.y >= 0 && mouse_pos.y <= 40)
-		return 10;
-
 	//Undo-Redo
 	sf::Vector2f origin = board_offset + sf::Vector2f(0, static_cast <float> (goboard.getSize().y) + 20);
 
@@ -190,18 +192,23 @@ int GameUI::tryClickingAt(sf::Vector2f mouse_pos) {
 	//Pass
 	origin.x += functional_buttons[0].getSize().x * 0.75f * 2 + 20 * 2;
 	if (origin.x <= mouse_pos.x && mouse_pos.x <= origin.x + 175 && origin.y <= mouse_pos.y && origin.y <= mouse_pos.y + 75) {
-		if (board.pass()) return 10;
+		board.pass();
+
+		return -1;
 	}
 
 	origin += sf::Vector2f(175 + 20, 0);
 	if (origin.x <= mouse_pos.x && mouse_pos.x <= origin.x + 175 && origin.y <= mouse_pos.y && origin.y <= mouse_pos.y + 75) {
 		board.resign();
-		return 10;
+
+		return -1;
 	}
 	return -1;
 }
 
 void GameUI::drawShadow(sf::RenderWindow& appwindow, sf::Vector2f mouse_pos) {
+	if (!board.isInGame()) return;
+
 	const float RADIUS = 25;
 
 	for (int r = 0; r < board.getSize().first; ++r) {

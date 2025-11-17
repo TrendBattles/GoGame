@@ -199,8 +199,25 @@ std::string Board::getState() {
 	return state_list[state_pointer];
 }
 
+bool Board::isInGame() {
+	if (!playing) return false;
+	//If pass 2 times or resign -> End already
+	//No possible moves -> Also end game
+
+	std::string current_pgn = getState();
+	for (char x : current_pgn) {
+		if (x == '.') {
+			return true;
+		}
+	}
+
+	return (playing = false);
+}
+
 bool Board::undo() {
 	if (state_pointer > 0) {
+		current_turn = 1 ^ current_turn;
+
 		--state_pointer;
 		return true;
 	}
@@ -208,6 +225,8 @@ bool Board::undo() {
 }
 bool Board::redo() {
 	if (state_pointer + 1 < (int)state_list.size()) {
+		current_turn = 1 ^ current_turn;
+
 		++state_pointer;
 		return true;
 	}
@@ -218,6 +237,7 @@ bool Board::pass() {
 	//End-scoring?
 	if (already_passed) {
 		std::cerr << "Ending the game\n";
+		playing = false;
 
 		return true;
 	}
@@ -229,4 +249,5 @@ bool Board::pass() {
 
 void Board::resign() {
 	std::cerr << "Player " << current_turn + 1 << " won by resignation\n";
+	playing = false;
 }
