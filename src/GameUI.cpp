@@ -38,6 +38,8 @@ void GameUI::init() {
 		functional_buttons.emplace_back(moveTexture);
 	}
 
+	swap(functional_buttons[0], functional_buttons[1]);
+
 	//Pass
 	PIECE_SCALE = sf::Vector2f(0.4, 0.4);
 	offset = sf::Vector2f(40, 40);
@@ -51,6 +53,8 @@ void GameUI::resetGame() {
 
 	board = Board();
 	board.setSize(9, 9);
+
+	std::cerr << "Player 1's turn\n";
 }
 
 void GameUI::setCenter(sf::Text& text) {
@@ -234,4 +238,29 @@ void GameUI::drawShadow(sf::RenderWindow& appwindow, sf::Vector2f mouse_pos) {
 			return;
 		}
 	}
+}
+
+bool GameUI::annouceEndGame() {
+	if (board.isInGame()) return false;
+
+	std::array <int, 2> score = board.getScore();
+	if (score[0] == 0x3f3f3f3f) {
+		std::cout << "Player 1 won by resignation\n";
+	}
+	else if (score[1] == 0x3f3f3f3f) {
+		std::cout << "Player 2 won by resignation\n";
+	}
+	else {
+		std::cout << "Player 1: " << score[0] << '\n';
+		std::cout << "Player 2: " << score[1] << '\n';
+
+		if (score[0] == score[1]) {
+			std::cout << "Draw\n";
+		}
+		else {
+			std::cout << "Player " << (score[0] < score[1]) + 1 << " wins\n";
+		}
+	}
+
+	return true;
 }

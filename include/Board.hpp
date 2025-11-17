@@ -15,8 +15,6 @@ public:
 	int getState(int x, int y);
 	bool emptyCell(int x, int y);
 	bool outsideBoard(int x, int y);
-
-	void setTurn(bool who);
 	bool getTurn();
 	
 	std::vector <std::pair <int, int>> findComponent(int x, int y, int cell_id);
@@ -28,19 +26,25 @@ public:
 	std::string getState();
 
 	bool isInGame();
+	bool getPassState();
 
 	bool undo();
 	bool redo();
 	bool pass();
 
 	void resign();
+
+	std::array <int, 2> getScore();
 private:
 	std::vector <std::string> state_list;
+
 	int state_pointer;
 
 	int row = -1, column = -1;
 	bool current_turn;
-	bool already_passed, playing;
+	bool playing;
+
+	std::array <int, 2> score;
 };
 
 #endif

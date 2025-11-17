@@ -28,3 +28,6 @@ target_compile_definitions(GoGame PRIVATE PROJECT_DIR="${CMAKE_SOURCE_DIR}/")
 
 find_package(SFML 3 REQUIRED COMPONENTS Audio Graphics Network Window System)
 target_link_libraries(GoGame PRIVATE SFML::Audio SFML::Graphics SFML::Network SFML::Window SFML::System)
+
+
+set_target_properties(GoGame PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build/")

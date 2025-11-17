@@ -16,6 +16,7 @@ public:
 	int tryClickingAt(sf::Vector2f mouse_pos = sf::Vector2f{ 0, 0 });
 	void drawShadow(sf::RenderWindow& appwindow, sf::Vector2f mouse_pos = sf::Vector2f{ 0, 0 });
 
+	bool annouceEndGame();
 private:
 	sf::Font chinese_font, english_font;
 	sf::Color ui_color;
