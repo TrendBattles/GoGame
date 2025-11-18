@@ -56,8 +56,6 @@ void Board::setState(int x, int y, int c) {
 	}
 
 	state_list[state_pointer].back() = '0';
-
-	saveGame();
 }
 
 
@@ -229,8 +227,6 @@ bool Board::undo() {
 		current_turn = 1 ^ current_turn;
 		--state_pointer;
 
-		saveGame();
-
 		std::cerr << "Player " << (getTurn() + 1) << "'s turn\n";
 		std::cerr << (getPassState() ? "Already passed\n" : "No pass\n");
 		return true;
@@ -241,8 +237,6 @@ bool Board::redo() {
 	if (state_pointer + 1 < (int)state_list.size()) {
 		current_turn = 1 ^ current_turn;
 		++state_pointer;
-
-		saveGame();
 
 		std::cerr << "Player " << (getTurn() + 1) << "'s turn\n";
 		std::cerr << (getPassState() ? "Already passed\n" : "No pass\n");
@@ -257,9 +251,6 @@ bool Board::pass() {
 		std::cerr << "Ending the game\n";
 		playing = false;
 
-		getScore();
-		saveGame();
-
 		return true;
 	}
 
@@ -267,8 +258,6 @@ bool Board::pass() {
 	state_list.push_back(state_list.back());
 	state_list.back().back() = '1';
 	state_pointer = (int) state_list.size() - 1;
-
-	saveGame();
 
 	current_turn = 1 ^ current_turn;
 
@@ -278,13 +267,11 @@ bool Board::pass() {
 }
 
 void Board::resign() { 
-	std::cerr << "Player " << (current_turn ^ 1) + 1 << " won by resignation\n";
+	//std::cerr << "Player " << (current_turn ^ 1) + 1 << " won by resignation\n";
 	playing = false; 
 	
 	score[current_turn ^ 1] = 0x3f3f3f3f;
 	score[current_turn] = 0;
-
-	saveGame();
 }
 
 std::array <int, 2> Board::getScore() {
@@ -372,8 +359,8 @@ std::array <int, 2> Board::getScore() {
 	return score;
 }
 
-void Board::saveGame() {
-	const std::string fileName = std::string(PROJECT_DIR) + "assets/gopgn.txt";
+bool Board::saveGame() {
+	const std::string fileName = std::string(PROJECT_DIR) + "assets/game.cache";
 	std::ofstream fout(fileName);
 
 	/*
@@ -382,7 +369,7 @@ void Board::saveGame() {
 
 	if (!fout.is_open()) {
 		std::cerr << "Error: Can't save game\n";
-		return;
+		return false;
 	}
 		
 	/*
@@ -395,11 +382,13 @@ void Board::saveGame() {
 	fout << score[0] << ' ' << score[1] << '\n';
 
 	fout.close();
-	//std::cerr << "Saved successfully\n";
+
+	std::cerr << "Saved successfully\n";
+	return true;
 }
 
-void Board::loadGame() {
-	const std::string fileName = std::string(PROJECT_DIR) + "assets/gopgn.txt";
+bool Board::loadGame() {
+	const std::string fileName = std::string(PROJECT_DIR) + "assets/game.cache";
 	std::ifstream fin(fileName);
 
 	/*
@@ -410,7 +399,7 @@ void Board::loadGame() {
 
 	if (!fin.is_open() || fin.eof()) {
 		std::cerr << "Error: Can't load game\n";
-		return;
+		return false;
 	}
 
 	std::cerr << "Loaded successfully\n";
@@ -423,30 +412,13 @@ void Board::loadGame() {
 	}
 	fin >> score[0] >> score[1];
 
-	current_turn = stackSize % 2;
-
-	if (score[0] == -1 || score[1] == -1) {
+	current_turn = (state_pointer & 1);
+	playing = score[0] == -1 && score[1] == -1;
+	
+	if (playing) {
 		std::cerr << "Player " << (getTurn() + 1) << "'s turn\n";
 		std::cerr << (getPassState() ? "Already passed\n" : "No pass\n");
-
-		return;
 	}
 
-	if (score[0] == 0x3f3f3f3f) {
-		std::cout << "Player 1 won by resignation\n";
-	}
-	else if (score[1] == 0x3f3f3f3f) {
-		std::cout << "Player 2 won by resignation\n";
-	}
-	else {
-		std::cout << "Player 1: " << score[0] << '\n';
-		std::cout << "Player 2: " << score[1] << '\n';
-
-		if (score[0] == score[1]) {
-			std::cout << "Draw\n";
-		}
-		else {
-			std::cout << "Player " << (score[0] < score[1]) + 1 << " wins\n";
-		}
-	}
+	return true;
 }

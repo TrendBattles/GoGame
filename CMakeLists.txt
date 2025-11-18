@@ -18,7 +18,7 @@ target_sources(GoGame PRIVATE
   "src/MediaPlayer.cpp"
   "src/OptionMenu.cpp" 
   "src/AboutMenu.cpp" 
-  "src/GameUI.cpp")
+  "src/GameUI.cpp" "src/Popup.cpp")
 
 
 set(SFML_DIR "${CMAKE_SOURCE_DIR}/SFML/lib/cmake/SFML")

@@ -35,8 +35,8 @@ public:
 	void resign();
 	std::array <int, 2> getScore();
 
-	void saveGame();
-	void loadGame();
+	bool saveGame();
+	bool loadGame();
 private:
 	std::vector <std::string> state_list;
 

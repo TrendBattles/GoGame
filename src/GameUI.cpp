@@ -54,6 +54,9 @@ void GameUI::resetGame() {
 	board = Board();
 	board.setSize(9, 9);
 
+	savedEndGame = false;
+	endPopup.clearCache();
+
 	std::cerr << "Player 1's turn\n";
 }
 
@@ -63,20 +66,20 @@ void GameUI::setCenter(sf::Text& text) {
 }
 
 
-void GameUI::draw_back_button(sf::RenderWindow& appwindow) {
+void GameUI::draw_back_button(sf::RenderWindow& appWindow) {
 	// draw the text
 	sf::Text back_button(chinese_font);
 	back_button.setString("GO BACK");
 	back_button.setCharacterSize(25);
 	back_button.setFillColor(ui_color);
 	back_button.setPosition(sf::Vector2f(20, 20));
-	appwindow.draw(back_button);
+	appWindow.draw(back_button);
 }
 
-void GameUI::draw_UI(sf::RenderWindow& appwindow) {
+void GameUI::draw_UI(sf::RenderWindow& appWindow) {
 	sf::Sprite board_sprite(goboard);
 	board_sprite.setPosition(board_offset);
-	appwindow.draw(board_sprite);
+	appWindow.draw(board_sprite);
 
 	//Draw the go board
 	for(int r = 0; r < board.getSize().first; ++r)
@@ -90,7 +93,7 @@ void GameUI::draw_UI(sf::RenderWindow& appwindow) {
 
 			sf::Vector2u sz = go_piece[cur].getSize();
 			current_piece.setOrigin(sf::Vector2f(0.5f * sz.x, 0.5f * sz.y));
-			appwindow.draw(current_piece);
+			appWindow.draw(current_piece);
 		}
 	}
 }
@@ -141,12 +144,19 @@ void GameUI::draw_game_buttons(sf::RenderWindow& appWindow) {
 	Specific_Draw("LOAD", origin + buttonSize + sf::Vector2f(20, 20));
 }
 
-int GameUI::tryClickingAt(sf::Vector2f mouse_pos) {
+int GameUI::tryClickingAt(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos) {
 	//Go back
 	if (mouse_pos.x >= 0 && mouse_pos.x <= 150 && mouse_pos.y >= 0 && mouse_pos.y <= 40)
 		return 10;
 
-	if (!board.isInGame()) return -1;
+	//End game -> Disable functions and only check New Game ?
+	if (!board.isInGame()) {
+		if (endPopup.clickedOn(appWindow, "New Game?", mouse_pos)) {
+			resetGame();
+		}
+
+		return -1;
+	}
 
 	const float RADIUS = 25;
 
@@ -166,10 +176,13 @@ int GameUI::tryClickingAt(sf::Vector2f mouse_pos) {
 
 			std::string cur = board.getState();
 			int cnt = 0;
-			for (int i = 0; i < (int)tmp.size(); ++i)
+
+			//The last chacracter is the pass toggle
+			for (int i = 0; i < (int) tmp.size() - 1; ++i)
 				cnt += (cur[i] != tmp[i]);
 
 			if (cnt > 1) return 1;
+
 			return 0;
 		}
 	}
@@ -204,11 +217,11 @@ int GameUI::tryClickingAt(sf::Vector2f mouse_pos) {
 		return -1;
 	}
 
-	/*if (origin.x <= mouse_pos.x && mouse_pos.x <= origin.x + buttonSize.x && origin.y + buttonSize.y + 20 <= mouse_pos.y && mouse_pos.y <= origin.y + 2 * buttonSize.y + 20) {
+	if (origin.x <= mouse_pos.x && mouse_pos.x <= origin.x + buttonSize.x && origin.y + buttonSize.y + 20 <= mouse_pos.y && mouse_pos.y <= origin.y + 2 * buttonSize.y + 20) {
 		board.saveGame();
 
 		return -1;
-	}*/
+	}
 
 	origin += sf::Vector2f(buttonSize.x + 20, 0);
 
@@ -220,16 +233,19 @@ int GameUI::tryClickingAt(sf::Vector2f mouse_pos) {
 
 	if (origin.x <= mouse_pos.x && mouse_pos.x <= origin.x + buttonSize.x && origin.y + buttonSize.y + 20 <= mouse_pos.y && mouse_pos.y <= origin.y + 2 * buttonSize.y + 20) {
 		board.loadGame();
+		savedEndGame = false;
 
 		return -1;
 	}
 	return -1;
 }
 
-void GameUI::drawShadow(sf::RenderWindow& appwindow, sf::Vector2f mouse_pos) {
+void GameUI::drawShadow(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos) {
 	if (!board.isInGame()) return;
 
 	const float RADIUS = 25;
+
+	//Draw shadow if possible to place the piece in that cell
 
 	for (int r = 0; r < board.getSize().first; ++r) {
 		for (int c = 0; c < board.getSize().second; ++c) {
@@ -250,34 +266,52 @@ void GameUI::drawShadow(sf::RenderWindow& appwindow, sf::Vector2f mouse_pos) {
 
 			sf::Vector2u sz = go_piece[cur_turn].getSize();
 			current_piece.setOrigin(sf::Vector2f(0.5f * sz.x, 0.5f * sz.y));
-			appwindow.draw(current_piece);
+			appWindow.draw(current_piece);
 			return;
 		}
 	}
 }
 
-bool GameUI::annouceEndGame() {
-	if (board.isInGame()) return false;
+//void GameUI::annouceInGame(sf::RenderWindow& appWindow) {
+//	if (!board.isInGame()) return;
+//
+//
+//	messageBox.clearCache();
+//}
 
-	std::array <int, 2> score = board.getScore();
-	if (score[0] == 0x3f3f3f3f) {
-		std::cout << "Player 1 won by resignation\n";
-	}
-	else if (score[1] == 0x3f3f3f3f) {
-		std::cout << "Player 2 won by resignation\n";
-	}
-	else {
-		std::cout << "Player 1: " << score[0] << '\n';
-		std::cout << "Player 2: " << score[1] << '\n';
+void GameUI::annouceEndGame(sf::RenderWindow& appWindow) {
+	if (board.isInGame()) return;
 
-		if (score[0] == score[1]) {
-			std::cout << "Draw\n";
+	//GGWP, end game!
+
+	if (!savedEndGame) {
+		endPopup = Popup(sf::Vector2f(300, 200));
+
+		std::array <int, 2> score = board.getScore();
+
+		if (score[0] == 0x3f3f3f3f) {
+			endPopup.addObject("Player 1 won\nby resignation.", { 20, 20 });
+		}
+		else if (score[1] == 0x3f3f3f3f) {
+			endPopup.addObject("Player 2 won\nby resignation.", { 20, 20 });
 		}
 		else {
-			std::cout << "Player " << (score[0] < score[1]) + 1 << " wins\n";
+			endPopup.addObject("Player 1: " + std::to_string(score[0]), { 20, 20 });
+			endPopup.addObject("Player 2: " + std::to_string(score[1]), { 20, 60 });
+
+			if (score[0] == score[1]) {
+				endPopup.addObject("Draw", { 20, 100 });
+			}
+			else {
+				endPopup.addObject("Player " + std::to_string((score[0] < score[1]) + 1) + " wins", { 20, 100 });
+			}
 		}
+
+		endPopup.addObject("New Game?", { 75, 150 });
+
+		board.saveGame();
+		savedEndGame = true;
 	}
-	
-	board.saveGame();
-	return true;
+
+	endPopup.drawOn(appWindow);
 }

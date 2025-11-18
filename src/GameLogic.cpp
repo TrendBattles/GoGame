@@ -151,10 +151,11 @@ void handle_game_scene() {
 	gameui.draw_UI(appWindow);
 	gameui.draw_game_buttons(appWindow);
 
-	//gameui.annouceEndGame();
+	//gameui.annouceInGame(appWindow);
+	gameui.annouceEndGame(appWindow);
 
 	if (mouse_state == MouseState::CLICK) {
-		int signal = gameui.tryClickingAt(get_mouse_position());
+		int signal = gameui.tryClickingAt(appWindow, get_mouse_position());
 		if (signal != -1) {
 			if (signal == 10) {
 				current_scene = GameScene::MENU;

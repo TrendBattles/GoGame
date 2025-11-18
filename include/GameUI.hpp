@@ -3,20 +3,22 @@
 
 #include <SFML/Graphics.hpp>
 #include <Board.hpp>
+#include <PopUp.hpp>
 
 struct GameUI {
 public:
 	void init();
 	void resetGame();
 
-	void draw_back_button(sf::RenderWindow& appwindow);
-	void draw_UI(sf::RenderWindow& appwindow);
+	void draw_back_button(sf::RenderWindow& appWindow);
+	void draw_UI(sf::RenderWindow& appWindow);
 	void draw_game_buttons(sf::RenderWindow& appWindow);
 
-	int tryClickingAt(sf::Vector2f mouse_pos = sf::Vector2f{ 0, 0 });
-	void drawShadow(sf::RenderWindow& appwindow, sf::Vector2f mouse_pos = sf::Vector2f{ 0, 0 });
+	int tryClickingAt(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos = sf::Vector2f{ 0, 0 });
+	void drawShadow(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos = sf::Vector2f{ 0, 0 });
 
-	bool annouceEndGame();
+	//void annouceInGame(sf::RenderWindow& appWindow);
+	void annouceEndGame(sf::RenderWindow& appWindow);
 private:
 	sf::Font chinese_font, english_font;
 	sf::Color ui_color;
@@ -31,6 +33,13 @@ private:
 	sf::Vector2f PIECE_SCALE;
 	sf::Vector2f offset, board_offset;
 	sf::Vector2f gapX, gapY;
+
+	//End game texture
+	bool savedEndGame;
+	Popup endPopup;
+	
+	////Game Annoucement
+	//Popup messageBox;
 };
 
 #endif

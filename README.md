@@ -15,6 +15,7 @@ Textures: Bao
 Placing: Thanh, improved by Bao
 
 Game rules, functional buttons: Bao
+
 Saving PGNs, Loading PGNs: Bao
 
 

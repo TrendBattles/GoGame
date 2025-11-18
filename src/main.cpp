@@ -1,5 +1,6 @@
 #include <SFML/Graphics.hpp>
 #include <iostream>
+#include <Helper.hpp>
 
 sf::Vector2f get_mouse_position();
 sf::RenderWindow appWindow;
@@ -13,9 +14,7 @@ void handle_game_scene();
 void appLoop();
 
 int main(int argv, char* args[]) {
-	int width = 1000, height = 800;
-
-	appWindow = sf::RenderWindow(sf::VideoMode(sf::Vector2u(width, height)), "Go",
+	appWindow = sf::RenderWindow(sf::VideoMode(windowSize), "Go",
 		sf::Style::Titlebar | sf::Style::Close);
 
 	if (appWindow.isOpen() == false) {
