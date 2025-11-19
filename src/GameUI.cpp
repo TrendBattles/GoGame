@@ -43,23 +43,18 @@ void GameUI::init() {
 	//Pass
 	PIECE_SCALE = sf::Vector2f(0.4, 0.4);
 	offset = sf::Vector2f(40, 40);
-	board_offset = sf::Vector2f(200, 0);
+	board_offset = sf::Vector2f(150, 0);
 	gapX = sf::Vector2f(65, 0);
 	gapY = sf::Vector2f(0, 65);
 }
 
 //Gameplay initialization
 void GameUI::initGame() {
-	system("cls");
-
 	board = Board();
 	board.setSize(9, 9);
 
 	savedEndGame = false;
 	endPopup.clearCache();
-
-	std::cerr << "Player 1's turn\n";
-	std::cerr << "No pass\n";
 }
 
 void GameUI::resetGame() {
@@ -76,12 +71,15 @@ void GameUI::setCenter(sf::Text& text) {
 
 void GameUI::draw_back_button(sf::RenderWindow& appWindow) {
 	// draw the text
-	sf::Text back_button(chinese_font);
-	back_button.setString("GO BACK");
-	back_button.setCharacterSize(25);
-	back_button.setFillColor(ui_color);
-	back_button.setPosition(sf::Vector2f(20, 20));
-	appWindow.draw(back_button);
+	delete back_button;
+
+	back_button = new sf::Text(chinese_font);
+	back_button -> setString("GO BACK");
+	back_button -> setCharacterSize(25);
+	back_button -> setFillColor(ui_color);
+	back_button -> setPosition(sf::Vector2f(20, 20));
+
+	appWindow.draw(*back_button);
 }
 
 void GameUI::draw_UI(sf::RenderWindow& appWindow) {
@@ -154,12 +152,13 @@ void GameUI::draw_game_buttons(sf::RenderWindow& appWindow) {
 
 int GameUI::tryClickingAt(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos) {
 	//Go back
-	if (mouse_pos.x >= 0 && mouse_pos.x <= 150 && mouse_pos.y >= 0 && mouse_pos.y <= 40)
+	if (back_button->getGlobalBounds().contains(mouse_pos)) {
 		return 10;
+	}
 
 	//End game -> Disable functions and only check New Game ?
 	if (!board.isInGame()) {
-		if (endPopup.clickedOn(appWindow, "New Game?", mouse_pos)) {
+		if (endPopup.clickedOn( "New Game?", mouse_pos)) {
 			resetGame();
 		}
 
@@ -226,7 +225,7 @@ int GameUI::tryClickingAt(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos) {
 	}
 
 	if (origin.x <= mouse_pos.x && mouse_pos.x <= origin.x + buttonSize.x && origin.y + buttonSize.y + 20 <= mouse_pos.y && mouse_pos.y <= origin.y + 2 * buttonSize.y + 20) {
-		board.saveGame();
+		saveGame();
 
 		return -1;
 	}
@@ -240,7 +239,8 @@ int GameUI::tryClickingAt(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos) {
 	}
 
 	if (origin.x <= mouse_pos.x && mouse_pos.x <= origin.x + buttonSize.x && origin.y + buttonSize.y + 20 <= mouse_pos.y && mouse_pos.y <= origin.y + 2 * buttonSize.y + 20) {
-		board.loadGame();
+		loadGame();
+
 		savedEndGame = !board.isInGame();
 
 		return -1;
@@ -280,15 +280,73 @@ void GameUI::drawShadow(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos) {
 	}
 }
 
-//void GameUI::annouceInGame(sf::RenderWindow& appWindow) {
-//	if (!board.isInGame()) return;
-//
-//
-//	messageBox.clearCache();
-//}
+void GameUI::saveGame() {
+	switch (board.saveGame()) {
+		case FileStatus::Success:
+			fileNotification = "Saved\nsuccessfully";
+			break;
+		case FileStatus::FileNotFound:
+			fileNotification = "File not found";
+			break;
+		case FileStatus::CorruptedFile:
+			fileNotification = "Corrupted file";
+			break;
+		case FileStatus::WrongFormat:
+			fileNotification = "Wrong game's\nformat";
+			break;
+	}
 
+	notificationTimer.restart();
+}
+void GameUI::loadGame() {
+	switch (board.loadGame()) {
+		case FileStatus::Success:
+			fileNotification = "Loaded\nsuccessfully";
+			break;
+		case FileStatus::FileNotFound:
+			fileNotification = "File not found";
+			break;
+		case FileStatus::CorruptedFile:
+			fileNotification = "Corrupted file";
+			break;
+		case FileStatus::WrongFormat:
+			fileNotification = "Wrong game's\nformat";
+			break;
+	}
+
+	notificationTimer.restart();
+}
+
+//Showing whose turn is it and game saves/loads
+void GameUI::loadTurnIndicator() {
+	messageBox.setPosition(sf::Vector2f(board_offset.x + goboard.getSize().x, 0));
+
+	messageBox.setSize(sf::Vector2f(convertToFloat(virtualWindowSize).x - goboard.getSize().x, 400));
+
+	messageBox.addObject("Player " + std::to_string(board.getTurn() + 1) + "'s turn", { 20, 20 });
+	messageBox.addObject(board.getPassState() ? "Pass clicked" : "Pass unclicked", { 20, 60 });
+
+	if (notificationTimer.getElapsedTime() <= notificationDuration) {
+		messageBox.addObject(fileNotification, { 20, 140 });
+	}
+}
+
+//In-game Annoucement
+void GameUI::annouceInGame(sf::RenderWindow& appWindow) {
+	if (!board.isInGame()) return;
+
+	loadTurnIndicator();
+	messageBox.drawOn(appWindow);
+
+	messageBox.clearCache();
+}
+
+//End Popup
 void GameUI::loadEndPopup() {
-	endPopup = Popup(sf::Vector2f(300, 200));
+	endPopup = Popup();
+	endPopup.setSize(sf::Vector2f(300, 200));
+
+	endPopup.setPosition((convertToFloat(virtualWindowSize) - endPopup.getSize()) * 0.5f);
 
 	std::array <int, 2> score = board.getScore();
 
@@ -312,6 +370,8 @@ void GameUI::loadEndPopup() {
 
 	endPopup.addObject("New Game?", { 75, 150 });
 }
+
+//End-game annoucement
 void GameUI::annouceEndGame(sf::RenderWindow& appWindow) {
 	if (board.isInGame()) return;
 

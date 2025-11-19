@@ -16,21 +16,23 @@ Placing: Thanh, improved by Bao
 
 Game rules, functional buttons: Bao
 
+End-scoring: Bao
+
 Saving PGNs, Loading PGNs: Bao
 
 
-Work needed to be done next ❎:
-
--Gameplay:
-
-End-scoring
+Work needed to be done next ❎: (with priority)
 
 -UI:
 
-Background settings
+Background settings (3)
 
-Game mode options (AI, Board size)
+Game mode options (AI, Board size) (4, 1)
 
-Probably responsive design
+Game rules in menu. (2)
 
--AI difficulty
+Probably responsive design (5)
+
+-AI difficulty (4)
+
+

@@ -8,21 +8,24 @@
 
 class Popup {
 public:
-	Popup(sf::Vector2f targetSize = sf::Vector2f(0, 0));
+	Popup();
 
 	void setSize(sf::Vector2f targetSize = sf::Vector2f(0, 0));
+	void setPosition(sf::Vector2f targetPosition = sf::Vector2f(0, 0));
+
 	sf::Vector2f getSize();
+	sf::Vector2f getPosition();
 
 	void drawOn(sf::RenderWindow& appWindow);
 
 	void addObject(std::string message = "", sf::Vector2f offsetPosition = sf::Vector2f(0, 0));
-	bool clickedOn(sf::RenderWindow& appWindow, std::string message = "", sf::Vector2f mouse_pos = sf::Vector2f(0, 0));
+	bool clickedOn(std::string message = "", sf::Vector2f mouse_pos = sf::Vector2f(0, 0));
 
 	void clearCache();
 private:
 	sf::Font chinese_font, english_font;
 
 	std::vector <sf::Text> textBoxList;
-	sf::Vector2f size;
+	sf::RectangleShape background;
 };
 #endif

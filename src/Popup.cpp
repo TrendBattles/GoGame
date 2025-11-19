@@ -1,25 +1,34 @@
 #include <Popup.hpp>
 #include <Helper.hpp>
 
-
 //Initialization 
-Popup::Popup(sf::Vector2f targetSize) {
+Popup::Popup() {
 	const std::filesystem::path CHINESE_FONT_PATH =
 		std::filesystem::absolute(std::string(PROJECT_DIR) + "assets/Font/chinese.otf");
 	chinese_font.openFromFile(CHINESE_FONT_PATH.c_str());
 	const std::filesystem::path ENGLISH_FONT_PATH =
 		std::filesystem::absolute(std::string(PROJECT_DIR) + "assets/Font/english.otf");
 	english_font.openFromFile(ENGLISH_FONT_PATH.c_str());
-
-	setSize(targetSize);
+	
+	background.setFillColor(sf::Color(48, 48, 48, 200));
+	/*background.setOutlineThickness(2.f);
+	background.setOutlineColor(sf::Color(100, 100, 100, 160));*/
 }
 
 void Popup::setSize(sf::Vector2f targetSize) {
-	size = targetSize;
+	background.setSize(targetSize);
+}
+
+void Popup::setPosition(sf::Vector2f targetPosition) {
+	background.setPosition(targetPosition);
 }
 
 sf::Vector2f Popup::getSize() {
-	return size;
+	return background.getSize();
+}
+
+sf::Vector2f Popup::getPosition() {
+	return background.getPosition();
 }
 
 //Add text into popup
@@ -34,23 +43,18 @@ void Popup::addObject(std::string message, sf::Vector2f offsetPosition) {
 
 //Display
 void Popup::drawOn(sf::RenderWindow& appWindow) {
-	sf::RectangleShape PopupBackground(size);
-	PopupBackground.setPosition((convertToFloat(appWindow.getSize()) - size) * 0.5f);
-	PopupBackground.setFillColor(sf::Color(48, 48, 48, 200));
-	PopupBackground.setOutlineThickness(2.f);
-	PopupBackground.setOutlineColor(sf::Color(100, 100, 100, 160));
-
-	appWindow.draw(PopupBackground);
+	appWindow.draw(background);
 
 	for (sf::Text messageBox : textBoxList) {
-		messageBox.setPosition(messageBox.getPosition() + PopupBackground.getPosition());
+		messageBox.setPosition(messageBox.getPosition() + background.getPosition());
 		appWindow.draw(messageBox);
 	}
 }
 
 //Check if a text clicked on?
-bool Popup::clickedOn(sf::RenderWindow& appWindow, std::string message, sf::Vector2f mouse_pos) {
-	sf::Vector2f popupTopLeft = (convertToFloat(appWindow.getSize()) - size) * 0.5f;
+bool Popup::clickedOn(std::string message, sf::Vector2f mouse_pos) {
+	sf::Vector2f popupTopLeft = background.getPosition();
+
 	for (sf::Text messageBox : textBoxList) {
 		messageBox.setPosition(messageBox.getPosition() + popupTopLeft);
 

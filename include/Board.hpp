@@ -5,6 +5,13 @@
 #include <vector>
 #include <utility>
 
+static enum FileStatus {
+	Success = 0,
+	FileNotFound = 101,
+	CorruptedFile = 102,
+	WrongFormat = 103
+};
+
 class Board {
 public:
 	Board();
@@ -35,8 +42,8 @@ public:
 	void resign();
 	std::array <int, 2> getScore();
 
-	bool saveGame();
-	bool loadGame();
+	int saveGame();
+	int loadGame();
 private:
 	std::vector <std::string> state_list;
 
@@ -46,7 +53,7 @@ private:
 	bool current_turn;
 	bool playing;
 
-	std::array <int, 2> score;
+	std::array <int, 2> score, numCapture;
 };
 
 #endif
