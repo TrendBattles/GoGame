@@ -44,11 +44,6 @@ sf::Vector2f get_mouse_position() {
 	return convertToFloat(sf::Mouse::getPosition(appWindow));
 }
 
-//void load_texture() {
-//	const std::filesystem::path BOARD_PATH = std::filesystem::absolute(std::string(PROJECT_DIR) + "assets/board.png");
-//	const std::filesystem::path CHESS_PIECE = std::filesystem::absolute(std::string(PROJECT_DIR) + "assets/go_pieces.png");
-//}
-
 void appStart() {
 	sound_board.init();
 	sound_board.play_background_music();
@@ -151,9 +146,6 @@ void handle_game_scene() {
 	gameui.draw_UI(appWindow);
 	gameui.draw_game_buttons(appWindow);
 
-	//gameui.annouceInGame(appWindow);
-	gameui.annouceEndGame(appWindow);
-
 	if (mouse_state == MouseState::CLICK) {
 		int signal = gameui.tryClickingAt(appWindow, get_mouse_position());
 		if (signal != -1) {
@@ -165,21 +157,11 @@ void handle_game_scene() {
 			}
 		}
 	}
-	gameui.drawShadow(appWindow, get_mouse_position());
-	/*
-	gameui.drawBoard();
-	if (mouse_state == MouseState::CLICK) {
-		int cur = go_board.tryPlacingAt(get_mouse_position());
-		if (cur != -1) {
-			sound_board.play_audio((SoundEffect)cur);
-		}
-		mouse_state == MouseState::HOLD;
-	}
 
-	if (mouse_state == MouseState::RELEASE) {
-		go_board.drawShadow(get_mouse_position());
-	}
-	go_board.drawState();*/
+	gameui.annouceInGame(appWindow);
+	gameui.annouceEndGame(appWindow);
+
+	gameui.drawShadow(appWindow, get_mouse_position());
 }
 
 void appLoop() {

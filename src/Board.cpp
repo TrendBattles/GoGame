@@ -11,6 +11,7 @@ Board::Board() {
 	playing = true;
 
 	score = { -1, -1 };
+	numCapture = { 0, 0 };
 }
 
 
@@ -31,9 +32,6 @@ std::pair <int, int> Board::getSize() {
 void Board::placePieceAt(int x, int y) {
 	setState(x, y, current_turn);
 	current_turn = 1 ^ current_turn;
-
-	std::cerr << "Player " << (getTurn() + 1) << "'s turn\n";
-	std::cerr << (getPassState() ? "Already passed\n" : "No pass\n");
 }
 
 void Board::setState(int x, int y, int c) {
@@ -48,8 +46,10 @@ void Board::setState(int x, int y, int c) {
 	state_list.erase(state_list.begin() + state_pointer + 1, state_list.end());
 	std::vector <std::pair <int, int>> captured = capturedPositions(x, y, c);
 
+	numCapture[c] += (int)captured.size();
+
 	state_list.push_back(state_list.back());
-	state_list[++state_pointer][x * column + y] = c == -1 ? '.' : c + '0';
+	state_list[++state_pointer][x * column + y] = c + '0';
 
 	for (std::pair <int, int> point : captured) {
 		state_list[state_pointer][point.first * column + point.second] = '.';
@@ -99,10 +99,11 @@ std::vector <std::pair <int, int>> Board::findComponent(int x, int y, int cell_i
 		int i, j; std::tie(i, j) = _cell_queue[order];
 
 		for (int iter = 0; iter < 4; ++iter) {
-			if (getState(i + delta_x[iter], j + delta_y[iter]) != cell_id) continue;
-
 			int new_i = i + delta_x[iter];
 			int new_j = j + delta_y[iter];
+			
+			if (outsideBoard(new_i, new_j)) continue;
+			if (getState(new_i, new_j) != cell_id) continue;
 
 			if (visited[new_i][new_j]) continue;
 
@@ -227,8 +228,6 @@ bool Board::undo() {
 		current_turn = 1 ^ current_turn;
 		--state_pointer;
 
-		std::cerr << "Player " << (getTurn() + 1) << "'s turn\n";
-		std::cerr << (getPassState() ? "Already passed\n" : "No pass\n");
 		return true;
 	}
 	return false;
@@ -238,8 +237,6 @@ bool Board::redo() {
 		current_turn = 1 ^ current_turn;
 		++state_pointer;
 
-		std::cerr << "Player " << (getTurn() + 1) << "'s turn\n";
-		std::cerr << (getPassState() ? "Already passed\n" : "No pass\n");
 		return true;
 	}
 	return false;
@@ -260,9 +257,6 @@ bool Board::pass() {
 	state_pointer = (int) state_list.size() - 1;
 
 	current_turn = 1 ^ current_turn;
-
-	std::cerr << "Player " << (getTurn() + 1) << "'s turn\n";
-	std::cerr << (getPassState() ? "Already passed\n" : "No pass\n");
 	return false;
 }
 
@@ -282,84 +276,55 @@ std::array <int, 2> Board::getScore() {
 		If +inf -> won by resignation
 	*/
 	score = { 0, 0 };
-	std::string finalState = getState();
 	
-	for (int i = 0; i < row * column; ++i) {
-		if (finalState[i] != '.') score[finalState[i] - '0'] += 1;
+	for (int i = 0; i < row; ++i) {
+		for (int j = 0; j < column; ++j) {
+			if (getState(i, j) != -1) score[getState(i, j)] += 1;
+		}
 	}
 	
+	score[0] += numCapture[0];
+	score[1] += numCapture[1];
 
-	/*std::vector <std::vector <int>> visited(row, std::vector <int>(column));*/
+	/*
+		Score = (number of pieces on board) + (number of captured pieces) + (empty cells covered entirely)
+	*/
 	
-	/*
-		Score = (number of pieces on board) + (empty_cells covered)
-		(later I guess)
-	*/
+	int delta_x[4] = { -1, +1, 0, 0 };
+	int delta_y[4] = { 0, 0, -1, +1 };
 
-	/*
-		- Remove all dead pieces
-		- Then, remove the all pieces that are surrounded by opponent pieces and adjacent to less than two eyes.
-	*/
-
-	/*auto checkDeadState = [&] (std::pair <int, int> source) -> void {
-		int cell_id = finalState[source.first * column + source.second] - '0';
-
-		std::vector <std::pair <int, int>> component;
-		visited[source.first][source.second] = true;
-
-		component.emplace_back(source);
-
-		int delta_x[4] = { -1, +1, 0, 0 };
-		int delta_y[4] = { 0, 0, -1, +1 };
-
-		for (int p = 0; p < (int)component.size(); ++p) {
-			int x, y; std::tie(x, y) = component[p];
-
-			for (int dir = 0; dir < 4; ++dir) {
-				int new_x = x + delta_x[dir], new_y = y + delta_y[dir];
-
-				if (outsideBoard(new_x, new_y) || visited[new_x][new_y]) continue;
-
-				if (finalState[new_x * column + new_y] - '0' == cell_id) {
-					visited[new_x][new_y] = true;
-					component.emplace_back(new_x, new_y);
-				}
-			}
-		}
-
-		int any_liberty = false;
-		for (std::pair <int, int> P : component) {
-			for (int dir = 0; dir < 4; ++dir) {
-				int adj_x = P.first + delta_x[dir], adj_y = P.second + delta_y[dir];
-
-				if (outsideBoard(adj_x, adj_y)) continue;
-
-				any_liberty |= finalState[adj_x * column + adj_y] == '.';
-			}
-		}
-
-		if (any_liberty) return;
-		for (std::pair <int, int> P : component) {
-			finalState[P.first * column + P.second] = '.';
-		}
-	};
+	std::vector <std::vector <int>> visited(row, std::vector <int>(column));
 
 	for (int i = 0; i < row; ++i) {
 		for (int j = 0; j < column; ++j) {
-			if (finalState[i * column + j] == '.') continue;
+			if (getState(i, j) != -1 || visited[i][j]) continue;
 
-			if (visited[i][j]) continue;
+			std::vector <std::pair <int, int>> empty_component = findComponent(i, j, -1);
 
-			checkDeadState(std::make_pair(i, j));
+			int adjColorMask = 0;
+
+			for (std::pair <int, int> P : empty_component) {
+				visited[P.first][P.second] = true;
+
+				for (int dir = 0; dir < 4; ++dir) {
+					int adj_x = P.first + delta_x[dir], adj_y = P.second + delta_y[dir];
+
+					if (getState(adj_x, adj_y) != -1) adjColorMask |= 1 << getState(adj_x, adj_y);
+				}
+			}
+
+			if (adjColorMask == 1) score[0] += (int)empty_component.size();
+			if (adjColorMask == 2) score[1] += (int)empty_component.size();
 		}
-	}*/
+	}
 
-
+	//The second player will get 8 points
+	score[1] += 8;
 
 	return score;
 }
 
-bool Board::saveGame() {
+int Board::saveGame() {
 	const std::string fileName = std::string(PROJECT_DIR) + "assets/game.cache";
 	std::ofstream fout(fileName);
 
@@ -368,8 +333,7 @@ bool Board::saveGame() {
 	*/
 
 	if (!fout.is_open()) {
-		std::cerr << "Error: Can't save game\n";
-		return false;
+		return FileStatus::FileNotFound;
 	}
 		
 	/*
@@ -380,14 +344,13 @@ bool Board::saveGame() {
 	for (std::string st : state_list) fout << st << '\n';
 
 	fout << score[0] << ' ' << score[1] << '\n';
-
+	fout << numCapture[0] << ' ' << numCapture[1] << '\n';
 	fout.close();
 
-	std::cerr << "Saved successfully\n";
-	return true;
+	return FileStatus::Success;
 }
 
-bool Board::loadGame() {
+int Board::loadGame() {
 	const std::string fileName = std::string(PROJECT_DIR) + "assets/game.cache";
 	std::ifstream fin(fileName);
 
@@ -395,30 +358,47 @@ bool Board::loadGame() {
 		Loading games
 	*/
 
-	system("cls");
-
 	if (!fin.is_open() || fin.eof()) {
-		std::cerr << "Error: Can't load game\n";
-		return false;
+		return FileStatus::FileNotFound;
 	}
-
-	std::cerr << "Loaded successfully\n";
 	
-	int stackSize; fin >> stackSize >> state_pointer;
-	state_list.assign(stackSize, "");
+	int stackSize; 
+	try {
+		fin >> stackSize >> state_pointer;
+		if (stackSize <= 0 || stackSize <= state_pointer) throw std::invalid_argument("Zero-Negative stack size/Invalid stack pointer index.");
+		
+		state_list.assign(stackSize, "");
 
-	for (int i = 0; i < stackSize; ++i) {
-		fin >> state_list[i];
+		for (int i = 0; i < stackSize; ++i) {
+			fin >> state_list[i];
+
+			if ((int)state_list[i].length() != row * column + 1) throw std::invalid_argument("Incompatible board size.");
+
+			for (char x : state_list[i]) {
+				if (x != '.' && x != '0' && x != '1') throw std::invalid_argument("Invalid cell state. Found " + std::to_string(x));
+			}
+		}
+
+		fin >> score[0] >> score[1];
+		fin >> numCapture[0] >> numCapture[1];
+
+		current_turn = (state_pointer & 1);
+		playing = score[0] == -1 && score[1] == -1;
 	}
-	fin >> score[0] >> score[1];
+	catch (const std::invalid_argument& e) {
+		std::cerr << "Format Error: " << e.what() << "\n";
+		return FileStatus::WrongFormat;
+	}
+	catch (const std::runtime_error& e) {
+		std::cerr << "Runtime error: " << e.what() << "\n";
+		return FileStatus::CorruptedFile;
+	}
+	catch (const std::exception& e) {
+		std::cerr << "Exception: " << e.what() << '\n';
+		return FileStatus::CorruptedFile;
+	}
 
-	current_turn = (state_pointer & 1);
-	playing = score[0] == -1 && score[1] == -1;
 	
-	if (playing) {
-		std::cerr << "Player " << (getTurn() + 1) << "'s turn\n";
-		std::cerr << (getPassState() ? "Already passed\n" : "No pass\n");
-	}
 
-	return true;
+	return FileStatus::Success;
 }
