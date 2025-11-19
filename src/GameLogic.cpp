@@ -100,7 +100,7 @@ void handle_menu() {
 		switch (new_signal) {
 			case 0:
 				current_scene = GameScene::GAME;
-				gameui.resetGame();
+				gameui.initGame();
 				break;
 			case 1:
 				current_scene = GameScene::OPTION;

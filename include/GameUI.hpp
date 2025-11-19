@@ -8,6 +8,7 @@
 struct GameUI {
 public:
 	void init();
+	void initGame();
 	void resetGame();
 
 	void draw_back_button(sf::RenderWindow& appWindow);
@@ -18,6 +19,7 @@ public:
 	void drawShadow(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos = sf::Vector2f{ 0, 0 });
 
 	//void annouceInGame(sf::RenderWindow& appWindow);
+	void loadEndPopup();
 	void annouceEndGame(sf::RenderWindow& appWindow);
 private:
 	sf::Font chinese_font, english_font;

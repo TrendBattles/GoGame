@@ -48,7 +48,8 @@ void GameUI::init() {
 	gapY = sf::Vector2f(0, 65);
 }
 
-void GameUI::resetGame() {
+//Gameplay initialization
+void GameUI::initGame() {
 	system("cls");
 
 	board = Board();
@@ -58,6 +59,13 @@ void GameUI::resetGame() {
 	endPopup.clearCache();
 
 	std::cerr << "Player 1's turn\n";
+	std::cerr << "No pass\n";
+}
+
+void GameUI::resetGame() {
+	initGame();
+	
+	board.saveGame();
 }
 
 void GameUI::setCenter(sf::Text& text) {
@@ -233,7 +241,7 @@ int GameUI::tryClickingAt(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos) {
 
 	if (origin.x <= mouse_pos.x && mouse_pos.x <= origin.x + buttonSize.x && origin.y + buttonSize.y + 20 <= mouse_pos.y && mouse_pos.y <= origin.y + 2 * buttonSize.y + 20) {
 		board.loadGame();
-		savedEndGame = false;
+		savedEndGame = !board.isInGame();
 
 		return -1;
 	}
@@ -279,36 +287,39 @@ void GameUI::drawShadow(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos) {
 //	messageBox.clearCache();
 //}
 
+void GameUI::loadEndPopup() {
+	endPopup = Popup(sf::Vector2f(300, 200));
+
+	std::array <int, 2> score = board.getScore();
+
+	if (score[0] == 0x3f3f3f3f) {
+		endPopup.addObject("Player 1 won\nby resignation.", { 20, 20 });
+	}
+	else if (score[1] == 0x3f3f3f3f) {
+		endPopup.addObject("Player 2 won\nby resignation.", { 20, 20 });
+	}
+	else {
+		endPopup.addObject("Player 1: " + std::to_string(score[0]), { 20, 20 });
+		endPopup.addObject("Player 2: " + std::to_string(score[1]), { 20, 60 });
+
+		if (score[0] == score[1]) {
+			endPopup.addObject("Draw", { 20, 100 });
+		}
+		else {
+			endPopup.addObject("Player " + std::to_string((score[0] < score[1]) + 1) + " wins", { 20, 100 });
+		}
+	}
+
+	endPopup.addObject("New Game?", { 75, 150 });
+}
 void GameUI::annouceEndGame(sf::RenderWindow& appWindow) {
 	if (board.isInGame()) return;
 
 	//GGWP, end game!
 
+	loadEndPopup();
+
 	if (!savedEndGame) {
-		endPopup = Popup(sf::Vector2f(300, 200));
-
-		std::array <int, 2> score = board.getScore();
-
-		if (score[0] == 0x3f3f3f3f) {
-			endPopup.addObject("Player 1 won\nby resignation.", { 20, 20 });
-		}
-		else if (score[1] == 0x3f3f3f3f) {
-			endPopup.addObject("Player 2 won\nby resignation.", { 20, 20 });
-		}
-		else {
-			endPopup.addObject("Player 1: " + std::to_string(score[0]), { 20, 20 });
-			endPopup.addObject("Player 2: " + std::to_string(score[1]), { 20, 60 });
-
-			if (score[0] == score[1]) {
-				endPopup.addObject("Draw", { 20, 100 });
-			}
-			else {
-				endPopup.addObject("Player " + std::to_string((score[0] < score[1]) + 1) + " wins", { 20, 100 });
-			}
-		}
-
-		endPopup.addObject("New Game?", { 75, 150 });
-
 		board.saveGame();
 		savedEndGame = true;
 	}
