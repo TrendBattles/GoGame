@@ -11,7 +11,6 @@ Board::Board() {
 	playing = true;
 
 	score = { -1, -1 };
-	numCapture = { 0, 0 };
 }
 
 
@@ -23,6 +22,7 @@ void Board::setSize(int _i_row, int _i_column) {
 	state_pointer = 0;
 	state_list.assign(1, std::string(row * column, '.'));
 	state_list.back().push_back('0');
+	numCapture.assign(1, { 0, 0 });
 }
 
 std::pair <int, int> Board::getSize() {
@@ -45,11 +45,14 @@ void Board::setState(int x, int y, int c) {
 
 	state_list.erase(state_list.begin() + state_pointer + 1, state_list.end());
 	std::vector <std::pair <int, int>> captured = capturedPositions(x, y, c);
-
-	numCapture[c] += (int)captured.size();
+	
+	numCapture.erase(numCapture.begin() + state_pointer + 1, numCapture.end());
+	numCapture.push_back(numCapture.back());
+	
 
 	state_list.push_back(state_list.back());
 	state_list[++state_pointer][x * column + y] = c + '0';
+	numCapture[state_pointer][c] += (int)captured.size();
 
 	for (std::pair <int, int> point : captured) {
 		state_list[state_pointer][point.first * column + point.second] = '.';
@@ -245,7 +248,6 @@ bool Board::redo() {
 bool Board::pass() {
 	//End-scoring?
 	if (getPassState()) {
-		std::cerr << "Ending the game\n";
 		playing = false;
 
 		return true;
@@ -254,6 +256,10 @@ bool Board::pass() {
 	state_list.erase(state_list.begin() + state_pointer + 1, state_list.end());
 	state_list.push_back(state_list.back());
 	state_list.back().back() = '1';
+
+	numCapture.erase(numCapture.begin() + state_pointer + 1, numCapture.end());
+	numCapture.push_back(numCapture.back());
+	
 	state_pointer = (int) state_list.size() - 1;
 
 	current_turn = 1 ^ current_turn;
@@ -264,8 +270,20 @@ void Board::resign() {
 	//std::cerr << "Player " << (current_turn ^ 1) + 1 << " won by resignation\n";
 	playing = false; 
 	
+	state_list.erase(state_list.begin() + state_pointer + 1, state_list.end());
+	state_list.push_back(state_list.back());
+
+	numCapture.erase(numCapture.begin() + state_pointer + 1, numCapture.end());
+	numCapture.push_back(numCapture.back());
+
+	state_pointer = (int)state_list.size() - 1;
+
 	score[current_turn ^ 1] = 0x3f3f3f3f;
 	score[current_turn] = 0;
+}
+
+std::array <int, 2> Board::getCapture() {
+	return numCapture[state_pointer];
 }
 
 std::array <int, 2> Board::getScore() {
@@ -283,8 +301,8 @@ std::array <int, 2> Board::getScore() {
 		}
 	}
 	
-	score[0] += numCapture[0];
-	score[1] += numCapture[1];
+	score[0] += getCapture()[0];
+	score[1] += getCapture()[1];
 
 	/*
 		Score = (number of pieces on board) + (number of captured pieces) + (empty cells covered entirely)
@@ -341,10 +359,11 @@ int Board::saveGame() {
 		state_list
 	*/
 	fout << (int)state_list.size() << ' ' << state_pointer << '\n';
-	for (std::string st : state_list) fout << st << '\n';
+	for (std::string& st : state_list) fout << st << '\n';
+
+	for (std::array <int, 2>& data : numCapture) fout << data[0] << ' ' << data[1] << '\n';
 
 	fout << score[0] << ' ' << score[1] << '\n';
-	fout << numCapture[0] << ' ' << numCapture[1] << '\n';
 	fout.close();
 
 	return FileStatus::Success;
@@ -379,8 +398,12 @@ int Board::loadGame() {
 			}
 		}
 
+		numCapture.assign(stackSize, {0, 0});
+		for (int i = 0; i < stackSize; ++i) {
+			fin >> numCapture[i][0] >> numCapture[i][1];
+		}
+
 		fin >> score[0] >> score[1];
-		fin >> numCapture[0] >> numCapture[1];
 
 		current_turn = (state_pointer & 1);
 		playing = score[0] == -1 && score[1] == -1;

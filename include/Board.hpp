@@ -40,6 +40,8 @@ public:
 	bool pass();
 
 	void resign();
+	
+	std::array <int, 2> getCapture();
 	std::array <int, 2> getScore();
 
 	int saveGame();
@@ -53,7 +55,8 @@ private:
 	bool current_turn;
 	bool playing;
 
-	std::array <int, 2> score, numCapture;
+	std::array <int, 2> score;
+	std::vector <std::array <int, 2>> numCapture;
 };
 
 #endif

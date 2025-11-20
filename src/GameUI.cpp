@@ -60,7 +60,7 @@ void GameUI::initGame() {
 void GameUI::resetGame() {
 	initGame();
 	
-	board.saveGame();
+	saveGame();
 }
 
 void GameUI::setCenter(sf::Text& text) {
