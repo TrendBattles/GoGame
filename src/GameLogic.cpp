@@ -6,6 +6,7 @@ Log:
 */
 
 #include <Helper.hpp>
+#include <GameLogic.hpp>
 #include <Menu.hpp>
 #include <OptionMenu.hpp>
 #include <AboutMenu.hpp>
