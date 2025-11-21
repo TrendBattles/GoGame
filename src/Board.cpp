@@ -396,8 +396,6 @@ int Board::loadGame() {
 	std::vector <std::array <int, 2>> stackCapture;
 	std::array <int, 2> tempScore;
 
-	system("cls");
-
 	try {
 		fin >> stackSize >> stack_pointer;
 		if (stackSize <= 0 || stackSize <= stack_pointer) throw std::invalid_argument("Zero-Negative stack size/Invalid stack pointer index.");

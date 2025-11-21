@@ -21,7 +21,7 @@ struct GameConfig {
 class GameUI {
 public:
 	void init();
-	void initGame(int autoSaveFlag = 0);
+	void initGame();
 	void resetGame();
 
 	void draw_back_button(sf::RenderWindow& appWindow);
@@ -40,6 +40,11 @@ public:
 
 	void loadEndPopup();
 	void annouceEndGame(sf::RenderWindow& appWindow);
+
+	void autoSave();
+	void autoLoad();
+
+	void setAutoSaveToggle(int x);
 private:
 	//Initial textures
 	sf::Font chinese_font, english_font;

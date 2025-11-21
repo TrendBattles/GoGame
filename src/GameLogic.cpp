@@ -48,7 +48,6 @@ sf::Vector2f get_mouse_position() {
 void appStart() {
 	sound_board.init();
 	sound_board.play_background_music();
-	//load_texture();
 	mouse_state = MouseState::RELEASE;
 	current_scene = GameScene::MENU;
 
@@ -96,7 +95,7 @@ void handle_menu() {
 		switch (new_signal) {
 			case 0:
 				current_scene = GameScene::GAME;
-				gameui.initGame(optionmenu.getSaveToggle());
+				gameui.initGame();
 				break;
 			case 1:
 				current_scene = GameScene::OPTION;
@@ -113,6 +112,9 @@ void handle_option_menu() {
 	optionmenu.draw_back_button(appWindow);
 	sound_board.setAudioVolume(optionmenu.getSoundVolume() * 20);
 	sound_board.setMusicVolume(optionmenu.getMusicVolume() * 20);
+
+	int autoSaveToggle = optionmenu.getSaveToggle();
+	gameui.setAutoSaveToggle(autoSaveToggle);
 
 	if (mouse_state == MouseState::CLICK) {
 		int signal = optionmenu.tryClickingAt(get_mouse_position());
@@ -143,6 +145,7 @@ void handle_about_menu() {
 }
 
 void handle_game_scene() {
+	gameui.setAutoSaveToggle(optionmenu.getSaveToggle());
 	gameui.draw_back_button(appWindow);
 	gameui.draw_option_button(appWindow);
 	gameui.draw_UI(appWindow);
@@ -150,6 +153,7 @@ void handle_game_scene() {
 
 	if (mouse_state == MouseState::CLICK) {
 		int signal = gameui.tryClickingAt(appWindow, get_mouse_position());
+		gameui.autoSave();
 		if (signal != -1) {
 			switch (signal) {
 				case 10:

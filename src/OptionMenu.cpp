@@ -21,7 +21,7 @@ void OptionMenu::init() {
 
 	music_volume = 2;
 	sound_volume = 5;
-	autoSaveToggle = 0;
+	autoSaveToggle = 1;
 }
 
 void OptionMenu::setCenter(sf::Text& text) {

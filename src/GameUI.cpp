@@ -54,16 +54,17 @@ void GameUI::init() {
 	}
 
 	PIECE_SCALE = sf::Vector2f(0.4, 0.4);
+
+	autoSaveToggle = 1;
 }
 
 //Gameplay initialization
-void GameUI::initGame(int autoSaveFlag) {
+void GameUI::initGame() {
 	board = Board();
 	gameConfig = GameConfig(0);
-
-
-	autoSaveToggle = autoSaveFlag;
 	board.setSize(gameConfig.gridSize, gameConfig.gridSize);
+	
+	autoLoad();
 	
 	PIECE_SCALE = sf::Vector2f(gameConfig.stoneRadius() / (go_piece[0].getSize().x * 0.5f), gameConfig.stoneRadius() / (go_piece[0].getSize().y * 0.5f));
 
@@ -71,7 +72,7 @@ void GameUI::initGame(int autoSaveFlag) {
 	endPopup.clearCache();
 
 	fileNotification = "";
-	system("cls");
+	//system("cls");
 }
 
 void GameUI::resetGame() {
@@ -442,8 +443,6 @@ void GameUI::loadEndPopup() {
 void GameUI::annouceEndGame(sf::RenderWindow& appWindow) {
 	if (board.isInGame()) return;
 
-	//GGWP, end game!
-
 	loadEndPopup();
 
 	if (!savedEndGame) {
@@ -452,4 +451,21 @@ void GameUI::annouceEndGame(sf::RenderWindow& appWindow) {
 	}
 
 	endPopup.drawOn(appWindow);
+}
+
+void GameUI::autoSave() {
+	if (autoSaveToggle) {
+		board.saveGame();
+	}
+}
+
+
+void GameUI::autoLoad() {
+	if (autoSaveToggle) {
+		board.loadGame();
+	}
+}
+
+void GameUI::setAutoSaveToggle(int x) {
+	autoSaveToggle = x;
 }
