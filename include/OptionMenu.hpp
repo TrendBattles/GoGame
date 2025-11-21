@@ -6,13 +6,14 @@
 class OptionMenu {
 public:
 	void init();
-	void draw_volume_button(sf::RenderWindow& appwindow);
+	void draw_feature_button(sf::RenderWindow& appwindow);
 	void draw_back_button(sf::RenderWindow& appwindow);
 	int tryClickingAt(sf::Vector2f mousepos);
 
 	int getMusicVolume();
 	int getSoundVolume();
 
+	int getSaveToggle();
 private:
 	sf::Font font;
 	sf::Vector2f horizontal_offset, vertical_offset, gap;
@@ -23,6 +24,9 @@ private:
 
 	int music_volume;
 	int sound_volume;
+
+	int autoSaveToggle;
+	sf::Text* autoSaveAlert;
 
 	void setCenter(sf::Text& text);
 };

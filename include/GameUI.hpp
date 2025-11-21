@@ -21,7 +21,7 @@ struct GameConfig {
 class GameUI {
 public:
 	void init();
-	void initGame();
+	void initGame(int autoSaveFlag = 0);
 	void resetGame();
 
 	void draw_back_button(sf::RenderWindow& appWindow);
@@ -51,6 +51,7 @@ private:
 	//In-game parameters
 	Board board;
 	GameConfig gameConfig;
+	int autoSaveToggle;
 
 	sf::Vector2f PIECE_SCALE;
 	

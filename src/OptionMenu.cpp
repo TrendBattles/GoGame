@@ -14,13 +14,14 @@ void OptionMenu::init() {
 	ui_color = sf::Color::White;
 
 
-	text_offset = sf::Vector2f(-100, 0);
+	text_offset = sf::Vector2f(-150, 0);
 	content_offset = sf::Vector2f(40, 0);
 	volume_btn_size = sf::Vector2f(30, 20);
 	button_gap = sf::Vector2f(35, 0);
 
 	music_volume = 2;
 	sound_volume = 5;
+	autoSaveToggle = 0;
 }
 
 void OptionMenu::setCenter(sf::Text& text) {
@@ -28,20 +29,26 @@ void OptionMenu::setCenter(sf::Text& text) {
 	text.setOrigin(bounds.size * 0.5f);;
 }
 
-void OptionMenu::draw_volume_button(sf::RenderWindow& appwindow) {
+void OptionMenu::draw_feature_button(sf::RenderWindow& appwindow) {
 	// draw the text
-	sf::Text music(font), sound(font);
+	sf::Text music(font), sound(font), autoSave(font);
 	music.setString("MUSIC"); sound.setString("SOUND");
+	autoSave.setString("AUTOSAVE");
 
-	music.setCharacterSize(30); sound.setCharacterSize(30);
+	//music.setCharacterSize(30); sound.setCharacterSize(30);
 	music.setFillColor(ui_color); sound.setFillColor(ui_color);
+	autoSave.setFillColor(ui_color);
+
 	music.setPosition(horizontal_offset + vertical_offset + text_offset);
 	sound.setPosition(horizontal_offset + vertical_offset + gap + text_offset);
+	autoSave.setPosition(horizontal_offset + vertical_offset + gap * 2.0f + text_offset);
 
 	setCenter(music); setCenter(sound);
+	setCenter(autoSave);
 
 	appwindow.draw(music);
 	appwindow.draw(sound);
+	appwindow.draw(autoSave);
 
 
 	for (int r = 0; r <= 1; ++r) {
@@ -68,6 +75,15 @@ void OptionMenu::draw_volume_button(sf::RenderWindow& appwindow) {
 			appwindow.draw(rect);
 		}
 	}
+
+	delete autoSaveAlert;
+	autoSaveAlert = new sf::Text(font);
+	
+	autoSaveAlert->setString(autoSaveToggle ? "ON" : "OFF");
+	autoSaveAlert->setPosition(vertical_offset + horizontal_offset + gap * 2.0f + button_gap * 2.5f);
+	setCenter(*autoSaveAlert);
+
+	appwindow.draw(*autoSaveAlert);
 }
 
 
@@ -81,7 +97,6 @@ void OptionMenu::draw_back_button(sf::RenderWindow& appwindow) {
 	back_button.setPosition(sf::Vector2f(20, 20));
 
 	appwindow.draw(back_button);
-
 }
 
 int OptionMenu::tryClickingAt(sf::Vector2f mouse_pos) {
@@ -106,6 +121,11 @@ int OptionMenu::tryClickingAt(sf::Vector2f mouse_pos) {
 		}
 	}
 
+	if (autoSaveAlert->getGlobalBounds().contains(mouse_pos)) {
+		autoSaveToggle ^= 1;
+		return -1;
+	}
+
 	if (mouse_pos.x >= 0 && mouse_pos.x <= 150 && mouse_pos.y >= 0 && mouse_pos.y <= 40) 
 		return 1;
 	return -1;
@@ -113,3 +133,4 @@ int OptionMenu::tryClickingAt(sf::Vector2f mouse_pos) {
 
 int OptionMenu::getMusicVolume() { return music_volume; }
 int OptionMenu::getSoundVolume() { return sound_volume; }
+int OptionMenu::getSaveToggle() { return autoSaveToggle;  }

@@ -27,10 +27,10 @@ enum MouseState {
 };
 
 enum GameScene {
-	MENU = 0,
-	GAME = 1,
-	OPTION = 2,
-	ABOUT = 3
+	MENU = 0b0001,
+	GAME = 0b0010,
+	OPTION = 0b0100,
+	ABOUT = 0b1000
 };
 
 GameScene current_scene;
@@ -96,7 +96,7 @@ void handle_menu() {
 		switch (new_signal) {
 			case 0:
 				current_scene = GameScene::GAME;
-				gameui.initGame();
+				gameui.initGame(optionmenu.getSaveToggle());
 				break;
 			case 1:
 				current_scene = GameScene::OPTION;
@@ -109,7 +109,7 @@ void handle_menu() {
 
 
 void handle_option_menu() {
-	optionmenu.draw_volume_button(appWindow);
+	optionmenu.draw_feature_button(appWindow);
 	optionmenu.draw_back_button(appWindow);
 	sound_board.setAudioVolume(optionmenu.getSoundVolume() * 20);
 	sound_board.setMusicVolume(optionmenu.getMusicVolume() * 20);

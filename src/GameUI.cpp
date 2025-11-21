@@ -57,16 +57,20 @@ void GameUI::init() {
 }
 
 //Gameplay initialization
-void GameUI::initGame() {
+void GameUI::initGame(int autoSaveFlag) {
 	board = Board();
 	gameConfig = GameConfig(0);
 
+
+	autoSaveToggle = autoSaveFlag;
 	board.setSize(gameConfig.gridSize, gameConfig.gridSize);
+	
 	PIECE_SCALE = sf::Vector2f(gameConfig.stoneRadius() / (go_piece[0].getSize().x * 0.5f), gameConfig.stoneRadius() / (go_piece[0].getSize().y * 0.5f));
 
 	savedEndGame = false;
 	endPopup.clearCache();
 
+	fileNotification = "";
 	system("cls");
 }
 
@@ -223,6 +227,10 @@ int GameUI::tryClickingAt(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos) {
 			
 			std::string tmp = board.getState();
 			board.placePieceAt(r, c);
+
+
+			//AutoSaving
+			if (autoSaveToggle) saveGame();
 
 			std::string cur = board.getState();
 			int cnt = 0;
