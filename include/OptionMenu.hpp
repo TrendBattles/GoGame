@@ -19,6 +19,8 @@ public:
 	void loadConfig();
 	void saveConfig();
 	void initConfigFile();
+
+	int getAttribute(std::string name);
 private:
 	sf::Font chinese_font, english_font;
 	sf::Vector2f horizontal_offset, vertical_offset, gap;

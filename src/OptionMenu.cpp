@@ -30,8 +30,7 @@ void OptionMenu::init() {
 
 	selection_section.clear();
 	selection_section.push_back("BOARD SIZE");
-	selection_section.push_back("BG MUSIC");
-	selection_section.push_back("SFX KIT");
+	selection_section.push_back("MUSIC THEME");
 
 	option_chosen.resize(selection_section.size());
 	selection_option.resize(selection_section.size());
@@ -40,14 +39,9 @@ void OptionMenu::init() {
 	selection_option[0].push_back("13 x 13");
 	selection_option[0].push_back("19 x 19");
 
-	selection_option[1].push_back("Quirky");
 	selection_option[1].push_back("Chill");
 	selection_option[1].push_back("Futuristic");
-
-
-	selection_option[2].push_back("Standard");
-	selection_option[2].push_back("Retro");
-
+	selection_option[1].push_back("Ancient");;
 
 	loadConfig();
 }
@@ -83,7 +77,7 @@ void OptionMenu::loadConfig() {
 
 	for (int i = 0; i < (int)selection_section.size(); ++i) {
 		int x; fin >> x;
-		if (fin.eof()) {
+		if (fin.eof() || x >= selection_option[i].size()) {
 			std::cerr << "tryna reading files failed" << std::endl;
 			fin.close();
 			initConfigFile();
@@ -202,57 +196,6 @@ void OptionMenu::draw_selection_button(sf::RenderWindow& appwindow) {
 
 		buttons.emplace_back(current_option);
 	}
-	
-	/*
-	//music.setCharacterSize(30); sound.setCharacterSize(30);
-	music.setFillColor(ui_color); sound.setFillColor(ui_color);
-	autoSave.setFillColor(ui_color);
-
-	music.setPosition(horizontal_offset + vertical_offset + text_offset);
-	sound.setPosition(horizontal_offset + vertical_offset + gap + text_offset);
-	autoSave.setPosition(horizontal_offset + vertical_offset + gap * 2.0f + text_offset);
-
-	setCenter(music); setCenter(sound);
-	setCenter(autoSave);
-
-	appwindow.draw(music);
-	appwindow.draw(sound);
-	appwindow.draw(autoSave);
-
-
-	for (int r = 0; r <= 1; ++r) {
-		int threshold;
-		if (r == 0) threshold = music_volume;
-		if (r == 1) threshold = sound_volume;
-		for (int c = 1; c <= 5; ++c) {
-			sf::RectangleShape rect(volume_btn_size);
-			rect.setOrigin(volume_btn_size * 0.5f);
-
-			if (c <= threshold) {
-				rect.setFillColor(ui_color);
-				rect.setOutlineColor(ui_color);
-			}
-			else {
-				rect.setFillColor(sf::Color::Black);
-				rect.setOutlineColor(sf::Color::Black);
-			}
-
-			sf::Vector2f cur_pos =
-				vertical_offset + horizontal_offset + button_gap * float(c) + gap * float(r);
-			rect.setPosition(cur_pos);
-
-			appwindow.draw(rect);
-		}
-	}
-
-	delete autoSaveAlert;
-	autoSaveAlert = new sf::Text(font);
-
-	autoSaveAlert->setString(autoSaveToggle ? "ON" : "OFF");
-	autoSaveAlert->setPosition(vertical_offset + horizontal_offset + gap * 2.0f + button_gap * 2.5f);
-	setCenter(*autoSaveAlert);
-
-	appwindow.draw(*autoSaveAlert);*/
 }
 
 void OptionMenu::draw_back_button(sf::RenderWindow& appwindow) {
@@ -309,6 +252,16 @@ int OptionMenu::tryClickingAt(sf::Vector2f mouse_pos) {
 	return -1;
 }
 
+
+int OptionMenu::getAttribute(std::string name) {
+	for (int i = 0; i < (int)selection_section.size(); ++i) {
+		if (selection_section[i] == name)
+			return option_chosen[i];
+	}
+	return -1;
+}
+
 int OptionMenu::getMusicVolume() { return music_volume; }
 int OptionMenu::getSoundVolume() { return sound_volume; }
 int OptionMenu::getSaveToggle() { return autoSaveToggle;  }
+

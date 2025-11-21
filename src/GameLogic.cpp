@@ -1,8 +1,6 @@
-/*
-
+ /*
 Log:
 - Added the functionality that tell me when I place the piece, what action was it (move, capture, illegal).
-
 */
 
 #include <Helper.hpp>
@@ -46,8 +44,6 @@ sf::Vector2f get_mouse_position() {
 }
 
 void appStart() {
-	sound_board.init();
-	sound_board.play_background_music();
 	mouse_state = MouseState::RELEASE;
 	current_scene = GameScene::MENU;
 
@@ -55,6 +51,13 @@ void appStart() {
 	optionmenu.init();
 	aboutmenu.init();
 	gameui.init();
+
+	sound_board.init();
+	sound_board.setAudioType(optionmenu.getAttribute("MUSIC THEME") + 1);
+	sound_board.play_background_music();
+
+	sound_board.setAudioVolume(optionmenu.getSoundVolume() * 20);
+	sound_board.setMusicVolume(optionmenu.getMusicVolume() * 20);
 }
 
 int pollEvent() { // if window is closed, return 0
@@ -126,6 +129,9 @@ void handle_option_menu() {
 				current_scene = GameScene::MENU;
 				break;
 		}
+
+		sound_board.setAudioType(optionmenu.getAttribute("MUSIC THEME") + 1);
+		sound_board.play_background_music();
 	}
 }
 
