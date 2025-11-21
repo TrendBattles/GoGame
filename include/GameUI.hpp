@@ -5,13 +5,27 @@
 #include <Board.hpp>
 #include <PopUp.hpp>
 
-struct GameUI {
+struct GameConfig {
+	GameConfig(int stateSize = 0);
+
+	int piece_offset();
+	float board_offset();
+	float stoneRadius();
+
+	int boardEdge = 576, borderLimit = 600;
+	int gridSize;
+
+	sf::Vector2f boardTopLeft;
+};
+
+class GameUI {
 public:
 	void init();
 	void initGame();
 	void resetGame();
 
 	void draw_back_button(sf::RenderWindow& appWindow);
+	void draw_option_button(sf::RenderWindow& appWindow);
 	void draw_UI(sf::RenderWindow& appWindow);
 	void draw_game_buttons(sf::RenderWindow& appWindow);
 
@@ -30,16 +44,15 @@ private:
 	//Initial textures
 	sf::Font chinese_font, english_font;
 	sf::Color ui_color;
-	sf::Texture goboard;
 	std::array <sf::Texture, 2> go_piece;
 
 	void setCenter(sf::Text& text);
 
 	//In-game parameters
 	Board board;
+	GameConfig gameConfig;
+
 	sf::Vector2f PIECE_SCALE;
-	sf::Vector2f offset, board_offset;
-	sf::Vector2f gapX, gapY;
 	
 	std::string fileNotification; //Save/Load notifications
 	sf::Clock notificationTimer;
@@ -47,8 +60,8 @@ private:
 
 
 	//Game function buttons
-	std::vector <sf::Texture> functional_buttons;
 	sf::Text* back_button;
+	sf::Text* option_button;
 
 	//End-game texture
 	bool savedEndGame;

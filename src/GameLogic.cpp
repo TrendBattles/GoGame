@@ -144,17 +144,23 @@ void handle_about_menu() {
 
 void handle_game_scene() {
 	gameui.draw_back_button(appWindow);
+	gameui.draw_option_button(appWindow);
 	gameui.draw_UI(appWindow);
 	gameui.draw_game_buttons(appWindow);
 
 	if (mouse_state == MouseState::CLICK) {
 		int signal = gameui.tryClickingAt(appWindow, get_mouse_position());
 		if (signal != -1) {
-			if (signal == 10) {
-				current_scene = GameScene::MENU;
-			}
-			else {
-				sound_board.play_audio((SoundEffect)signal);
+			switch (signal) {
+				case 10:
+					current_scene = GameScene::MENU;
+					break;
+				case 20:
+					current_scene = GameScene::MENU;
+					break;
+				default:
+					sound_board.play_audio((SoundEffect)signal);
+					break;
 			}
 		}
 	}

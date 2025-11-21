@@ -3,7 +3,7 @@
 
 #include <SFML/Graphics.hpp>
 
-struct Menu {
+class Menu {
 public:
 	void init();
 	void draw_game_text(sf::RenderWindow &appwindow);

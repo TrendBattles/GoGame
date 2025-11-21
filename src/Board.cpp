@@ -235,6 +235,10 @@ bool Board::undo() {
 	}
 	return false;
 }
+void Board::undoAll() {
+	state_pointer = 0;
+	current_turn = state_pointer & 1;
+}
 bool Board::redo() {
 	if (state_pointer + 1 < (int)state_list.size()) {
 		current_turn = 1 ^ current_turn;
@@ -243,6 +247,10 @@ bool Board::redo() {
 		return true;
 	}
 	return false;
+}
+void Board::redoAll() {
+	state_pointer = (int)state_list.size() - 1;
+	current_turn = state_pointer & 1;
 }
 
 bool Board::pass() {
@@ -382,31 +390,36 @@ int Board::loadGame() {
 	}
 	
 	int stackSize; 
+	int stack_pointer;
+	std::vector <std::string> stack_list;
+
+	std::vector <std::array <int, 2>> stackCapture;
+	std::array <int, 2> tempScore;
+
+	system("cls");
+
 	try {
-		fin >> stackSize >> state_pointer;
-		if (stackSize <= 0 || stackSize <= state_pointer) throw std::invalid_argument("Zero-Negative stack size/Invalid stack pointer index.");
+		fin >> stackSize >> stack_pointer;
+		if (stackSize <= 0 || stackSize <= stack_pointer) throw std::invalid_argument("Zero-Negative stack size/Invalid stack pointer index.");
 		
-		state_list.assign(stackSize, "");
+		stack_list.assign(stackSize, "");
 
 		for (int i = 0; i < stackSize; ++i) {
-			fin >> state_list[i];
+			fin >> stack_list[i];
 
-			if ((int)state_list[i].length() != row * column + 1) throw std::invalid_argument("Incompatible board size.");
+			if ((int)stack_list[i].length() != row * column + 1) throw std::invalid_argument("Incompatible board size.");
 
-			for (char x : state_list[i]) {
+			for (char x : stack_list[i]) {
 				if (x != '.' && x != '0' && x != '1') throw std::invalid_argument("Invalid cell state. Found " + std::to_string(x));
 			}
 		}
 
-		numCapture.assign(stackSize, {0, 0});
+		stackCapture.assign(stackSize, {0, 0});
 		for (int i = 0; i < stackSize; ++i) {
-			fin >> numCapture[i][0] >> numCapture[i][1];
+			fin >> stackCapture[i][0] >> stackCapture[i][1];
 		}
 
-		fin >> score[0] >> score[1];
-
-		current_turn = (state_pointer & 1);
-		playing = score[0] == -1 && score[1] == -1;
+		fin >> tempScore[0] >> tempScore[1];
 	}
 	catch (const std::invalid_argument& e) {
 		std::cerr << "Format Error: " << e.what() << "\n";
@@ -422,6 +435,14 @@ int Board::loadGame() {
 	}
 
 	
+	state_pointer = stack_pointer;
+	state_list = stack_list;
+	numCapture = stackCapture;
+
+	score = tempScore;
+
+	current_turn = (state_pointer & 1);
+	playing = score[0] == -1 && score[1] == -1;
 
 	return FileStatus::Success;
 }

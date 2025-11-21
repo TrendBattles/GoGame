@@ -36,7 +36,7 @@ void Popup::addObject(std::string message, sf::Vector2f offsetPosition) {
 	sf::Text messageBox(english_font);
 	messageBox.setString(message);
 	messageBox.setPosition(offsetPosition);
-	//messageBox.setCharacterSize(25);
+	messageBox.setCharacterSize(25);
 
 	textBoxList.emplace_back(messageBox);
 }

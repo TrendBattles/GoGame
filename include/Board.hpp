@@ -36,7 +36,9 @@ public:
 	bool getPassState();
 
 	bool undo();
+	void undoAll();
 	bool redo();
+	void redoAll();
 	bool pass();
 
 	void resign();
