@@ -109,6 +109,7 @@ void handle_menu() {
 
 void handle_option_menu() {
 	optionmenu.draw_feature_button(appWindow);
+	optionmenu.draw_selection_button(appWindow);
 	optionmenu.draw_back_button(appWindow);
 	sound_board.setAudioVolume(optionmenu.getSoundVolume() * 20);
 	sound_board.setMusicVolume(optionmenu.getMusicVolume() * 20);

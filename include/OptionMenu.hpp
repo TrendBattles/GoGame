@@ -7,6 +7,7 @@ class OptionMenu {
 public:
 	void init();
 	void draw_feature_button(sf::RenderWindow& appwindow);
+	void draw_selection_button(sf::RenderWindow& appwindow);
 	void draw_back_button(sf::RenderWindow& appwindow);
 	int tryClickingAt(sf::Vector2f mousepos);
 
@@ -19,7 +20,7 @@ public:
 	void saveConfig();
 	void initConfigFile();
 private:
-	sf::Font font;
+	sf::Font chinese_font, english_font;
 	sf::Vector2f horizontal_offset, vertical_offset, gap;
 	sf::Vector2f text_offset, content_offset, button_gap;
 	sf::Color ui_color;
@@ -33,6 +34,11 @@ private:
 	sf::Text* autoSaveAlert;
 
 	void setCenter(sf::Text& text);
+
+	std::vector<std::string> selection_section;
+	std::vector<int> option_chosen;
+	std::vector<std::vector<std::string>> selection_option;
+	std::vector<sf::Text> buttons;
 };
 
 #endif
