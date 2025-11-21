@@ -32,6 +32,8 @@ private:
 	int music_volume;
 	int sound_volume;
 
+	sf::Text* back_button;
+
 	int autoSaveToggle;
 	sf::Text* autoSaveAlert;
 

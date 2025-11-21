@@ -5,6 +5,26 @@ double sqr(double x) {
 	return x * x;
 }
 
+//Converting time to print on the screen
+std::string convertTime(sf::Time askTime) {
+	if (askTime >= sf::seconds(60.0f)) {
+		int seconds = std::ceil(askTime.asSeconds());
+		int minutes = seconds / 60;
+		seconds %= 60;
+
+		return std::to_string(minutes) + ":" + std::to_string(seconds / 10) + std::to_string(seconds % 10);
+	}
+
+	int milliseconds = askTime.asMilliseconds();
+	milliseconds = (milliseconds + 99) / 100;
+
+	int seconds = milliseconds / 10;
+	milliseconds %= 10;
+	
+	if (seconds >= 10) return std::to_string(seconds / 10) + std::to_string(seconds % 10) + "." + std::to_string(milliseconds);
+	return std::to_string(seconds) + "." + std::to_string(milliseconds);
+}
+
 sf::Vector2f convertToFloat(sf::Vector2i cur) {
 	return sf::Vector2f((float)cur.x, (float)cur.y);
 }

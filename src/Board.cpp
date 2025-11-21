@@ -9,6 +9,7 @@ Board::Board() {
 	current_turn = 0;
 	state_pointer = 0;
 	playing = true;
+	moveLimit = 0;
 
 	score = { -1, -1 };
 }
@@ -81,6 +82,19 @@ bool Board::outsideBoard(int x, int y) {
 
 bool Board::getTurn() {
 	return current_turn;
+}
+
+//Set the game to be continued or not
+void Board::setGame(bool gameOn) {
+	playing = gameOn;
+}
+
+void Board::setMoveLimit(int target) {
+	//Set move limit (50 minimum)
+	moveLimit = target;
+}
+int Board::getPointer() {
+	return state_pointer;
 }
 
 std::vector <std::pair <int, int>> Board::findComponent(int x, int y, int cell_id) {
@@ -209,8 +223,11 @@ std::string Board::getState() {
 bool Board::isInGame() {
 	if (!playing) return false;
 	//If pass 2 times or resign -> End already
-	//No possible moves -> Also end game
+	
+	//If move limit set, check if the stack size exceeds move limit.
+	if (moveLimit > 0 && getPointer() / 2 >= moveLimit) return false;
 
+	//No possible moves -> Also end game
 	std::string current_pgn = getState();
 	for (char x : current_pgn) {
 		if (x == '.') {
@@ -366,7 +383,7 @@ int Board::saveGame() {
 		stack size - pointer
 		state_list
 	*/
-	fout << (int)state_list.size() << ' ' << state_pointer << '\n';
+	fout << (int)state_list.size() << ' ' << state_pointer << ' ' << moveLimit << '\n';
 	for (std::string& st : state_list) fout << st << '\n';
 
 	for (std::array <int, 2>& data : numCapture) fout << data[0] << ' ' << data[1] << '\n';
@@ -385,21 +402,26 @@ int Board::loadGame() {
 		Loading games
 	*/
 
+	system("cls");
+
 	if (!fin.is_open() || fin.eof()) {
 		return FileStatus::FileNotFound;
 	}
 	
 	int stackSize; 
 	int stack_pointer;
+	int stackLimit;
 	std::vector <std::string> stack_list;
 
 	std::vector <std::array <int, 2>> stackCapture;
 	std::array <int, 2> tempScore;
 
 	try {
-		fin >> stackSize >> stack_pointer;
+		fin >> stackSize >> stack_pointer >> stackLimit;
 		if (stackSize <= 0 || stackSize <= stack_pointer) throw std::invalid_argument("Zero-Negative stack size/Invalid stack pointer index.");
 		
+		if (stackLimit != moveLimit) throw std::invalid_argument("Different move limits");
+
 		stack_list.assign(stackSize, "");
 
 		for (int i = 0; i < stackSize; ++i) {
@@ -435,6 +457,7 @@ int Board::loadGame() {
 	
 	state_pointer = stack_pointer;
 	state_list = stack_list;
+	moveLimit = stackLimit;
 	numCapture = stackCapture;
 
 	score = tempScore;
@@ -443,4 +466,19 @@ int Board::loadGame() {
 	playing = score[0] == -1 && score[1] == -1;
 
 	return FileStatus::Success;
+}
+
+void Board::clearGame() {
+	state_list.clear();
+	numCapture.clear();
+
+	current_turn = 0;
+	state_pointer = 0;
+	playing = true;
+
+	score = { -1, -1 };
+
+	state_list.assign(1, std::string(row * column, '.'));
+	state_list.back().push_back('0');
+	numCapture.assign(1, { 0, 0 });
 }

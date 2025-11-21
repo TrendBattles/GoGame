@@ -24,6 +24,11 @@ public:
 	bool outsideBoard(int x, int y);
 	bool getTurn();
 	
+	void setGame(bool gameOn = true);
+	void setMoveLimit(int target = 50);
+
+	int getPointer();
+	
 	std::vector <std::pair <int, int>> findComponent(int x, int y, int cell_id);
 	std::vector <std::pair <int, int>> capturedPositions(int x, int y, bool turn);
 	
@@ -48,6 +53,8 @@ public:
 
 	int saveGame();
 	int loadGame();
+	void clearGame();
+
 private:
 	std::vector <std::string> state_list;
 
@@ -56,6 +63,8 @@ private:
 	int row = -1, column = -1;
 	bool current_turn;
 	bool playing;
+
+	int moveLimit;
 
 	std::array <int, 2> score;
 	std::vector <std::array <int, 2>> numCapture;

@@ -8,7 +8,7 @@ Progress so far ✅:
 
 Game menu, game options: Thanh
 
-Textures: Bao
+Textures: Thanh
 
 -Gameplay:
 
@@ -25,14 +25,14 @@ Work needed to be done next ❎: (with priority)
 
 -UI:
 
-Background settings (3)
+Add Quit button (1)
 
-Game mode options (AI, Board size) (4, 1)
+Background settings (4)
+
+Game mode options (AI) (3)
 
 Game rules in menu. (2)
 
 Probably responsive design (5)
-
--AI difficulty (4)
 
 

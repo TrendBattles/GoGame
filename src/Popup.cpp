@@ -32,13 +32,24 @@ sf::Vector2f Popup::getPosition() {
 }
 
 //Add text into popup
-void Popup::addObject(std::string message, sf::Vector2f offsetPosition) {
+void Popup::addObject(std::string message, sf::Vector2f offsetPosition, sf::Color textColor) {
 	sf::Text messageBox(english_font);
 	messageBox.setString(message);
 	messageBox.setPosition(offsetPosition);
 	messageBox.setCharacterSize(25);
 
+	messageBox.setFillColor(textColor);
+
 	textBoxList.emplace_back(messageBox);
+}
+
+void Popup::addObject(sf::Text builtMessage) {
+	textBoxList.emplace_back(builtMessage);
+}
+
+
+void Popup::setBackgroundColor(sf::Color bgColor) {
+	background.setFillColor(bgColor);
 }
 
 //Display

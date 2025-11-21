@@ -61,24 +61,35 @@ void GameUI::init() {
 //Gameplay initialization
 void GameUI::initGame() {
 	board = Board();
-	gameConfig = GameConfig(0);
+	gameConfig = GameConfig(boardOption);
 	board.setSize(gameConfig.gridSize, gameConfig.gridSize);
+	board.setMoveLimit(moveLimit);
 	
+	//When initialized, force to remove the message
+	fileNotification = "";
+
+	//Loading the game
 	autoLoad();
-	
+
+	//Initialize the clock
+	if (timeLimitSet) {
+		timeRemaining[0] = timeRemaining[1] = timeLimit;
+		deltaClock.restart();
+	}
+
 	PIECE_SCALE = sf::Vector2f(gameConfig.stoneRadius() / (go_piece[0].getSize().x * 0.5f), gameConfig.stoneRadius() / (go_piece[0].getSize().y * 0.5f));
 
 	savedEndGame = false;
 	endPopup.clearCache();
-
-	fileNotification = "";
-	//system("cls");
 }
 
 void GameUI::resetGame() {
-	initGame();
-	
+	//Remove traces of the last game in the file
+	board.clearGame();
 	saveGame();
+
+	//Load the game
+	initGame();
 }
 
 void GameUI::setCenter(sf::Text& text) {
@@ -98,19 +109,6 @@ void GameUI::draw_back_button(sf::RenderWindow& appWindow) {
 	back_button -> setPosition(sf::Vector2f(20, 20));
 
 	appWindow.draw(*back_button);
-}
-
-void GameUI::draw_option_button(sf::RenderWindow& appWindow) {
-	// draw the text
-	delete option_button;
-
-	option_button = new sf::Text(chinese_font);
-	option_button->setString("OPTIONS");
-	option_button->setCharacterSize(25);
-	option_button->setFillColor(ui_color);
-	option_button->setPosition(sf::Vector2f(869, 20));
-
-	appWindow.draw(*option_button);
 }
 
 void GameUI::draw_UI(sf::RenderWindow& appWindow) {
@@ -183,15 +181,23 @@ void GameUI::draw_game_buttons(sf::RenderWindow& appWindow) {
 		appWindow.draw(passText);
 	};
 	
-	Specific_Draw("SAVE", sf::Vector2f(20, 369));
-	Specific_Draw("LOAD", sf::Vector2f(20, 369 + buttonSize.y + 20));
-	Specific_Draw("PASS", sf::Vector2f(20, 369 + 2 * (buttonSize.y + 20)));
-	Specific_Draw("RESIGN", sf::Vector2f(20, 369 + 3 * (buttonSize.y + 20)));
+	if (!timeLimitSet) {
+		//Case for no time limit
+		Specific_Draw("SAVE", sf::Vector2f(90, 369));
+		Specific_Draw("LOAD", sf::Vector2f(90, 369 + buttonSize.y + 20));
+		Specific_Draw("PASS", sf::Vector2f(90, 369 + 2 * (buttonSize.y + 20)));
+		Specific_Draw("RESIGN", sf::Vector2f(90, 369 + 3 * (buttonSize.y + 20)));
 
-	Specific_Draw("UNDO", sf::Vector2f(gameConfig.boardTopLeft.x + gameConfig.borderLimit + 20, 369));
-	Specific_Draw("REDO", sf::Vector2f(gameConfig.boardTopLeft.x + gameConfig.borderLimit + 20, 369 + buttonSize.y + 20));
-	Specific_Draw("UNDO ALL", sf::Vector2f(gameConfig.boardTopLeft.x + gameConfig.borderLimit + 20, 369 + 2 * (buttonSize.y + 20)));
-	Specific_Draw("REDO ALL", sf::Vector2f(gameConfig.boardTopLeft.x + gameConfig.borderLimit + 20, 369 + 3 * (buttonSize.y + 20)));
+		Specific_Draw("UNDO", sf::Vector2f(gameConfig.boardTopLeft.x + gameConfig.borderLimit + 70, 369));
+		Specific_Draw("REDO", sf::Vector2f(gameConfig.boardTopLeft.x + gameConfig.borderLimit + 70, 369 + buttonSize.y + 20));
+		Specific_Draw("UNDO ALL", sf::Vector2f(gameConfig.boardTopLeft.x + gameConfig.borderLimit + 70, 369 + 2 * (buttonSize.y + 20)));
+		Specific_Draw("REDO ALL", sf::Vector2f(gameConfig.boardTopLeft.x + gameConfig.borderLimit + 70, 369 + 3 * (buttonSize.y + 20)));
+	}
+	else {
+		int totalLength = buttonSize.x * 2 + 50;
+		Specific_Draw("PASS", sf::Vector2f(gameConfig.boardTopLeft.x + (gameConfig.borderLimit - totalLength) * 0.5f, gameConfig.boardTopLeft.y + gameConfig.borderLimit + 20));
+		Specific_Draw("RESIGN", sf::Vector2f(gameConfig.boardTopLeft.x + (gameConfig.borderLimit - totalLength) * 0.5f + buttonSize.x + 50, gameConfig.boardTopLeft.y + gameConfig.borderLimit + 20));
+	}
 }
 
 int GameUI::tryClickingAt(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos) {
@@ -200,9 +206,6 @@ int GameUI::tryClickingAt(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos) {
 		return 10;
 	}
 
-	if (option_button->getGlobalBounds().contains(mouse_pos)) {
-		return 20;
-	}
 
 	//End game -> Disable functions and only check New Game ?
 	if (!board.isInGame()) {
@@ -224,8 +227,9 @@ int GameUI::tryClickingAt(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos) {
 				return 2;
 			}
 
-			// check if there were capture, really inefficient.
-			
+			//Bonus time
+			if (timeLimitSet) addTime(board.getTurn());
+
 			std::string tmp = board.getState();
 			board.placePieceAt(r, c);
 
@@ -236,6 +240,7 @@ int GameUI::tryClickingAt(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos) {
 			std::string cur = board.getState();
 			int cnt = 0;
 
+			// check if there were capture, really inefficient.
 			//The last chacracter is the pass toggle
 			for (int i = 0; i < (int) tmp.size() - 1; ++i)
 				cnt += (cur[i] != tmp[i]);
@@ -247,69 +252,103 @@ int GameUI::tryClickingAt(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos) {
 	}
 	
 	sf::Vector2f buttonSize(155, 75);
-	sf::Vector2f funcButton(20, 369);
 
-	//Save region
-	if ((mouse_pos.x - funcButton.x) * (mouse_pos.x - (funcButton.x + buttonSize.x)) <= 0 && (mouse_pos.y - funcButton.y) * (mouse_pos.y - (funcButton.y + buttonSize.y)) <= 0) {
-		saveGame();
-		return -1;
+	if (!timeLimitSet) {
+		//No time limit
+		sf::Vector2f funcButton(90, 369);
+
+		//Save region
+		if ((mouse_pos.x - funcButton.x) * (mouse_pos.x - (funcButton.x + buttonSize.x)) <= 0 && (mouse_pos.y - funcButton.y) * (mouse_pos.y - (funcButton.y + buttonSize.y)) <= 0) {
+			saveGame();
+			return -1;
+		}
+
+		funcButton += sf::Vector2f(0, buttonSize.y + 20);
+
+		//Load region
+		if ((mouse_pos.x - funcButton.x) * (mouse_pos.x - (funcButton.x + buttonSize.x)) <= 0 && (mouse_pos.y - funcButton.y) * (mouse_pos.y - (funcButton.y + buttonSize.y)) <= 0) {
+			loadGame();
+			return -1;
+		}
+
+		funcButton += sf::Vector2f(0, buttonSize.y + 20);
+
+		//Pass region
+		if ((mouse_pos.x - funcButton.x) * (mouse_pos.x - (funcButton.x + buttonSize.x)) <= 0 && (mouse_pos.y - funcButton.y) * (mouse_pos.y - (funcButton.y + buttonSize.y)) <= 0) {
+			board.pass();
+
+			if (autoSaveToggle) saveGame();
+			return -1;
+		}
+
+		funcButton += sf::Vector2f(0, buttonSize.y + 20);
+
+		//Resign region
+		if ((mouse_pos.x - funcButton.x) * (mouse_pos.x - (funcButton.x + buttonSize.x)) <= 0 && (mouse_pos.y - funcButton.y) * (mouse_pos.y - (funcButton.y + buttonSize.y)) <= 0) {
+			board.resign();
+			return -1;
+		}
+
+		funcButton = sf::Vector2f(gameConfig.boardTopLeft.x + gameConfig.borderLimit + 70, 369);
+
+		//Undo region
+		if ((mouse_pos.x - funcButton.x) * (mouse_pos.x - (funcButton.x + buttonSize.x)) <= 0 && (mouse_pos.y - funcButton.y) * (mouse_pos.y - (funcButton.y + buttonSize.y)) <= 0) {
+			board.undo();
+
+			if (autoSaveToggle) saveGame();
+			return -1;
+		}
+
+		funcButton += sf::Vector2f(0, buttonSize.y + 20);
+
+		//Redo region
+		if ((mouse_pos.x - funcButton.x) * (mouse_pos.x - (funcButton.x + buttonSize.x)) <= 0 && (mouse_pos.y - funcButton.y) * (mouse_pos.y - (funcButton.y + buttonSize.y)) <= 0) {
+			board.redo();
+
+			if (autoSaveToggle) saveGame();
+			return -1;
+		}
+
+		funcButton += sf::Vector2f(0, buttonSize.y + 20);
+
+		//Undo All region
+		if ((mouse_pos.x - funcButton.x) * (mouse_pos.x - (funcButton.x + buttonSize.x)) <= 0 && (mouse_pos.y - funcButton.y) * (mouse_pos.y - (funcButton.y + buttonSize.y)) <= 0) {
+			board.undoAll();
+
+			if (autoSaveToggle) saveGame();
+			return -1;
+		}
+
+		funcButton += sf::Vector2f(0, buttonSize.y + 20);
+
+		//Redo All region
+		if ((mouse_pos.x - funcButton.x) * (mouse_pos.x - (funcButton.x + buttonSize.x)) <= 0 && (mouse_pos.y - funcButton.y) * (mouse_pos.y - (funcButton.y + buttonSize.y)) <= 0) {
+			board.redoAll();
+
+			if (autoSaveToggle) saveGame();
+			return -1;
+		}
 	}
+	else {
+		int totalLength = buttonSize.x * 2 + 50;
 
-	funcButton += sf::Vector2f(0, buttonSize.y + 20);
+		sf::Vector2f funcButton = sf::Vector2f(gameConfig.boardTopLeft.x + (gameConfig.borderLimit - totalLength) * 0.5f, gameConfig.boardTopLeft.y + gameConfig.borderLimit + 20);
+		
+		//Pass region
+		if ((mouse_pos.x - funcButton.x) * (mouse_pos.x - (funcButton.x + buttonSize.x)) <= 0 && (mouse_pos.y - funcButton.y) * (mouse_pos.y - (funcButton.y + buttonSize.y)) <= 0) {
+			board.pass();
+			return -1;
+		}
+		
+		funcButton += sf::Vector2f(buttonSize.x + 50, 0);
 
-	//Load region
-	if ((mouse_pos.x - funcButton.x) * (mouse_pos.x - (funcButton.x + buttonSize.x)) <= 0 && (mouse_pos.y - funcButton.y) * (mouse_pos.y - (funcButton.y + buttonSize.y)) <= 0) {
-		loadGame();
-		return -1;
+		//Resign region
+		if ((mouse_pos.x - funcButton.x) * (mouse_pos.x - (funcButton.x + buttonSize.x)) <= 0 && (mouse_pos.y - funcButton.y) * (mouse_pos.y - (funcButton.y + buttonSize.y)) <= 0) {
+			board.resign();
+			return -1;
+		}
 	}
-
-	funcButton += sf::Vector2f(0, buttonSize.y + 20);
-
-	//Pass region
-	if ((mouse_pos.x - funcButton.x) * (mouse_pos.x - (funcButton.x + buttonSize.x)) <= 0 && (mouse_pos.y - funcButton.y) * (mouse_pos.y - (funcButton.y + buttonSize.y)) <= 0) {
-		board.pass();
-		return -1;
-	}
-
-	funcButton += sf::Vector2f(0, buttonSize.y + 20);
-
-	//Resign region
-	if ((mouse_pos.x - funcButton.x) * (mouse_pos.x - (funcButton.x + buttonSize.x)) <= 0 && (mouse_pos.y - funcButton.y) * (mouse_pos.y - (funcButton.y + buttonSize.y)) <= 0) {
-		board.resign();
-		return -1;
-	}
-
-	funcButton = sf::Vector2f(gameConfig.boardTopLeft.x + gameConfig.borderLimit + 20, 369);
-
-	//Undo region
-	if ((mouse_pos.x - funcButton.x) * (mouse_pos.x - (funcButton.x + buttonSize.x)) <= 0 && (mouse_pos.y - funcButton.y) * (mouse_pos.y - (funcButton.y + buttonSize.y)) <= 0) {
-		board.undo();
-		return -1;
-	}
-
-	funcButton += sf::Vector2f(0, buttonSize.y + 20);
-
-	//Redo region
-	if ((mouse_pos.x - funcButton.x) * (mouse_pos.x - (funcButton.x + buttonSize.x)) <= 0 && (mouse_pos.y - funcButton.y) * (mouse_pos.y - (funcButton.y + buttonSize.y)) <= 0) {
-		board.redo();
-		return -1;
-	}
-
-	funcButton += sf::Vector2f(0, buttonSize.y + 20);
-
-	//Undo All region
-	if ((mouse_pos.x - funcButton.x) * (mouse_pos.x - (funcButton.x + buttonSize.x)) <= 0 && (mouse_pos.y - funcButton.y) * (mouse_pos.y - (funcButton.y + buttonSize.y)) <= 0) {
-		board.undoAll();
-		return -1;
-	}
-
-	funcButton += sf::Vector2f(0, buttonSize.y + 20);
-
-	//Redo All region
-	if ((mouse_pos.x - funcButton.x) * (mouse_pos.x - (funcButton.x + buttonSize.x)) <= 0 && (mouse_pos.y - funcButton.y) * (mouse_pos.y - (funcButton.y + buttonSize.y)) <= 0) {
-		board.redoAll();
-		return -1;
-	}
+	
 
 	return -1;
 }
@@ -387,16 +426,67 @@ void GameUI::loadGame() {
 
 //Showing whose turn is it and game saves/loads
 void GameUI::loadTurnIndicator() {
-	messageBox.setPosition(sf::Vector2f(10, 100));
+	messageBox = Popup();
 
-	messageBox.setSize(sf::Vector2f(200, 200));
+	messageBox.setPosition(sf::Vector2f(70, 100));
 
-	messageBox.addObject("Player " + std::to_string(board.getTurn() + 1) + "'s turn", { 10, 20 });
-	messageBox.addObject(board.getPassState() ? "Pass clicked" : "Pass unclicked", { 10, 60 });
+	messageBox.setSize(sf::Vector2f(200, 240));
 
-	if (notificationTimer.getElapsedTime() <= notificationDuration) {
-		messageBox.addObject(fileNotification, { 10, 100 });
+	if (!timeLimitSet) {
+		messageBox.addObject(board.getPassState() ? "Pass clicked" : "Pass unclicked", { 15, 10 });
+
+
+		if (moveLimit > 0) {
+			messageBox.addObject("Moves left: " + std::to_string(moveLimit - board.getPointer() / 2), { 15, 90 });
+		}
+
+		if (notificationTimer.getElapsedTime() > notificationDuration) {
+			fileNotification = "";
+		}
+
+		messageBox.addObject(fileNotification, { 15, 170 });
 	}
+	else {
+		messageBox.addObject(board.getPassState() ? "Pass clicked" : "Pass unclicked", { 15, 90 });
+	}
+}
+
+//This will displaying the timer of black/white and whose turn is it
+void GameUI::loadTime() {
+	blackSide = whiteSide = Popup();
+
+	int turn = board.getTurn();
+	sf::Time timePassed = deltaClock.restart();
+
+	if (timeLimitSet && timeRemaining[turn] <= timePassed) {
+		board.setGame(false);
+		return;
+	}
+
+	if (timeLimitSet) timeRemaining[turn] -= timePassed;
+	
+	blackSide.setSize(sf::Vector2f(200, 100));
+	whiteSide.setSize(sf::Vector2f(200, 100));
+
+	if (turn != 0) blackSide.setBackgroundColor(sf::Color::Transparent);
+	else whiteSide.setBackgroundColor(sf::Color::Transparent);
+
+	blackSide.setPosition(sf::Vector2f(gameConfig.boardTopLeft.x + gameConfig.borderLimit + 50, 100));
+	blackSide.addObject("Black", sf::Vector2f(70, 10));
+
+	sf::Text timeHolder(english_font);
+	timeHolder.setPosition(sf::Vector2f(100, 70));
+
+	timeHolder.setString(timeLimitSet ? convertTime(timeRemaining[0]) : "--:--");
+	timeHolder.setOrigin(timeHolder.getGlobalBounds().size * 0.5f);
+	blackSide.addObject(timeHolder);
+
+	whiteSide.setPosition(sf::Vector2f(gameConfig.boardTopLeft.x + gameConfig.borderLimit + 50, 220));
+	whiteSide.addObject("White", sf::Vector2f(70, 10));
+
+	timeHolder.setString(timeLimitSet ? convertTime(timeRemaining[1]) : "--:--");
+	timeHolder.setOrigin(timeHolder.getGlobalBounds().size * 0.5f);
+	whiteSide.addObject(timeHolder);
 }
 
 //In-game Annoucement
@@ -404,9 +494,13 @@ void GameUI::annouceInGame(sf::RenderWindow& appWindow) {
 	if (!board.isInGame()) return;
 
 	loadTurnIndicator();
+
 	messageBox.drawOn(appWindow);
 
-	messageBox.clearCache();
+	loadTime();
+
+	blackSide.drawOn(appWindow);
+	whiteSide.drawOn(appWindow);
 }
 
 //End Popup
@@ -419,20 +513,20 @@ void GameUI::loadEndPopup() {
 	std::array <int, 2> score = board.getScore();
 
 	if (score[0] == 0x3f3f3f3f) {
-		endPopup.addObject("Player 1 won\nby resignation.", { 20, 20 });
+		endPopup.addObject("Black wins\nby resignation.", { 20, 20 });
 	}
 	else if (score[1] == 0x3f3f3f3f) {
-		endPopup.addObject("Player 2 won\nby resignation.", { 20, 20 });
+		endPopup.addObject("White wins\nby resignation.", { 20, 20 });
 	}
 	else {
-		endPopup.addObject("Player 1: " + std::to_string(score[0]), { 20, 20 });
-		endPopup.addObject("Player 2: " + std::to_string(score[1]), { 20, 60 });
+		endPopup.addObject("Black: " + std::to_string(score[0]), { 20, 20 });
+		endPopup.addObject("White: " + std::to_string(score[1]), { 20, 60 });
 
 		if (score[0] == score[1]) {
 			endPopup.addObject("Draw", { 20, 100 });
 		}
 		else {
-			endPopup.addObject("Player " + std::to_string((score[0] < score[1]) + 1) + " wins", { 20, 100 });
+			endPopup.addObject(std::string((score[0] < score[1] ? "White" : "Black")) + " wins", {20, 100});
 		}
 	}
 
@@ -455,17 +549,57 @@ void GameUI::annouceEndGame(sf::RenderWindow& appWindow) {
 
 void GameUI::autoSave() {
 	if (autoSaveToggle) {
-		board.saveGame();
+		saveGame();
 	}
 }
 
 
 void GameUI::autoLoad() {
 	if (autoSaveToggle) {
-		board.loadGame();
+		loadGame();
 	}
 }
 
 void GameUI::setAutoSaveToggle(int x) {
 	autoSaveToggle = x;
+}
+void GameUI::setBoardOption(int x) {
+	boardOption = x;
+}
+
+void GameUI::setMoveLimit(int x) {
+	moveLimit = x;
+}
+
+void GameUI::setTimeLimit(int id) {
+	timeLimitSet = id > 0;
+
+	switch (id) {
+		case 0:
+			timeLimit = sf::seconds(0.0f);
+			timeAdd = sf::seconds(0.0f);
+			break;
+		case 1:
+			timeLimit = sf::seconds(60.0f);
+			timeAdd = sf::seconds(3.0f);
+			break;
+		case 2:
+			timeLimit = sf::seconds(180.0f);
+			timeAdd = sf::seconds(5.0f);
+			break;
+		case 3:
+			timeLimit = sf::seconds(600.0f);
+			timeAdd = sf::seconds(10.0f);
+			break;
+		case 4:
+			timeLimit = sf::seconds(1800.0f);
+			timeAdd = sf::seconds(20.0f);
+			break;
+	}
+}
+void GameUI::addTime(int turn) {
+	timeRemaining[turn] += timeAdd;
+
+	//Upper bound time limit: 90 minutes
+	timeRemaining[turn] = std::min(timeRemaining[turn], sf::seconds(5400.0f));
 }

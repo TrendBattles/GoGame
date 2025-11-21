@@ -12,6 +12,7 @@ void handle_menu();
 void handle_option_menu();
 void handle_about_menu();
 void handle_game_scene();
+void globalSetFunction();
 void appLoop();
 
 #endif

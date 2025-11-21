@@ -3,10 +3,10 @@
 
 #include <SFML/Graphics.hpp>
 
-static sf::Vector2u windowSize = sf::Vector2u(1000, 800);
-static const sf::Vector2u virtualWindowSize = sf::Vector2u(1000, 800);
+static sf::Vector2u windowSize = sf::Vector2u(1200, 800);
+static const sf::Vector2u virtualWindowSize = sf::Vector2u(1200, 800);
 
-
+std::string convertTime(sf::Time askTime);
 sf::Vector2f convertToFloat(sf::Vector2i cur);
 sf::Vector2f convertToFloat(sf::Vector2u cur);
 

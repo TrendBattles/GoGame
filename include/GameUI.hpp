@@ -25,7 +25,6 @@ public:
 	void resetGame();
 
 	void draw_back_button(sf::RenderWindow& appWindow);
-	void draw_option_button(sf::RenderWindow& appWindow);
 	void draw_UI(sf::RenderWindow& appWindow);
 	void draw_game_buttons(sf::RenderWindow& appWindow);
 
@@ -44,7 +43,14 @@ public:
 	void autoSave();
 	void autoLoad();
 
-	void setAutoSaveToggle(int x);
+	void setAutoSaveToggle(int x = 0);
+	void setBoardOption(int x = 0);
+	void setMoveLimit(int x = 50);
+
+	void setTimeLimit(int id = 0);
+	void addTime(int turn);
+
+	void loadTime();
 private:
 	//Initial textures
 	sf::Font chinese_font, english_font;
@@ -56,25 +62,30 @@ private:
 	//In-game parameters
 	Board board;
 	GameConfig gameConfig;
-	int autoSaveToggle;
-
 	sf::Vector2f PIECE_SCALE;
+
+	int autoSaveToggle;
+	int boardOption;
+	int moveLimit;
+
+	bool timeLimitSet;
+	sf::Time timeRemaining[2], timeAdd, timeLimit;
+	sf::Clock deltaClock;
 	
 	std::string fileNotification; //Save/Load notifications
 	sf::Clock notificationTimer;
-	sf::Time notificationDuration = sf::seconds(5.f); //Time limit for showing
+	sf::Time notificationDuration = sf::seconds(2.5f); //Time limit for showing
 
 
 	//Game function buttons
 	sf::Text* back_button;
-	sf::Text* option_button;
 
 	//End-game texture
 	bool savedEndGame;
 	Popup endPopup;
 	
 	//In-game Annoucement
-	Popup messageBox;
+	Popup messageBox, blackSide, whiteSide;
 };
 
 #endif

@@ -31,18 +31,33 @@ void OptionMenu::init() {
 	selection_section.clear();
 	selection_section.push_back("BOARD SIZE");
 	selection_section.push_back("MUSIC THEME");
+	selection_section.push_back("MOVE LIMIT");
+	selection_section.push_back("TIME LIMIT");
 
 	option_chosen.resize(selection_section.size());
 	selection_option.resize(selection_section.size());
-	
+
+	//Board size
 	selection_option[0].push_back("9 x 9");
 	selection_option[0].push_back("13 x 13");
 	selection_option[0].push_back("19 x 19");
 
+	//Theme
 	selection_option[1].push_back("Chill");
 	selection_option[1].push_back("Futuristic");
 	selection_option[1].push_back("Ancient");;
 
+	selection_option[2].push_back("None");
+
+	for (int i = 1; i <= 5; ++i) {
+		selection_option[2].push_back(std::to_string(50 * i));
+	}
+
+	selection_option[3].push_back("None");
+	selection_option[3].push_back("1 min + 3s");
+	selection_option[3].push_back("3 min + 5s");
+	selection_option[3].push_back("10 min + 10s");
+	selection_option[3].push_back("30 min + 20s");
 	loadConfig();
 }
 
@@ -58,36 +73,61 @@ void OptionMenu::loadConfig() {
 
 	std::vector<int> sta;
 	for (int _ = 0; _ < 3; ++_) {
-		int x = 0; fin >> x;
 		if (fin.eof()) {
 			fin.close();
 			initConfigFile();
 			loadConfig();
 			return;
 		}
+
+		int x = 0; fin >> x;
 		sta.push_back(x);
 	}
 
 	int volume1 = sta[0], volume2 = sta[1], auto_save = sta[2];
+	if (std::min(volume1, volume2) < 0 || std::max(volume1, volume2) > 5 || auto_save < 0 || auto_save > 1) {
+		fin.close();
+		initConfigFile();
+		loadConfig();
+		return;
+	}
+
 	music_volume = volume1;
 	sound_volume = volume2;
 	autoSaveToggle = auto_save;
 
-	std::cerr << "still working normally" << std::endl;
-
 	for (int i = 0; i < (int)selection_section.size(); ++i) {
-		int x; fin >> x;
-		if (fin.eof() || x >= selection_option[i].size()) {
-			std::cerr << "tryna reading files failed" << std::endl;
+		if (fin.eof()) {
 			fin.close();
 			initConfigFile();
 			loadConfig();
 			return;
 		}
+
+		int x; fin >> x;
+		if (x < 0 || x >= selection_option[i].size()) {
+			fin.close();
+			initConfigFile();
+			loadConfig();
+			return;
+		}
+
 		option_chosen[i] = x;
 	}
 
 	fin.close();
+
+	int timeLimitPos = std::find(selection_section.begin(), selection_section.end(), "TIME LIMIT") - selection_section.begin();
+
+	//Time limit turned on -> No autosave, no move limits
+	if (selection_option[timeLimitPos][option_chosen[timeLimitPos]] != "None") {
+		autoSaveToggle = 0;
+
+		int moveLimitPos = std::find(selection_section.begin(), selection_section.end(), "MOVE LIMIT") - selection_section.begin();
+		option_chosen[moveLimitPos] = 0;
+
+		saveConfig();
+	}
 }
 
 void OptionMenu::saveConfig() {
@@ -175,7 +215,7 @@ void OptionMenu::draw_feature_button(sf::RenderWindow& appwindow) {
 
 
 void OptionMenu::draw_selection_button(sf::RenderWindow& appwindow) {
-	// draw the text
+	// draw buttons
 
 	buttons.clear();
 	for (int i = 0; i < (int)selection_section.size(); ++i) {
@@ -200,14 +240,15 @@ void OptionMenu::draw_selection_button(sf::RenderWindow& appwindow) {
 
 void OptionMenu::draw_back_button(sf::RenderWindow& appwindow) {
 	// draw the text
-	sf::Text back_button(chinese_font);
-	back_button.setString("GO BACK");
+	delete back_button;
 
-	back_button.setCharacterSize(25);
-	back_button.setFillColor(ui_color);
-	back_button.setPosition(sf::Vector2f(20, 20));
+	back_button = new sf::Text(chinese_font);
+	back_button->setString("GO BACK");
+	back_button->setCharacterSize(25);
+	back_button->setFillColor(ui_color);
+	back_button->setPosition(sf::Vector2f(20, 20));
 
-	appwindow.draw(back_button);
+	appwindow.draw(*back_button);
 }
 
 int OptionMenu::tryClickingAt(sf::Vector2f mouse_pos) {
@@ -234,21 +275,44 @@ int OptionMenu::tryClickingAt(sf::Vector2f mouse_pos) {
 	}
 
 	if (autoSaveAlert->getGlobalBounds().contains(mouse_pos)) {
-		autoSaveToggle ^= 1;
-		saveConfig();
+		int timeLimitPos = std::find(selection_section.begin(), selection_section.end(), "TIME LIMIT") - selection_section.begin();
+
+		//Time limit turned on -> No autosave
+		if (selection_option[timeLimitPos][option_chosen[timeLimitPos]] == "None") {
+			autoSaveToggle ^= 1;
+			saveConfig();
+		}
+
 		return -1;
 	}
 
 	for (int i = 0; i < (int)selection_section.size(); ++i) {
 		if (buttons[i].getGlobalBounds().contains(mouse_pos)) {
 			int sz = selection_option[i].size();
+			//Rotating choices
 			option_chosen[i] = (option_chosen[i] + 1) % sz;
+
+			//Time limit turned on -> No autosave, no move limit
+			if (selection_section[i] == "TIME LIMIT" && selection_option[i][option_chosen[i]] != "None") {
+				autoSaveToggle = 0;
+
+				int moveLimitPos = std::find(selection_section.begin(), selection_section.end(), "MOVE LIMIT") - selection_section.begin();
+				option_chosen[moveLimitPos] = 0;
+			}
+
+			if (selection_section[i] == "MOVE LIMIT" && selection_option[i][option_chosen[i]] != "None") {
+
+				int timeLimitPos = std::find(selection_section.begin(), selection_section.end(), "TIME LIMIT") - selection_section.begin();
+				option_chosen[timeLimitPos] = 0;
+			}
+
 			saveConfig();
 		}
 	}
 
-	if (mouse_pos.x >= 0 && mouse_pos.x <= 150 && mouse_pos.y >= 0 && mouse_pos.y <= 40) 
+	if (back_button->getGlobalBounds().contains(mouse_pos)) {
 		return 1;
+	}
 	return -1;
 }
 

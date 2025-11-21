@@ -114,11 +114,6 @@ void handle_option_menu() {
 	optionmenu.draw_feature_button(appWindow);
 	optionmenu.draw_selection_button(appWindow);
 	optionmenu.draw_back_button(appWindow);
-	sound_board.setAudioVolume(optionmenu.getSoundVolume() * 20);
-	sound_board.setMusicVolume(optionmenu.getMusicVolume() * 20);
-
-	int autoSaveToggle = optionmenu.getSaveToggle();
-	gameui.setAutoSaveToggle(autoSaveToggle);
 
 	if (mouse_state == MouseState::CLICK) {
 		int signal = optionmenu.tryClickingAt(get_mouse_position());
@@ -152,15 +147,13 @@ void handle_about_menu() {
 }
 
 void handle_game_scene() {
-	gameui.setAutoSaveToggle(optionmenu.getSaveToggle());
 	gameui.draw_back_button(appWindow);
-	gameui.draw_option_button(appWindow);
 	gameui.draw_UI(appWindow);
 	gameui.draw_game_buttons(appWindow);
 
 	if (mouse_state == MouseState::CLICK) {
 		int signal = gameui.tryClickingAt(appWindow, get_mouse_position());
-		gameui.autoSave();
+
 		if (signal != -1) {
 			switch (signal) {
 				case 10:
@@ -182,7 +175,21 @@ void handle_game_scene() {
 	gameui.drawShadow(appWindow, get_mouse_position());
 }
 
+void globalSetFunction() {
+	//Sound settings
+	sound_board.setAudioVolume(optionmenu.getSoundVolume() * 20);
+	sound_board.setMusicVolume(optionmenu.getMusicVolume() * 20);
+
+	//Game UI
+	gameui.setAutoSaveToggle(optionmenu.getSaveToggle());
+	gameui.setBoardOption(optionmenu.getAttribute("BOARD SIZE"));
+	gameui.setMoveLimit(50 * optionmenu.getAttribute("MOVE LIMIT"));
+	gameui.setTimeLimit(optionmenu.getAttribute("TIME LIMIT"));
+}
+
 void appLoop() {
+	globalSetFunction();
+
 	if (pollEvent() == 0) {
 		return;
 	}

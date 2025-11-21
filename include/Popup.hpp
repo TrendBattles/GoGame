@@ -18,7 +18,11 @@ public:
 
 	void drawOn(sf::RenderWindow& appWindow);
 
-	void addObject(std::string message = "", sf::Vector2f offsetPosition = sf::Vector2f(0, 0));
+	void addObject(std::string message = "", sf::Vector2f offsetPosition = sf::Vector2f(0, 0), sf::Color textColor = sf::Color::White);
+	void addObject(sf::Text builtMessage);
+
+	void setBackgroundColor(sf::Color bgColor = sf::Color::Transparent);
+		
 	bool clickedOn(std::string message = "", sf::Vector2f mouse_pos = sf::Vector2f(0, 0));
 
 	void clearCache();
