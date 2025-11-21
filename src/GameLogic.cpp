@@ -130,8 +130,8 @@ void handle_option_menu() {
 				break;
 		}
 
-		sound_board.setAudioType(optionmenu.getAttribute("MUSIC THEME") + 1);
-		sound_board.play_background_music();
+		if (sound_board.setAudioType(optionmenu.getAttribute("MUSIC THEME") + 1))
+			sound_board.play_background_music();
 	}
 }
 
@@ -187,7 +187,20 @@ void appLoop() {
 		return;
 	}
 
-	appWindow.clear(sf::Color(112, 59, 59));
+	int cur_theme = optionmenu.getAttribute("MUSIC THEME");
+	sf::Color BG_COLOR = sf::Color::White;
+	switch (cur_theme) {
+	case 0:
+		BG_COLOR = sf::Color(0, 126, 110);
+		break;
+	case 1:		
+		BG_COLOR = sf::Color(84, 8, 99);
+		break;
+	case 2: 
+		BG_COLOR = sf::Color(118, 21, 60);
+		break;
+	}
+	appWindow.clear(BG_COLOR);
 
 	switch (current_scene) {
 		case GameScene::MENU:
