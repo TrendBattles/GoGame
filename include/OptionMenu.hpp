@@ -14,6 +14,10 @@ public:
 	int getSoundVolume();
 
 	int getSaveToggle();
+
+	void loadConfig();
+	void saveConfig();
+	void initConfigFile();
 private:
 	sf::Font font;
 	sf::Vector2f horizontal_offset, vertical_offset, gap;

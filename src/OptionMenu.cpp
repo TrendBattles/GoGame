@@ -1,9 +1,13 @@
 #include <OptionMenu.hpp>
 #include <iostream>
 #include <vector>
+#include <fstream>
+
+
+const std::filesystem::path CACHE_FILE =
+std::filesystem::absolute(std::string(PROJECT_DIR) + "assets/options.cache");
 
 void OptionMenu::init() {
-
 	const std::filesystem::path FONT_PATH =
 		std::filesystem::absolute(std::string(PROJECT_DIR) + "assets/Font/chinese.otf");
 	font.openFromFile(FONT_PATH.c_str());
@@ -19,9 +23,49 @@ void OptionMenu::init() {
 	volume_btn_size = sf::Vector2f(30, 20);
 	button_gap = sf::Vector2f(35, 0);
 
-	music_volume = 2;
-	sound_volume = 5;
-	autoSaveToggle = 1;
+	loadConfig();
+}
+
+void OptionMenu::loadConfig() {
+	std::ifstream fin(CACHE_FILE.c_str());
+
+	if (!fin.is_open() || fin.eof()) {
+		fin.close();
+		initConfigFile();
+		loadConfig();
+		return;
+	}
+
+	std::vector<int> sta;
+	for (int _ = 0; _ < 3; ++_) {
+		int x = 0; fin >> x;
+		if (fin.eof()) {
+			fin.close();
+			initConfigFile();
+			loadConfig();
+			return;
+		}
+		sta.push_back(x);
+	}
+
+	int volume1 = sta[0], volume2 = sta[1], auto_save = sta[2];
+	music_volume = volume1;
+	sound_volume = volume2;
+	autoSaveToggle = auto_save;
+
+	fin.close();
+}
+
+void OptionMenu::saveConfig() {
+	std::ofstream fout(CACHE_FILE.c_str());
+	fout << music_volume << " " << sound_volume << " " << autoSaveToggle << "\n";
+	fout.close();
+}
+
+void OptionMenu::initConfigFile() {
+	std::ofstream fout(CACHE_FILE.c_str());
+	fout << 2 << " " << 5 << " " << 1 << "\n";
+	fout.close();
 }
 
 void OptionMenu::setCenter(sf::Text& text) {
@@ -116,6 +160,7 @@ int OptionMenu::tryClickingAt(sf::Vector2f mouse_pos) {
 						sound_volume = c;
 						break;
 				}
+				saveConfig();
 				return 0;
 			}
 		}
@@ -123,6 +168,7 @@ int OptionMenu::tryClickingAt(sf::Vector2f mouse_pos) {
 
 	if (autoSaveAlert->getGlobalBounds().contains(mouse_pos)) {
 		autoSaveToggle ^= 1;
+		saveConfig();
 		return -1;
 	}
 
