@@ -60,8 +60,8 @@ void appStart() {
 	sound_board.setAudioType(optionmenu.getAttribute("MUSIC THEME") + 1);
 	sound_board.play_background_music();
 
-	sound_board.setAudioVolume(optionmenu.getSoundVolume() * 20);
-	sound_board.setMusicVolume(optionmenu.getMusicVolume() * 20);
+	sound_board.setAudioVolume(optionmenu.getSoundVolume());
+	sound_board.setMusicVolume(optionmenu.getMusicVolume());
 }
 
 int pollEvent() { // if window is closed, return 0
@@ -205,8 +205,8 @@ void handle_game_scene() {
 
 void globalSetFunction() {
 	//Sound settings
-	sound_board.setAudioVolume(optionmenu.getSoundVolume() * 20);
-	sound_board.setMusicVolume(optionmenu.getMusicVolume() * 20);
+	sound_board.setAudioVolume(optionmenu.getSoundVolume());
+	sound_board.setMusicVolume(optionmenu.getMusicVolume());
 
 	//Game UI
 	gameui.setAutoSaveToggle(optionmenu.getSaveToggle());

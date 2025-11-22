@@ -23,9 +23,10 @@ void OptionMenu::init() {
 	gap = sf::Vector2f(0, 80);
 
 
-	text_offset = sf::Vector2f(-150, 0);
-	volume_btn_size = sf::Vector2f(30, 20);
-	button_gap = sf::Vector2f(35, 0);
+	text_offset = sf::Vector2f(-300, 0);
+	volume_btn_size = sf::Vector2f(25, 25);
+	button_gap = sf::Vector2f(2, 0);
+	content_offset = sf::Vector2f(40, 0);
 
 	selection_section.clear();
 	selection_section.push_back("BOARD SIZE");
@@ -44,7 +45,7 @@ void OptionMenu::init() {
 	//Theme
 	selection_option[1].push_back("Chill");
 	selection_option[1].push_back("Futuristic");
-	selection_option[1].push_back("Ancient");;
+	selection_option[1].push_back("Ancient");
 
 	selection_option[2].push_back("None");
 	for (int i = 1; i <= 5; ++i) {
@@ -83,7 +84,7 @@ void OptionMenu::loadConfig() {
 	}
 
 	int volume1 = sta[0], volume2 = sta[1], auto_save = sta[2];
-	if (std::min(volume1, volume2) < 0 || std::max(volume1, volume2) > 5 || auto_save < 0 || auto_save > 1) {
+	if (std::min(volume1, volume2) < 0 || std::max(volume1, volume2) > 100 || auto_save < 0 || auto_save > 1) {
 		fin.close();
 		initConfigFile();
 		loadConfig();
@@ -141,7 +142,7 @@ void OptionMenu::saveConfig() {
 
 void OptionMenu::initConfigFile() {
 	std::ofstream fout(CACHE_FILE.c_str());
-	fout << 2 << " " << 5 << " " << 0 << "\n";
+	fout << 40 << " " << 100 << " " << 0 << "\n";
 	for (int i = 0; i < (int)option_chosen.size(); ++i) {
 		fout << 0 << " ";
 	}
@@ -149,8 +150,10 @@ void OptionMenu::initConfigFile() {
 	fout.close();
 }
 
-void OptionMenu::setCenter(sf::Text& text) {
+void OptionMenu::setCenter(sf::Text& text, int mask) {
 	sf::FloatRect bounds = text.getLocalBounds();
+	if ((mask & 1) == 0) bounds.size.x = 0;
+	if (mask <= 1) bounds.size.y = 0;
 	text.setOrigin(bounds.size * 0.5f);;
 }
 
@@ -167,7 +170,7 @@ void OptionMenu::draw_feature_button(sf::RenderWindow& appwindow) {
 
 	// draw the text
 	sf::Text music(chinese_font), sound(chinese_font), autoSave(chinese_font);
-	music.setString("MUSIC"); sound.setString("SOUND");
+	music.setString("MUSIC VOLUME"); sound.setString("SOUND VOLUME");
 	autoSave.setString("AUTOSAVE");
 
 	//music.setCharacterSize(30); sound.setCharacterSize(30);
@@ -178,45 +181,58 @@ void OptionMenu::draw_feature_button(sf::RenderWindow& appwindow) {
 	sound.setPosition(horizontal_offset + vertical_offset + gap + text_offset);
 	autoSave.setPosition(horizontal_offset + vertical_offset + gap * 2.0f + text_offset);
 
-	setCenter(music); setCenter(sound);
-	setCenter(autoSave);
+	setCenter(music, 2); setCenter(sound, 2);
+	setCenter(autoSave, 2);
 
 	appwindow.draw(music);
 	appwindow.draw(sound);
 	appwindow.draw(autoSave);
 
-
+	const sf::Color beige(252, 229, 205), brown(40, 40, 40), bruh(89, 89, 89);
 	for (int r = 0; r <= 1; ++r) {
 		int threshold;
 		if (r == 0) threshold = music_volume;
 		if (r == 1) threshold = sound_volume;
-		for (int c = 1; c <= 5; ++c) {
-			sf::RectangleShape rect(volume_btn_size);
-			rect.setOrigin(volume_btn_size * 0.5f);
 
-			if (c <= threshold) {
-				rect.setFillColor(ui_color);
-				rect.setOutlineColor(ui_color);
-			}
-			else {
-				rect.setFillColor(sf::Color::Black);
-				rect.setOutlineColor(sf::Color::Black);
-			}
+		sf::Vector2f zero_percent = 
+		vertical_offset + horizontal_offset + gap * float(r) + content_offset;
+		sf::Vector2f hundred_percent =
+			vertical_offset + horizontal_offset + button_gap * float(100) + gap * float(r) + content_offset;
+		sf::Vector2f current_percent =
+			vertical_offset + horizontal_offset + button_gap * float(threshold) + gap * float(r) + content_offset;
 
-			sf::Vector2f cur_pos =
-				vertical_offset + horizontal_offset + button_gap * float(c) + gap * float(r);
-			rect.setPosition(cur_pos);
+		sf::CircleShape cyka0(volume_btn_size.x * 0.5f), cyka100(volume_btn_size.x * 0.5f);
+		cyka0.setPosition(zero_percent); cyka100.setPosition(hundred_percent);
+		cyka0.setOrigin(volume_btn_size * 0.5f); cyka100.setOrigin(volume_btn_size * 0.5f);
+		cyka0.setFillColor(beige); cyka100.setFillColor(brown);
 
-			appwindow.draw(rect);
-		}
+		sf::RectangleShape filled(sf::Vector2f(current_percent.x - zero_percent.x, volume_btn_size.y)),
+			unfilled(sf::Vector2f(hundred_percent.x - current_percent.x, volume_btn_size.y));
+		filled.setOrigin(sf::Vector2f(0, volume_btn_size.y * 0.5f));
+		unfilled.setOrigin(sf::Vector2f(0, volume_btn_size.y * 0.5f));
+		filled.setPosition(zero_percent); unfilled.setPosition(current_percent);
+		filled.setFillColor(beige); unfilled.setFillColor(brown);
+
+		sf::CircleShape chode(volume_btn_size.x * 0.8f);
+		chode.setPosition(current_percent);
+		chode.setOrigin(volume_btn_size * 0.8f);
+		chode.setFillColor(ui_color); 
+		chode.setOutlineColor(bruh);
+		chode.setOutlineThickness(5.0f);
+
+
+		appwindow.draw(cyka0); appwindow.draw(cyka100);
+		appwindow.draw(filled); appwindow.draw(unfilled);
+		appwindow.draw(chode);
 	}
+
 
 	delete autoSaveAlert;
 	autoSaveAlert = new sf::Text(chinese_font);
 	
 	autoSaveAlert->setString(autoSaveToggle ? "ON" : "OFF");
-	autoSaveAlert->setPosition(vertical_offset + horizontal_offset + gap * 2.0f + button_gap * 2.5f);
-	setCenter(*autoSaveAlert);
+	autoSaveAlert->setPosition(vertical_offset + horizontal_offset + gap * 2.0f + content_offset);
+	setCenter(*autoSaveAlert, 2);
 
 	appwindow.draw(*autoSaveAlert);
 }
@@ -231,14 +247,14 @@ void OptionMenu::draw_selection_button(sf::RenderWindow& appwindow) {
 		vcl.setString(selection_section[i]);
 		vcl.setFillColor(ui_color);
 		vcl.setPosition(horizontal_offset + vertical_offset + gap * float(3 + i) + text_offset);
-		setCenter(vcl);
+		setCenter(vcl, 2);
 		appwindow.draw(vcl);
 
 		sf::Text current_option(english_font);
 		current_option.setString(selection_option[i][option_chosen[i]]);
 		current_option.setFillColor(ui_color);
-		current_option.setPosition(horizontal_offset + vertical_offset + gap * float(3 + i) + button_gap * 2.5f);
-		setCenter(current_option);
+		current_option.setPosition(horizontal_offset + vertical_offset + gap * float(3 + i) + content_offset);
+		setCenter(current_option, 2);
 
 		appwindow.draw(current_option);
 
@@ -267,23 +283,21 @@ void OptionMenu::draw_back_button(sf::RenderWindow& appwindow, sf::Vector2f mous
 
 int OptionMenu::tryClickingAt(sf::Vector2f mouse_pos) {
 	for (int r = 0; r <= 1; ++r) {
-		for (int c = 0; c <= 5; ++c) {
-			sf::Vector2f cur_pos =
-				vertical_offset + horizontal_offset + button_gap * float(c) + gap * float(r);
-			sf::Vector2f diff = cur_pos - mouse_pos;
+		sf::Vector2f cao_boi =
+			vertical_offset + horizontal_offset + button_gap * float(50) + gap * float(r) + content_offset;
+		sf::Vector2f sz(button_gap.x * float(50), volume_btn_size.x * 0.5f);
+		if (abs(mouse_pos.x - cao_boi.x) <= sz.x && abs(mouse_pos.y - cao_boi.y) <= sz.y) {
+			double chiu_bo = horizontal_offset.x + content_offset.x;
+			chiu_bo = (mouse_pos.x - chiu_bo) / button_gap.x;
 
-			if (abs(diff.x) <= volume_btn_size.x * 0.5f && 
-				abs(diff.y) <= volume_btn_size.y * 0.5f) {
-				switch (r) {
-					case 0:
-						music_volume = c;
-						break;
-					case 1:
-						sound_volume = c;
-						break;
-				}
-				saveConfig();
-				return 0;
+			int ans = round(chiu_bo / 10) * 10;
+			switch (r) {
+				case 0:
+					music_volume = ans;
+					break;
+				case 1:
+					sound_volume = ans;
+					break;
 			}
 		}
 	}

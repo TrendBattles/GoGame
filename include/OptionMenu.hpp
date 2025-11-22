@@ -23,7 +23,7 @@ public:
 	int getAttribute(std::string name);
 private:
 	sf::Font chinese_font, english_font;
-	sf::Vector2f horizontal_offset, vertical_offset, gap;
+	sf::Vector2f horizontal_offset, vertical_offset, gap, content_offset;
 	sf::Vector2f text_offset, button_gap;
 
 	sf::Vector2f volume_btn_size;
@@ -36,7 +36,7 @@ private:
 	int autoSaveToggle;
 	sf::Text* autoSaveAlert;
 
-	void setCenter(sf::Text& text);
+	void setCenter(sf::Text& text, int mask = 3);
 
 	std::vector<std::string> selection_section;
 	std::vector<int> option_chosen;
