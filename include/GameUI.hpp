@@ -25,7 +25,7 @@ public:
 	void initGame();
 	void resetGame();
 
-	void draw_back_button(sf::RenderWindow& appWindow);
+	void draw_back_button(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos = sf::Vector2f(-1, -1));
 	void draw_UI(sf::RenderWindow& appWindow);
 	void draw_game_buttons(sf::RenderWindow& appWindow);
 

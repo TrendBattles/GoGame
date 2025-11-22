@@ -8,7 +8,7 @@ public:
 	void init();
 	void draw_feature_button(sf::RenderWindow& appwindow);
 	void draw_selection_button(sf::RenderWindow& appwindow);
-	void draw_back_button(sf::RenderWindow& appwindow);
+	void draw_back_button(sf::RenderWindow& appwindow, sf::Vector2f mouse_pos = sf::Vector2f(-1, -1));
 	int tryClickingAt(sf::Vector2f mousepos);
 
 	int getMusicVolume();
@@ -25,7 +25,6 @@ private:
 	sf::Font chinese_font, english_font;
 	sf::Vector2f horizontal_offset, vertical_offset, gap;
 	sf::Vector2f text_offset, button_gap;
-	sf::Color ui_color;
 
 	sf::Vector2f volume_btn_size;
 

@@ -14,7 +14,6 @@ void AboutMenu::init() {
 	horizontal_offset = sf::Vector2f(virtualWindowSize.x * 0.5f, 0);
 	vertical_offset = sf::Vector2f(0, 180);
 	gap = sf::Vector2f(0, 40);
-	ui_color = sf::Color::White;
 }
 
 void AboutMenu::setCenter(sf::Text& text) {
@@ -56,8 +55,7 @@ void AboutMenu::draw_UI(sf::RenderWindow& appwindow) {
 		appwindow.draw(text);
 	}
 }
-
-void AboutMenu::draw_back_button(sf::RenderWindow& appwindow) {
+void AboutMenu::draw_back_button(sf::RenderWindow& appwindow, sf::Vector2f mouse_pos) {
 	// draw the text
 	sf::Text back_button(chinese_font);
 	back_button.setString("GO BACK");
@@ -66,12 +64,18 @@ void AboutMenu::draw_back_button(sf::RenderWindow& appwindow) {
 	back_button.setFillColor(ui_color);
 	back_button.setPosition(sf::Vector2f(20, 20));
 
+
+	if (mouse_pos.x >= 0 && mouse_pos.x <= 150 && mouse_pos.y >= 0 && mouse_pos.y <= 80) {
+		back_button.setFillColor(accent_color);
+	}
+
 	appwindow.draw(back_button);
+
 }
 
 int AboutMenu::tryClickingAt(sf::Vector2f mouse_pos) {
 
-	if (mouse_pos.x >= 0 && mouse_pos.x <= 150 && mouse_pos.y >= 0 && mouse_pos.y <= 40)
+	if (mouse_pos.x >= 0 && mouse_pos.x <= 150 && mouse_pos.y >= 0 && mouse_pos.y <= 80)
 		return 1;
 	return -1;
 }

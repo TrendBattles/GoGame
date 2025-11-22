@@ -5,6 +5,7 @@
 
 static sf::Vector2u windowSize = sf::Vector2u(1200, 800);
 static const sf::Vector2u virtualWindowSize = sf::Vector2u(1200, 800);
+static const sf::Color ui_color = sf::Color::White, accent_color = sf::Color::Black;
 
 std::string convertTime(sf::Time askTime);
 sf::Vector2f convertToFloat(sf::Vector2i cur);

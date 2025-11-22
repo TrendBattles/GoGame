@@ -21,7 +21,6 @@ void OptionMenu::init() {
 	horizontal_offset = sf::Vector2f(virtualWindowSize.x * 0.5f, 0);
 	vertical_offset = sf::Vector2f(0, 200);
 	gap = sf::Vector2f(0, 80);
-	ui_color = sf::Color::White;
 
 
 	text_offset = sf::Vector2f(-150, 0);
@@ -48,7 +47,6 @@ void OptionMenu::init() {
 	selection_option[1].push_back("Ancient");;
 
 	selection_option[2].push_back("None");
-
 	for (int i = 1; i <= 5; ++i) {
 		selection_option[2].push_back(std::to_string(50 * i));
 	}
@@ -248,7 +246,7 @@ void OptionMenu::draw_selection_button(sf::RenderWindow& appwindow) {
 	}
 }
 
-void OptionMenu::draw_back_button(sf::RenderWindow& appwindow) {
+void OptionMenu::draw_back_button(sf::RenderWindow& appwindow, sf::Vector2f mouse_pos) {
 	// draw the text
 	delete back_button;
 
@@ -257,6 +255,12 @@ void OptionMenu::draw_back_button(sf::RenderWindow& appwindow) {
 	back_button->setCharacterSize(25);
 	back_button->setFillColor(ui_color);
 	back_button->setPosition(sf::Vector2f(20, 20));
+
+
+
+	if (mouse_pos.x >= 0 && mouse_pos.x <= 150 && mouse_pos.y >= 0 && mouse_pos.y <= 80) {
+		back_button -> setFillColor(accent_color);
+	}
 
 	appwindow.draw(*back_button);
 }
@@ -310,8 +314,7 @@ int OptionMenu::tryClickingAt(sf::Vector2f mouse_pos) {
 			saveConfig();
 		}
 	}
-
-	if (back_button->getGlobalBounds().contains(mouse_pos)) {
+	if (mouse_pos.x >= 0 && mouse_pos.x <= 150 && mouse_pos.y >= 0 && mouse_pos.y <= 80) {
 		return 1;
 	}
 	return -1;

@@ -14,7 +14,6 @@ void RulesMenu::init() {
 	horizontal_offset = sf::Vector2f(virtualWindowSize.x * 0.5f, 0);
 	vertical_offset = sf::Vector2f(0, 180);
 	gap = sf::Vector2f(0, 35);
-	ui_color = sf::Color::White;
 }
 
 void RulesMenu::setCenter(sf::Text& text) {
@@ -29,9 +28,7 @@ void RulesMenu::draw_UI(sf::RenderWindow& appwindow) {
 	menu_title.setFillColor(ui_color);
 	menu_title.setPosition(horizontal_offset + vertical_offset * 0.5f);
 	setCenter(menu_title);
-
 	appwindow.draw(menu_title);
-
 
 	std::vector<std::string> lines;
 	lines.push_back("Go is a strategy game on a grid.");
@@ -51,8 +48,6 @@ void RulesMenu::draw_UI(sf::RenderWindow& appwindow) {
 	lines.push_back("----------");
 	lines.push_back("Saving, loading, undoing and redoing move is disabled in move/time limit");
 
-
-
 	for (int i = 0; i < (int)lines.size(); ++i) {
 		sf::Text text(english_font);
 		text.setString(lines[i]);
@@ -68,7 +63,7 @@ void RulesMenu::draw_UI(sf::RenderWindow& appwindow) {
 }
 
 
-void RulesMenu::draw_back_button(sf::RenderWindow& appwindow) {
+void RulesMenu::draw_back_button(sf::RenderWindow& appwindow, sf::Vector2f mouse_pos) {
 	// draw the text
 	sf::Text back_button(chinese_font);
 	back_button.setString("GO BACK");
@@ -77,13 +72,18 @@ void RulesMenu::draw_back_button(sf::RenderWindow& appwindow) {
 	back_button.setFillColor(ui_color);
 	back_button.setPosition(sf::Vector2f(20, 20));
 
+
+	if (mouse_pos.x >= 0 && mouse_pos.x <= 150 && mouse_pos.y >= 0 && mouse_pos.y <= 80) {
+		back_button.setFillColor(accent_color);
+	}
+
 	appwindow.draw(back_button);
 
 }
 
 int RulesMenu::tryClickingAt(sf::Vector2f mouse_pos) {
 
-	if (mouse_pos.x >= 0 && mouse_pos.x <= 150 && mouse_pos.y >= 0 && mouse_pos.y <= 40)
+	if (mouse_pos.x >= 0 && mouse_pos.x <= 150 && mouse_pos.y >= 0 && mouse_pos.y <= 80)
 		return 1;
 	return -1;
 }

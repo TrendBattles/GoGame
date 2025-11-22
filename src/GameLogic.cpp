@@ -125,7 +125,7 @@ void handle_menu() {
 void handle_option_menu() {
 	optionmenu.draw_feature_button(appWindow);
 	optionmenu.draw_selection_button(appWindow);
-	optionmenu.draw_back_button(appWindow);
+	optionmenu.draw_back_button(appWindow, get_mouse_position());
 
 	if (mouse_state == MouseState::CLICK) {
 		int signal = optionmenu.tryClickingAt(get_mouse_position());
@@ -143,7 +143,7 @@ void handle_option_menu() {
 }
 
 void handle_about_menu() {
-	aboutmenu.draw_back_button(appWindow);
+	aboutmenu.draw_back_button(appWindow, get_mouse_position());
 	aboutmenu.draw_UI(appWindow);
 
 	if (mouse_state == MouseState::CLICK) {
@@ -159,7 +159,7 @@ void handle_about_menu() {
 }
 
 void handle_rules_scene() {
-	rulesmenu.draw_back_button(appWindow);
+	rulesmenu.draw_back_button(appWindow, get_mouse_position());
 	rulesmenu.draw_UI(appWindow);
 
 	if (mouse_state == MouseState::CLICK) {
@@ -175,7 +175,7 @@ void handle_rules_scene() {
 }
 
 void handle_game_scene() {
-	gameui.draw_back_button(appWindow);
+	gameui.draw_back_button(appWindow, get_mouse_position());
 	gameui.draw_UI(appWindow);
 	gameui.draw_game_buttons(appWindow);
 

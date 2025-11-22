@@ -13,7 +13,6 @@ public:
 private:
 	sf::Font font;
 	sf::Vector2f horizontal_offset;
-	sf::Color ui_color, accent_color;
 	sf::Vector2f text_offset;
 	sf::Vector2f btn_size;
 	sf::Vector2f btn_gap, btn_offset;

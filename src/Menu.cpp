@@ -4,15 +4,12 @@
 #include <Helper.hpp>
 
 void Menu::init() {
-
 	const std::filesystem::path FONT_PATH = 
 		std::filesystem::absolute(std::string(PROJECT_DIR) + "assets/Font/chinese.otf");
 	font.openFromFile(FONT_PATH.c_str());
 
 	horizontal_offset = sf::Vector2f(virtualWindowSize.x * 0.5f, 0);
 	text_offset = horizontal_offset + sf::Vector2f(0, 100);
-	ui_color = sf::Color::White;
-	accent_color = sf::Color::Black;
 
 
 	btn_offset = horizontal_offset + sf::Vector2f(0, 300);
@@ -44,16 +41,6 @@ void Menu::draw_game_text(sf::RenderWindow &appwindow) {
 void Menu::draw_button(sf::RenderWindow& appwindow, sf::Vector2f mouse_pos) {
 	for (int i = 0; i < (int)btn_list.size(); ++i) {
 		sf::Vector2f cur_pos = btn_offset + btn_gap * float(i);
-		
-		sf::RectangleShape rect(btn_size);
-		rect.setPosition(cur_pos);
-		rect.setOrigin(btn_size * 0.5f);
-		rect.setFillColor(sf::Color::Transparent);
-
-		rect.setOutlineColor(ui_color);
-		rect.setOutlineThickness(5.f);
-
-
 
 		sf::Text cur_text(font);
 		cur_text.setString(btn_list[i]);
@@ -70,7 +57,6 @@ void Menu::draw_button(sf::RenderWindow& appwindow, sf::Vector2f mouse_pos) {
 			cur_text.setFillColor(accent_color);
 		}
 
-		//appwindow.draw(rect);
 		appwindow.draw(cur_text);
 	}
 }
