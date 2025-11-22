@@ -62,7 +62,7 @@ void AboutMenu::draw_UI(sf::RenderWindow& appwindow) {
 void AboutMenu::draw_back_button(sf::RenderWindow& appwindow, sf::Vector2f mouse_pos) {
 	// draw the text
 	sf::Text back_button(chinese_font);
-	back_button.setString("GO BACK");
+	back_button.setString("Menu");
 
 	back_button.setCharacterSize(25);
 	back_button.setFillColor(ui_color);

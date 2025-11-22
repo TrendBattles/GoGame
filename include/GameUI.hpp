@@ -17,6 +17,8 @@ struct GameConfig {
 
 	sf::Vector2f boardTopLeft;
 	sf::Vector2f horizontal_offset, vertical_offset;
+
+	void setBorderLimit(int x);
 };
 
 class GameUI {

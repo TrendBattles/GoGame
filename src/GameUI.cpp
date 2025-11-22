@@ -9,7 +9,6 @@ GameConfig::GameConfig(int sizeState) {
 	horizontal_offset = sf::Vector2f(virtualWindowSize.x * 0.5f, 0);
 	boardTopLeft = (convertToFloat(virtualWindowSize) - sf::Vector2f(boardEdge, boardEdge)) * 0.5f;
 	
-	//boardTopLeft.x += 20;
 	boardTopLeft.y = vertical_offset.y;
 
 	switch (sizeState) {
@@ -27,6 +26,13 @@ GameConfig::GameConfig(int sizeState) {
 			break;
 	}
 }
+
+void GameConfig::setBorderLimit(int x) {
+	borderLimit = x;
+	boardTopLeft = (convertToFloat(virtualWindowSize) - sf::Vector2f(boardEdge, boardEdge)) * 0.5f;
+	boardTopLeft.y = vertical_offset.y;
+}
+
 int GameConfig::piece_offset() {
 	return boardEdge / (gridSize - 1);
 }
@@ -105,7 +111,7 @@ void GameUI::draw_back_button(sf::RenderWindow& appWindow, sf::Vector2f mouse_po
 	delete back_button;
 
 	back_button = new sf::Text(chinese_font);
-	back_button -> setString("GO BACK");
+	back_button -> setString("Menu");
 	back_button -> setCharacterSize(25);
 	back_button -> setFillColor(ui_color);
 	back_button -> setPosition(sf::Vector2f(20, 20));
@@ -118,6 +124,19 @@ void GameUI::draw_back_button(sf::RenderWindow& appWindow, sf::Vector2f mouse_po
 }
 
 void GameUI::draw_UI(sf::RenderWindow& appWindow) {
+	switch (gameConfig.gridSize) {
+	case 9:
+		gameConfig.setBorderLimit(640);
+		break;
+	case 13:
+		gameConfig.setBorderLimit(630);
+		break;
+	case 19:
+		gameConfig.setBorderLimit(620);
+		break;
+	}
+
+
 	sf::Text menu_title(chinese_font);
 	menu_title.setString("GO GAME");
 	menu_title.setCharacterSize(40);
@@ -133,7 +152,7 @@ void GameUI::draw_UI(sf::RenderWindow& appWindow) {
 
 	sf::RectangleShape rect(sf::Vector2f(gameConfig.borderLimit, gameConfig.borderLimit));
 	rect.setPosition(gameConfig.boardTopLeft);
-	rect.setFillColor(sf::Color(215, 192, 151));
+	rect.setFillColor(sf::Color(246, 178, 107));
 
 	appWindow.draw(rect);
 	
@@ -183,12 +202,7 @@ void GameUI::draw_UI(sf::RenderWindow& appWindow) {
 void GameUI::draw_game_buttons(sf::RenderWindow& appWindow) {
 	//Pass, resign, save, load button
 
-	sf::Vector2f buttonSize(155, 75);
 	auto Specific_Draw = [&](const std::string label, sf::Vector2f topLeft, int default_size = 20) -> void {
-		sf::RectangleShape passButton(buttonSize);
-		passButton.setFillColor(sf::Color(67, 70, 75));
-		passButton.setPosition(topLeft);
-
 		sf::Text passText(chinese_font);
 		passText.setString(label);
 		passText.setFillColor(sf::Color::White);
@@ -197,28 +211,38 @@ void GameUI::draw_game_buttons(sf::RenderWindow& appWindow) {
 		sf::Vector2f textSize = passText.getLocalBounds().size;
 
 		passText.setOrigin(textSize * 0.5f);
-		passText.setPosition(topLeft + buttonSize * 0.5f);
-
-		appWindow.draw(passButton);
+		passText.setPosition(topLeft);
 		appWindow.draw(passText);
 	};
 	
+	sf::Vector2f horizontal_offset(virtualWindowSize.x * 0.5f, 0), content_offset(horizontal_offset.x - 100, 0);
+	sf::Vector2f vertical_offset(0, 400), vertical_gap(0, 75);
+	
 	if (!timeLimitSet) {
 		//Case for no time limit
-		Specific_Draw("SAVE", sf::Vector2f(90, 369), 25);
-		Specific_Draw("LOAD", sf::Vector2f(90, 369 + buttonSize.y + 20), 25);
-		Specific_Draw("PASS", sf::Vector2f(90, 369 + 2 * (buttonSize.y + 20)), 25);
-		Specific_Draw("RESIGN", sf::Vector2f(90, 369 + 3 * (buttonSize.y + 20)), 25);
+		Specific_Draw("SAVE", 
+			horizontal_offset - content_offset + vertical_offset + vertical_gap * 0.0f, 25);
+		Specific_Draw("LOAD",
+			horizontal_offset - content_offset + vertical_offset + vertical_gap * 1.0f, 25);
+		Specific_Draw("PASS",
+			horizontal_offset - content_offset + vertical_offset + vertical_gap * 2.0f, 25);
+		Specific_Draw("RESIGN",
+			horizontal_offset - content_offset + vertical_offset + vertical_gap * 3.0f, 25);
 
-		Specific_Draw("UNDO", sf::Vector2f(gameConfig.boardTopLeft.x + gameConfig.borderLimit + 70, 369), 25);
-		Specific_Draw("REDO", sf::Vector2f(gameConfig.boardTopLeft.x + gameConfig.borderLimit + 70, 369 + buttonSize.y + 20), 25);
-		Specific_Draw("UNDO ALL", sf::Vector2f(gameConfig.boardTopLeft.x + gameConfig.borderLimit + 70, 369 + 2 * (buttonSize.y + 20)));
-		Specific_Draw("REDO ALL", sf::Vector2f(gameConfig.boardTopLeft.x + gameConfig.borderLimit + 70, 369 + 3 * (buttonSize.y + 20)));
+		Specific_Draw("UNDO",
+			horizontal_offset + content_offset + vertical_offset + vertical_gap * 0.0f, 25);
+		Specific_Draw("REDO",
+			horizontal_offset + content_offset + vertical_offset + vertical_gap * 1.0f, 25);
+		Specific_Draw("UNDO ALL",
+			horizontal_offset + content_offset + vertical_offset + vertical_gap * 2.0f, 20);
+		Specific_Draw("REDO ALL",
+			horizontal_offset + content_offset + vertical_offset + vertical_gap * 3.0f, 20);
 	}
 	else {
-		int totalLength = buttonSize.x * 2 + 50;
-		Specific_Draw("PASS", sf::Vector2f(gameConfig.boardTopLeft.x + (gameConfig.borderLimit - totalLength) * 0.5f, gameConfig.boardTopLeft.y + gameConfig.borderLimit + 20), 25);
-		Specific_Draw("RESIGN", sf::Vector2f(gameConfig.boardTopLeft.x + (gameConfig.borderLimit - totalLength) * 0.5f + buttonSize.x + 50, gameConfig.boardTopLeft.y + gameConfig.borderLimit + 20), 25);
+		Specific_Draw("PASS",
+			horizontal_offset + content_offset + vertical_offset + vertical_gap * 2.0f, 25);
+		Specific_Draw("RESIGN",
+			horizontal_offset + content_offset + vertical_offset + vertical_gap * 3.0f, 25);
 	}
 }
 

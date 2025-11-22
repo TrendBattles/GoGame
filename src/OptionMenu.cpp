@@ -284,7 +284,7 @@ void OptionMenu::draw_back_button(sf::RenderWindow& appwindow, sf::Vector2f mous
 	delete back_button;
 
 	back_button = new sf::Text(chinese_font);
-	back_button->setString("GO BACK");
+	back_button->setString("Menu");
 	back_button->setCharacterSize(25);
 	back_button->setFillColor(ui_color);
 	back_button->setPosition(sf::Vector2f(20, 20));
