@@ -60,10 +60,10 @@ void GameUI::init() {
 
 //Gameplay initialization
 void GameUI::initGame() {
-	board = Board();
+	board.clearGame();
+
 	gameConfig = GameConfig(boardOption);
 	board.setSize(gameConfig.gridSize, gameConfig.gridSize);
-	board.setMoveLimit(moveLimit);
 	
 	//When initialized, force to remove the message
 	fileNotification = "";
@@ -73,7 +73,7 @@ void GameUI::initGame() {
 
 	//Initialize the clock
 	if (timeLimitSet) {
-		timeRemaining[0] = timeRemaining[1] = timeLimit;
+		board.resetClock();
 		deltaClock.restart();
 	}
 
@@ -228,7 +228,7 @@ int GameUI::tryClickingAt(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos) {
 			}
 
 			//Bonus time
-			if (timeLimitSet) addTime(board.getTurn());
+			if (timeLimitSet) board.addTime(board.getTurn());
 
 			std::string tmp = board.getState();
 			board.placePieceAt(r, c);
@@ -433,22 +433,34 @@ void GameUI::loadTurnIndicator() {
 	messageBox.setSize(sf::Vector2f(200, 240));
 
 	if (!timeLimitSet) {
-		messageBox.addObject(board.getPassState() ? "Pass clicked" : "Pass unclicked", { 15, 10 });
+		messageBox.addObject(createText(board.getPassState() ? "Pass clicked" : "Pass unclicked", true, sf::Color::White), { messageBox.getSize().x * 0.5f, 10});
 
 
-		if (moveLimit > 0) {
-			messageBox.addObject("Moves left: " + std::to_string(moveLimit - board.getPointer() / 2), { 15, 90 });
+		if (board.getMoveLimit() > 0) {
+			messageBox.addObject(createText("Moves left: " + std::to_string(board.getMoveLimit() - board.getPointer() / 2), true, sf::Color::White), { messageBox.getSize().x * 0.5f, 90});
 		}
 
 		if (notificationTimer.getElapsedTime() > notificationDuration) {
 			fileNotification = "";
 		}
 
-		messageBox.addObject(fileNotification, { 15, 170 });
+		messageBox.addObject(createText(fileNotification, true, sf::Color::White), { messageBox.getSize().x * 0.5f, 170 });
 	}
 	else {
-		messageBox.addObject(board.getPassState() ? "Pass clicked" : "Pass unclicked", { 15, 90 });
+		messageBox.addObject(createText(board.getPassState() ? "Pass clicked" : "Pass unclicked", true, sf::Color::White), { messageBox.getSize().x * 0.5f, 90 });
 	}
+}
+
+sf::Text GameUI::createText(std::string message, bool centered, sf::Color textColor) {
+	sf::Text messageTexture(english_font);
+	messageTexture.setString(message);
+	messageTexture.setFillColor(textColor);
+	messageTexture.setCharacterSize(25);
+
+	if (centered) {
+		messageTexture.setOrigin(messageTexture.getGlobalBounds().size * 0.5f);
+	}
+	return messageTexture;
 }
 
 //This will displaying the timer of black/white and whose turn is it
@@ -458,12 +470,12 @@ void GameUI::loadTime() {
 	int turn = board.getTurn();
 	sf::Time timePassed = deltaClock.restart();
 
-	if (timeLimitSet && timeRemaining[turn] <= timePassed) {
+	if (timeLimitSet && board.subtractTime(timePassed, turn) == false) {
 		board.setGame(false);
+		board.setWinByTime(turn ^ 1);
+
 		return;
 	}
-
-	if (timeLimitSet) timeRemaining[turn] -= timePassed;
 	
 	blackSide.setSize(sf::Vector2f(200, 100));
 	whiteSide.setSize(sf::Vector2f(200, 100));
@@ -472,21 +484,12 @@ void GameUI::loadTime() {
 	else whiteSide.setBackgroundColor(sf::Color::Transparent);
 
 	blackSide.setPosition(sf::Vector2f(gameConfig.boardTopLeft.x + gameConfig.borderLimit + 50, 100));
-	blackSide.addObject("Black", sf::Vector2f(70, 10));
-
-	sf::Text timeHolder(english_font);
-	timeHolder.setPosition(sf::Vector2f(100, 70));
-
-	timeHolder.setString(timeLimitSet ? convertTime(timeRemaining[0]) : "--:--");
-	timeHolder.setOrigin(timeHolder.getGlobalBounds().size * 0.5f);
-	blackSide.addObject(timeHolder);
+	blackSide.addObject(createText("Black", true, sf::Color::White), sf::Vector2f(blackSide.getSize().x * 0.5f, 10));
+	blackSide.addObject(createText(timeLimitSet ? convertTime(board.getTime(0)) : "--:--", true, sf::Color::White), { blackSide.getSize().x * 0.5f, 70 });
 
 	whiteSide.setPosition(sf::Vector2f(gameConfig.boardTopLeft.x + gameConfig.borderLimit + 50, 220));
-	whiteSide.addObject("White", sf::Vector2f(70, 10));
-
-	timeHolder.setString(timeLimitSet ? convertTime(timeRemaining[1]) : "--:--");
-	timeHolder.setOrigin(timeHolder.getGlobalBounds().size * 0.5f);
-	whiteSide.addObject(timeHolder);
+	whiteSide.addObject(createText("White", true, sf::Color::White), sf::Vector2f(whiteSide.getSize().x * 0.5f, 10));
+	whiteSide.addObject(createText(timeLimitSet ? convertTime(board.getTime(1)) : "--:--", true, sf::Color::White), { whiteSide.getSize().x * 0.5f, 70 });
 }
 
 //In-game Annoucement
@@ -504,33 +507,43 @@ void GameUI::annouceInGame(sf::RenderWindow& appWindow) {
 }
 
 //End Popup
+
 void GameUI::loadEndPopup() {
 	endPopup = Popup();
-	endPopup.setSize(sf::Vector2f(300, 200));
+	endPopup.setSize(sf::Vector2f(350, 200));
 
 	endPopup.setPosition((convertToFloat(virtualWindowSize) - endPopup.getSize()) * 0.5f);
 
 	std::array <int, 2> score = board.getScore();
-
-	if (score[0] == 0x3f3f3f3f) {
-		endPopup.addObject("Black wins\nby resignation.", { 20, 20 });
+	
+	//Scoring cases
+	if (score[0] == -0x3f3f3f3f) {
+		endPopup.addObject(createText("Black ran out of time.", true, sf::Color::White), { endPopup.getSize().x * 0.5f, 20});
+		endPopup.addObject(createText("White wins.", true, sf::Color::White), { endPopup.getSize().x * 0.5f, 60 });
+	}
+	else if (score[1] == -0x3f3f3f3f) {
+		endPopup.addObject(createText("White ran out of time.", true, sf::Color::White), { endPopup.getSize().x * 0.5f, 20 });
+		endPopup.addObject(createText("Black wins.", true, sf::Color::White), { endPopup.getSize().x * 0.5f, 60 });
+	}
+	else if (score[0] == 0x3f3f3f3f) {
+		endPopup.addObject(createText("Black wins by resignation.", true, sf::Color::White), { endPopup.getSize().x * 0.5f, 20 });
 	}
 	else if (score[1] == 0x3f3f3f3f) {
-		endPopup.addObject("White wins\nby resignation.", { 20, 20 });
+		endPopup.addObject(createText("White wins by resignation.", true, sf::Color::White), { endPopup.getSize().x * 0.5f, 20 });
 	}
 	else {
-		endPopup.addObject("Black: " + std::to_string(score[0]), { 20, 20 });
-		endPopup.addObject("White: " + std::to_string(score[1]), { 20, 60 });
+		endPopup.addObject(createText("Black: " + std::to_string(score[0]), true, sf::Color::White), { endPopup.getSize().x * 0.5f, 20 });
+		endPopup.addObject(createText("White: " + std::to_string(score[1]), true, sf::Color::White), { endPopup.getSize().x * 0.5f, 60 });
 
 		if (score[0] == score[1]) {
-			endPopup.addObject("Draw", { 20, 100 });
+			endPopup.addObject(createText("Draw" + std::to_string(score[0]), true, sf::Color::White), { endPopup.getSize().x * 0.5f, 100 });
 		}
 		else {
-			endPopup.addObject(std::string((score[0] < score[1] ? "White" : "Black")) + " wins", {20, 100});
+			endPopup.addObject(createText(std::string((score[0] < score[1] ? "White" : "Black")) + " wins", true, sf::Color::White), { endPopup.getSize().x * 0.5f, 100});
 		}
 	}
 
-	endPopup.addObject("New Game?", { 75, 150 });
+	endPopup.addObject(createText("New Game?", true, sf::Color::White), { endPopup.getSize().x * 0.5f, 150});
 }
 
 //End-game annoucement
@@ -568,38 +581,11 @@ void GameUI::setBoardOption(int x) {
 }
 
 void GameUI::setMoveLimit(int x) {
-	moveLimit = x;
+	board.setMoveLimit(x);
 }
 
 void GameUI::setTimeLimit(int id) {
 	timeLimitSet = id > 0;
 
-	switch (id) {
-		case 0:
-			timeLimit = sf::seconds(0.0f);
-			timeAdd = sf::seconds(0.0f);
-			break;
-		case 1:
-			timeLimit = sf::seconds(60.0f);
-			timeAdd = sf::seconds(3.0f);
-			break;
-		case 2:
-			timeLimit = sf::seconds(180.0f);
-			timeAdd = sf::seconds(5.0f);
-			break;
-		case 3:
-			timeLimit = sf::seconds(600.0f);
-			timeAdd = sf::seconds(10.0f);
-			break;
-		case 4:
-			timeLimit = sf::seconds(1800.0f);
-			timeAdd = sf::seconds(20.0f);
-			break;
-	}
-}
-void GameUI::addTime(int turn) {
-	timeRemaining[turn] += timeAdd;
-
-	//Upper bound time limit: 90 minutes
-	timeRemaining[turn] = std::min(timeRemaining[turn], sf::seconds(5400.0f));
+	board.setTimeLimit(id);
 }

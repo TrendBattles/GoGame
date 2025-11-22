@@ -1,5 +1,6 @@
 #include <math.h>
 #include <SFML/Graphics.hpp>
+#include <filesystem>
 
 double sqr(double x) {
 	return x * x;
@@ -31,7 +32,6 @@ sf::Vector2f convertToFloat(sf::Vector2i cur) {
 sf::Vector2f convertToFloat(sf::Vector2u cur) {
 	return sf::Vector2f((float)cur.x, (float)cur.y);
 }
-
 
 
 double squareDist(sf::Vector2f a) {

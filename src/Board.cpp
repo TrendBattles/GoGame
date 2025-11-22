@@ -93,6 +93,9 @@ void Board::setMoveLimit(int target) {
 	//Set move limit (50 minimum)
 	moveLimit = target;
 }
+int Board::getMoveLimit() {
+	return moveLimit;
+}
 int Board::getPointer() {
 	return state_pointer;
 }
@@ -481,4 +484,56 @@ void Board::clearGame() {
 	state_list.assign(1, std::string(row * column, '.'));
 	state_list.back().push_back('0');
 	numCapture.assign(1, { 0, 0 });
+}
+
+void Board::setTimeLimit(int id) {
+	switch (id) {
+	case 0:
+		timeLimit = sf::seconds(0.0f);
+		timeAdd = sf::seconds(0.0f);
+		break;
+	case 1:
+		timeLimit = sf::seconds(60.0f);
+		timeAdd = sf::seconds(3.0f);
+		break;
+	case 2:
+		timeLimit = sf::seconds(180.0f);
+		timeAdd = sf::seconds(5.0f);
+		break;
+	case 3:
+		timeLimit = sf::seconds(600.0f);
+		timeAdd = sf::seconds(10.0f);
+		break;
+	case 4:
+		timeLimit = sf::seconds(1800.0f);
+		timeAdd = sf::seconds(20.0f);
+		break;
+	}
+}
+
+//Reset the game with time limit
+void Board::resetClock() {
+	timeRemaining[0] = timeRemaining[1] = timeLimit;
+}
+//Add time
+void Board::addTime(int turn) {
+	timeRemaining[turn] += timeAdd;
+}
+
+sf::Time Board::getTime(int turn) {
+	return timeRemaining[turn];
+}
+
+//Running clock
+bool Board::subtractTime(sf::Time deltaClock, int turn) {
+	if (timeRemaining[turn] > deltaClock) {
+		timeRemaining[turn] -= deltaClock;
+		return true;
+	}
+	return false;
+}
+
+void Board::setWinByTime(int turn) {
+	score[turn] = 0;
+	score[turn ^ 1] = -0x3f3f3f3f;
 }

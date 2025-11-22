@@ -26,6 +26,7 @@ public:
 	
 	void setGame(bool gameOn = true);
 	void setMoveLimit(int target = 50);
+	int getMoveLimit();
 
 	int getPointer();
 	
@@ -55,6 +56,13 @@ public:
 	int loadGame();
 	void clearGame();
 
+	void setTimeLimit(int id = 0);
+	void resetClock();
+	void addTime(int turn = 0);
+	
+	sf::Time getTime(int turn = 0);
+	bool subtractTime(sf::Time deltaClock, int turn);
+	void setWinByTime(int turn);
 private:
 	std::vector <std::string> state_list;
 
@@ -64,10 +72,14 @@ private:
 	bool current_turn;
 	bool playing;
 
+	//Move Limit parameters
 	int moveLimit;
 
 	std::array <int, 2> score;
 	std::vector <std::array <int, 2>> numCapture;
+		
+	//Time limit parameters
+	sf::Time timeRemaining[2], timeAdd, timeLimit;
 };
 
 #endif

@@ -48,7 +48,6 @@ public:
 	void setMoveLimit(int x = 50);
 
 	void setTimeLimit(int id = 0);
-	void addTime(int turn);
 
 	void loadTime();
 private:
@@ -66,10 +65,9 @@ private:
 
 	int autoSaveToggle;
 	int boardOption;
-	int moveLimit;
 
 	bool timeLimitSet;
-	sf::Time timeRemaining[2], timeAdd, timeLimit;
+
 	sf::Clock deltaClock;
 	
 	std::string fileNotification; //Save/Load notifications
@@ -86,6 +84,8 @@ private:
 	
 	//In-game Annoucement
 	Popup messageBox, blackSide, whiteSide;
+
+	sf::Text createText(std::string message = "", bool centered = true, sf::Color textColor = sf::Color::White);
 };
 
 #endif

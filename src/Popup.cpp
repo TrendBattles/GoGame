@@ -47,6 +47,11 @@ void Popup::addObject(sf::Text builtMessage) {
 	textBoxList.emplace_back(builtMessage);
 }
 
+void Popup::addObject(sf::Text builtMessage, sf::Vector2f offsetPosition) {
+	builtMessage.setPosition(offsetPosition);
+	textBoxList.emplace_back(builtMessage);
+}
+
 
 void Popup::setBackgroundColor(sf::Color bgColor) {
 	background.setFillColor(bgColor);

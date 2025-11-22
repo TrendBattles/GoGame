@@ -20,6 +20,7 @@ public:
 
 	void addObject(std::string message = "", sf::Vector2f offsetPosition = sf::Vector2f(0, 0), sf::Color textColor = sf::Color::White);
 	void addObject(sf::Text builtMessage);
+	void addObject(sf::Text builtMessage, sf::Vector2f offsetPosition);
 
 	void setBackgroundColor(sf::Color bgColor = sf::Color::Transparent);
 		
