@@ -12,7 +12,7 @@ void RulesMenu::init() {
 	english_font.openFromFile(ENGLISH_FONT_PATH.c_str());
 
 	horizontal_offset = sf::Vector2f(virtualWindowSize.x * 0.5f, 0);
-	vertical_offset = sf::Vector2f(0, 180);
+	vertical_offset = sf::Vector2f(0, 100);
 	gap = sf::Vector2f(0, 35);
 }
 
@@ -24,7 +24,7 @@ void RulesMenu::setCenter(sf::Text& text) {
 void RulesMenu::draw_UI(sf::RenderWindow& appwindow) {
 	sf::Text menu_title(chinese_font);
 	menu_title.setString("RULES");
-	menu_title.setCharacterSize(60);
+	menu_title.setCharacterSize(50);
 	menu_title.setFillColor(ui_color);
 	menu_title.setPosition(horizontal_offset + vertical_offset * 0.5f);
 	setCenter(menu_title);
@@ -33,20 +33,23 @@ void RulesMenu::draw_UI(sf::RenderWindow& appwindow) {
 	std::vector<std::string> lines;
 	lines.push_back("Go is a strategy game on a grid.");
 	lines.push_back("Players place Black (go first) and White stones to surround territory.");
-	lines.push_back("Stones must have an adjacent empty point (liberty).");
+	lines.push_back("Stones must have an adjacent empty cell (liberty).");
 	lines.push_back("A stone/group with no liberties is captured (removed).");
 	lines.push_back("Repeating a board position is illegal (Ko rule).");
-	lines.push_back("The player with the most stone on the board win.");
-	lines.push_back("White will be given a 8 points lead to compensate.");
+	lines.push_back("The player with the most points on the board win.");
+	lines.push_back("White will be given an 8-point lead to compensate.");
 	lines.push_back("----------");
-	lines.push_back("You can change board size. Currently, 9x9, 13x13 and 19x19 is supported.");
+	lines.push_back("Points = (Number of your stones on board) + (Number of prisoners) + (Territory area)");
+	lines.push_back("Note that you can't see your current points during the game.");
 	lines.push_back("----------");
-	lines.push_back("You can put move limit. When move limit is exceeded, the game ends.");
-	lines.push_back("The winner will be calculate by the above rule.");
+	lines.push_back("You can change board size. Currently, 9x9, 13x13 and 19x19 are supported.");
+	lines.push_back("----------");
+	lines.push_back("You can put move limit. When exceeding the limit, the game ends.");
+	lines.push_back("The winner will be decided by the above rule.");
 	lines.push_back("----------");
 	lines.push_back("You can put time limit. Whoever runs out of time first loses.");
 	lines.push_back("----------");
-	lines.push_back("Saving, loading, undoing and redoing move is disabled in move/time limit");
+	lines.push_back("Saving, loading, undoing and redoing moves are disabled in time limit");
 
 	for (int i = 0; i < (int)lines.size(); ++i) {
 		sf::Text text(english_font);
