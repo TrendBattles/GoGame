@@ -432,7 +432,7 @@ void GameUI::loadTurnIndicator() {
 
 	messageBox.setSize(sf::Vector2f(200, 240));
 
-	if (!timeLimitSet) {
+	if (board.getMoveLimit() > 0) {
 		messageBox.addObject(createText(board.getPassState() ? "Pass clicked" : "Pass unclicked", true, sf::Color::White), { messageBox.getSize().x * 0.5f, 10});
 
 

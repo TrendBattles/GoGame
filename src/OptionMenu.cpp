@@ -292,18 +292,9 @@ int OptionMenu::tryClickingAt(sf::Vector2f mouse_pos) {
 			//Rotating choices
 			option_chosen[i] = (option_chosen[i] + 1) % sz;
 
-			//Time limit turned on -> No autosave, no move limit
+			//Time limit turned on -> No autosave
 			if (selection_section[i] == "TIME LIMIT" && selection_option[i][option_chosen[i]] != "None") {
 				autoSaveToggle = 0;
-
-				int moveLimitPos = std::find(selection_section.begin(), selection_section.end(), "MOVE LIMIT") - selection_section.begin();
-				option_chosen[moveLimitPos] = 0;
-			}
-
-			if (selection_section[i] == "MOVE LIMIT" && selection_option[i][option_chosen[i]] != "None") {
-
-				int timeLimitPos = std::find(selection_section.begin(), selection_section.end(), "TIME LIMIT") - selection_section.begin();
-				option_chosen[timeLimitPos] = 0;
 			}
 
 			saveConfig();
