@@ -12,7 +12,7 @@ struct GameConfig {
 	float board_offset();
 	float stoneRadius();
 
-	int boardEdge = 576, borderLimit = 600;
+	int boardEdge = 576, borderLimit = 620;
 	int gridSize;
 
 	sf::Vector2f boardTopLeft;
@@ -87,7 +87,6 @@ private:
 	Popup messageBox, blackSide, whiteSide;
 
 	sf::Text createText(std::string message = "", bool centered = true, sf::Color textColor = sf::Color::White);
-	sf::Vector2f horizontal_offset, vertical_offset;
 };
 
 #endif
