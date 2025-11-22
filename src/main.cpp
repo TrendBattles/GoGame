@@ -5,6 +5,8 @@
 
 sf::RenderWindow appWindow;
 
+
+
 int main(int argv, char* args[]) {
 	appWindow = sf::RenderWindow(sf::VideoMode(windowSize), "Go",
 		sf::Style::Titlebar | sf::Style::Close);

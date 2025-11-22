@@ -279,23 +279,37 @@ void OptionMenu::draw_selection_button(sf::RenderWindow& appwindow) {
 	}
 }
 
+
 void OptionMenu::draw_back_button(sf::RenderWindow& appwindow, sf::Vector2f mouse_pos) {
 	// draw the text
-	delete back_button;
+	sf::Text back_button(chinese_font);
+	back_button.setString("Menu");
 
-	back_button = new sf::Text(chinese_font);
-	back_button->setString("Menu");
-	back_button->setCharacterSize(25);
-	back_button->setFillColor(ui_color);
-	back_button->setPosition(sf::Vector2f(20, 20));
-
+	back_button.setCharacterSize(25);
+	back_button.setFillColor(ui_color);
+	back_button.setPosition(sf::Vector2f(20, 20));
 
 
 	if (mouse_pos.x >= 0 && mouse_pos.x <= 150 && mouse_pos.y >= 0 && mouse_pos.y <= 80) {
-		back_button -> setFillColor(accent_color);
+		back_button.setFillColor(accent_color);
 	}
 
-	appwindow.draw(*back_button);
+	appwindow.draw(back_button);
+
+
+	sf::Text game_button(chinese_font);
+	game_button.setString("Play!");
+
+	game_button.setCharacterSize(25);
+	game_button.setFillColor(ui_color);
+	game_button.setPosition(sf::Vector2f(1110, 20));
+
+	mouse_pos.x = virtualWindowSize.x - mouse_pos.x;
+	if (mouse_pos.x >= 0 && mouse_pos.x <= 150 && mouse_pos.y >= 0 && mouse_pos.y <= 80) {
+		game_button.setFillColor(accent_color);
+	}
+
+	appwindow.draw(game_button);
 }
 
 int OptionMenu::tryClickingAt(sf::Vector2f mouse_pos) {
@@ -355,6 +369,9 @@ int OptionMenu::tryClickingAt(sf::Vector2f mouse_pos) {
 	if (mouse_pos.x >= 0 && mouse_pos.x <= 150 && mouse_pos.y >= 0 && mouse_pos.y <= 80) {
 		return 1;
 	}
+	mouse_pos.x = virtualWindowSize.x - mouse_pos.x;
+	if (mouse_pos.x >= 0 && mouse_pos.x <= 150 && mouse_pos.y >= 0 && mouse_pos.y <= 80)
+		return 2;
 	return -1;
 }
 

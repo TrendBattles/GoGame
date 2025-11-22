@@ -77,10 +77,6 @@ private:
 	sf::Clock notificationTimer;
 	sf::Time notificationDuration = sf::seconds(2.5f); //Time limit for showing
 
-
-	//Game function buttons
-	sf::Text* back_button;
-
 	//End-game texture
 	bool savedEndGame;
 	Popup endPopup;

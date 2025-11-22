@@ -29,7 +29,7 @@ GameConfig::GameConfig(int sizeState) {
 
 void GameConfig::setBorderLimit(int x) {
 	borderLimit = x;
-	boardTopLeft = (convertToFloat(virtualWindowSize) - sf::Vector2f(boardEdge, boardEdge)) * 0.5f;
+	boardTopLeft = (convertToFloat(virtualWindowSize) - sf::Vector2f(borderLimit, borderLimit)) * 0.5f;
 	boardTopLeft.y = vertical_offset.y;
 }
 
@@ -107,20 +107,34 @@ void GameUI::setCenter(sf::Text& text) {
 
 
 void GameUI::draw_back_button(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos) {
-	// draw the text
-	delete back_button;
+	sf::Text back_button(chinese_font);
+	back_button.setString("Menu");
 
-	back_button = new sf::Text(chinese_font);
-	back_button -> setString("Menu");
-	back_button -> setCharacterSize(25);
-	back_button -> setFillColor(ui_color);
-	back_button -> setPosition(sf::Vector2f(20, 20));
+	back_button.setCharacterSize(25);
+	back_button.setFillColor(ui_color);
+	back_button.setPosition(sf::Vector2f(20, 20));
+
 
 	if (mouse_pos.x >= 0 && mouse_pos.x <= 150 && mouse_pos.y >= 0 && mouse_pos.y <= 80) {
-		back_button->setFillColor(accent_color);
+		back_button.setFillColor(accent_color);
 	}
 
-	appWindow.draw(*back_button);
+	appWindow.draw(back_button);
+
+
+	sf::Text game_button(chinese_font);
+	game_button.setString("Options");
+
+	game_button.setCharacterSize(25);
+	game_button.setFillColor(ui_color);
+	game_button.setPosition(sf::Vector2f(1080, 20));
+
+	mouse_pos.x = virtualWindowSize.x - mouse_pos.x;
+	if (mouse_pos.x >= 0 && mouse_pos.x <= 150 && mouse_pos.y >= 0 && mouse_pos.y <= 80) {
+		game_button.setFillColor(accent_color);
+	}
+
+	appWindow.draw(game_button);
 }
 
 void GameUI::draw_UI(sf::RenderWindow& appWindow) {
@@ -145,10 +159,6 @@ void GameUI::draw_UI(sf::RenderWindow& appWindow) {
 	setCenter(menu_title);
 
 	appWindow.draw(menu_title);
-
-	/*
-		drawing the back board
-	*/
 
 	sf::RectangleShape rect(sf::Vector2f(gameConfig.borderLimit, gameConfig.borderLimit));
 	rect.setPosition(gameConfig.boardTopLeft);
@@ -215,7 +225,7 @@ void GameUI::draw_game_buttons(sf::RenderWindow& appWindow) {
 		appWindow.draw(passText);
 	};
 	
-	sf::Vector2f horizontal_offset(virtualWindowSize.x * 0.5f, 0), content_offset(horizontal_offset.x - 100, 0);
+	sf::Vector2f horizontal_offset(virtualWindowSize.x * 0.5f, 0), content_offset(horizontal_offset.x - gameConfig.boardTopLeft.x * 0.5f, 0);
 	sf::Vector2f vertical_offset(0, 400), vertical_gap(0, 75);
 	
 	if (!timeLimitSet) {
@@ -240,9 +250,9 @@ void GameUI::draw_game_buttons(sf::RenderWindow& appWindow) {
 	}
 	else {
 		Specific_Draw("PASS",
-			horizontal_offset + content_offset + vertical_offset + vertical_gap * 2.0f, 25);
+			horizontal_offset + content_offset + vertical_offset + vertical_gap * 0.0f, 25);
 		Specific_Draw("RESIGN",
-			horizontal_offset + content_offset + vertical_offset + vertical_gap * 3.0f, 25);
+			horizontal_offset + content_offset + vertical_offset + vertical_gap * 1.0f, 25);
 	}
 }
 
@@ -250,6 +260,12 @@ int GameUI::tryClickingAt(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos) {
 	//Go back
 	if (mouse_pos.x >= 0 && mouse_pos.x <= 150 && mouse_pos.y >= 0 && mouse_pos.y <= 80) {
 		return 10;
+	}
+
+	sf::Vector2f tmp = mouse_pos;
+	tmp.x = virtualWindowSize.x - tmp.x;
+	if (tmp.x >= 0 && tmp.x <= 150 && tmp.y >= 0 && tmp.y <= 80) {
+		return 20;
 	}
 
 
@@ -299,18 +315,17 @@ int GameUI::tryClickingAt(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos) {
 	
 	sf::Vector2f buttonSize(155, 75);
 
+	auto check_inside = [&](sf::Vector2f a, sf::Vector2f b) -> bool {
+		return (abs(a.x) <= b.x) && (abs(a.y) <= b.y);
+		};
 	if (!timeLimitSet) {
 		//No time limit
-		sf::Vector2f horizontal_offset(virtualWindowSize.x * 0.5f, 0), content_offset(horizontal_offset.x - 100, 0);
+		sf::Vector2f horizontal_offset(virtualWindowSize.x * 0.5f, 0), content_offset(horizontal_offset.x - 150, 0);
 		sf::Vector2f vertical_offset(0, 400), vertical_gap(0, 75);
 
 
 		sf::Vector2f func_button = horizontal_offset - content_offset + vertical_offset;
 		sf::Vector2f hitbox(100, 35);
-
-		auto check_inside = [&](sf::Vector2f a, sf::Vector2f b) -> bool {
-			return (abs(a.x) <= b.x) && (abs(a.y) <= b.y);
-		};
 
 
 		//Save region
@@ -385,20 +400,21 @@ int GameUI::tryClickingAt(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos) {
 		}
 	}
 	else {
-		int totalLength = buttonSize.x * 2 + 50;
+		sf::Vector2f horizontal_offset(virtualWindowSize.x * 0.5f, 0), content_offset(horizontal_offset.x - 150, 0);
+		sf::Vector2f vertical_offset(0, 400), vertical_gap(0, 75);
+		sf::Vector2f hitbox(100, 35);
 
-		sf::Vector2f funcButton = sf::Vector2f(gameConfig.boardTopLeft.x + (gameConfig.borderLimit - totalLength) * 0.5f, gameConfig.boardTopLeft.y + gameConfig.borderLimit + 20);
+		sf::Vector2f func_button = horizontal_offset + vertical_offset + content_offset;
 		
 		//Pass region
-		if ((mouse_pos.x - funcButton.x) * (mouse_pos.x - (funcButton.x + buttonSize.x)) <= 0 && (mouse_pos.y - funcButton.y) * (mouse_pos.y - (funcButton.y + buttonSize.y)) <= 0) {
+		if (check_inside(mouse_pos - func_button, hitbox)) {
 			board.pass();
 			return -1;
 		}
-		
-		funcButton += sf::Vector2f(buttonSize.x + 50, 0);
+		func_button += vertical_gap;
 
 		//Resign region
-		if ((mouse_pos.x - funcButton.x) * (mouse_pos.x - (funcButton.x + buttonSize.x)) <= 0 && (mouse_pos.y - funcButton.y) * (mouse_pos.y - (funcButton.y + buttonSize.y)) <= 0) {
+		if (check_inside(mouse_pos - func_button, hitbox)) {
 			board.resign();
 			return -1;
 		}
@@ -483,9 +499,8 @@ void GameUI::loadGame() {
 void GameUI::loadTurnIndicator() {
 	messageBox = Popup();
 
-	messageBox.setPosition(sf::Vector2f(70, 100));
-
-	messageBox.setSize(sf::Vector2f(200, 240));
+	messageBox.setPosition(sf::Vector2f(20, 100));
+	messageBox.setSize(sf::Vector2f(250, 240));
 
 	if (board.getMoveLimit() > 0) {
 		messageBox.addObject(createText(board.getPassState() ? "Pass clicked" : "Pass unclicked", true, sf::Color::White), { messageBox.getSize().x * 0.5f, 10});
@@ -537,6 +552,8 @@ void GameUI::loadTime() {
 
 	if (turn != 0) blackSide.setBackgroundColor(sf::Color::Transparent);
 	else whiteSide.setBackgroundColor(sf::Color::Transparent);
+
+
 
 	blackSide.setPosition(sf::Vector2f(gameConfig.boardTopLeft.x + gameConfig.borderLimit + 50, 100));
 	blackSide.addObject(createText("Black", true, sf::Color::White), sf::Vector2f(blackSide.getSize().x * 0.5f, 10));

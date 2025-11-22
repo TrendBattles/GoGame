@@ -82,11 +82,27 @@ void RulesMenu::draw_back_button(sf::RenderWindow& appwindow, sf::Vector2f mouse
 
 	appwindow.draw(back_button);
 
+
+	sf::Text game_button(chinese_font);
+	game_button.setString("Play!");
+
+	game_button.setCharacterSize(25);
+	game_button.setFillColor(ui_color);
+	game_button.setPosition(sf::Vector2f(1110, 20));
+
+	mouse_pos.x = virtualWindowSize.x - mouse_pos.x;
+	if (mouse_pos.x >= 0 && mouse_pos.x <= 150 && mouse_pos.y >= 0 && mouse_pos.y <= 80) {
+		game_button.setFillColor(accent_color);
+	}
+
+	appwindow.draw(game_button);
 }
 
 int RulesMenu::tryClickingAt(sf::Vector2f mouse_pos) {
-
 	if (mouse_pos.x >= 0 && mouse_pos.x <= 150 && mouse_pos.y >= 0 && mouse_pos.y <= 80)
 		return 1;
+	mouse_pos.x = virtualWindowSize.x - mouse_pos.x;
+	if (mouse_pos.x >= 0 && mouse_pos.x <= 150 && mouse_pos.y >= 0 && mouse_pos.y <= 80)
+		return 2;
 	return -1;
 }

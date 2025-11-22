@@ -135,6 +135,10 @@ void handle_option_menu() {
 			case 1:
 				current_scene = GameScene::MENU;
 				break;
+			case 2:
+				current_scene = GameScene::GAME;
+				gameui.initGame();
+				break;
 		}
 
 		if (sound_board.setAudioType(optionmenu.getAttribute("MUSIC THEME") + 1))
@@ -154,11 +158,15 @@ void handle_about_menu() {
 		case 1:
 			current_scene = GameScene::MENU;
 			break;
+		case 2:
+			current_scene = GameScene::GAME;
+			gameui.initGame();
+			break;
 		}
 	}
 }
 
-void handle_rules_scene() {
+void handle_rules_menu() {
 	rulesmenu.draw_back_button(appWindow, get_mouse_position());
 	rulesmenu.draw_UI(appWindow);
 
@@ -169,6 +177,10 @@ void handle_rules_scene() {
 			break;
 		case 1:
 			current_scene = GameScene::MENU;
+			break;
+		case 2:
+			current_scene = GameScene::GAME;
+			gameui.initGame();
 			break;
 		}
 	}
@@ -181,6 +193,9 @@ void handle_game_scene() {
 
 	if (mouse_state == MouseState::CLICK) {
 		int signal = gameui.tryClickingAt(appWindow, get_mouse_position());
+		if (signal != -1) {
+			std::cerr << signal << "\n";
+		}
 
 		if (signal != -1) {
 			switch (signal) {
@@ -188,7 +203,7 @@ void handle_game_scene() {
 					current_scene = GameScene::MENU;
 					break;
 				case 20:
-					current_scene = GameScene::MENU;
+					current_scene = GameScene::OPTION;
 					break;
 				default:
 					sound_board.play_audio((SoundEffect)signal);
@@ -245,7 +260,7 @@ void appLoop() {
 			handle_game_scene();
 			break;
 		case GameScene::RULES:
-			handle_rules_scene();
+			handle_rules_menu();
 			break;
 		case GameScene::OPTION:
 			handle_option_menu();

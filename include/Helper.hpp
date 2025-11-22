@@ -19,4 +19,6 @@ double squareDist(sf::Vector2f a, sf::Vector2f b);
 double dist(sf::Vector2f a, sf::Vector2f b);
 double inverseDist(sf::Vector2f a, sf::Vector2f b);
 
+
+
 #endif
