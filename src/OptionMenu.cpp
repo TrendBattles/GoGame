@@ -19,7 +19,7 @@ void OptionMenu::init() {
 	english_font.openFromFile(ENGLISH_FONT_PATH.c_str());
 
 	horizontal_offset = sf::Vector2f(virtualWindowSize.x * 0.5f, 0);
-	vertical_offset = sf::Vector2f(0, 100);
+	vertical_offset = sf::Vector2f(0, 200);
 	gap = sf::Vector2f(0, 80);
 	ui_color = sf::Color::White;
 
@@ -157,6 +157,16 @@ void OptionMenu::setCenter(sf::Text& text) {
 }
 
 void OptionMenu::draw_feature_button(sf::RenderWindow& appwindow) {
+	sf::Text menu_title(chinese_font);
+	menu_title.setString("OPTIONS");
+	menu_title.setCharacterSize(60);
+	menu_title.setFillColor(ui_color);
+	menu_title.setPosition(horizontal_offset + vertical_offset * 0.5f);
+	setCenter(menu_title);
+	appwindow.draw(menu_title);
+
+
+
 	// draw the text
 	sf::Text music(chinese_font), sound(chinese_font), autoSave(chinese_font);
 	music.setString("MUSIC"); sound.setString("SOUND");

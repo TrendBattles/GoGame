@@ -16,6 +16,7 @@ struct GameConfig {
 	int gridSize;
 
 	sf::Vector2f boardTopLeft;
+	sf::Vector2f horizontal_offset, vertical_offset;
 };
 
 class GameUI {
@@ -86,6 +87,7 @@ private:
 	Popup messageBox, blackSide, whiteSide;
 
 	sf::Text createText(std::string message = "", bool centered = true, sf::Color textColor = sf::Color::White);
+	sf::Vector2f horizontal_offset, vertical_offset;
 };
 
 #endif

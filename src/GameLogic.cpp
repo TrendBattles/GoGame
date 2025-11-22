@@ -95,7 +95,7 @@ int pollEvent() { // if window is closed, return 0
 
 void handle_menu() {
 	menu.draw_game_text(appWindow);
-	menu.draw_button(appWindow);
+	menu.draw_button(appWindow, get_mouse_position());
 	
 	if (mouse_state == MouseState::CLICK) {
 		int new_signal = menu.tryClickingAt(get_mouse_position());

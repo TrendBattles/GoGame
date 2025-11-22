@@ -12,17 +12,27 @@ void RulesMenu::init() {
 	english_font.openFromFile(ENGLISH_FONT_PATH.c_str());
 
 	horizontal_offset = sf::Vector2f(virtualWindowSize.x * 0.5f, 0);
-	vertical_offset = sf::Vector2f(0, 150);
-	gap = sf::Vector2f(0, 40);
+	vertical_offset = sf::Vector2f(0, 180);
+	gap = sf::Vector2f(0, 35);
 	ui_color = sf::Color::White;
 }
 
 void RulesMenu::setCenter(sf::Text& text) {
 	sf::FloatRect bounds = text.getLocalBounds();
-	text.setOrigin(bounds.size * 0.5f);;
+	text.setOrigin(bounds.size * 0.5f);
 }
 
 void RulesMenu::draw_UI(sf::RenderWindow& appwindow) {
+	sf::Text menu_title(chinese_font);
+	menu_title.setString("RULES");
+	menu_title.setCharacterSize(60);
+	menu_title.setFillColor(ui_color);
+	menu_title.setPosition(horizontal_offset + vertical_offset * 0.5f);
+	setCenter(menu_title);
+
+	appwindow.draw(menu_title);
+
+
 	std::vector<std::string> lines;
 	lines.push_back("Go is a strategy game on a grid.");
 	lines.push_back("Players place Black (go first) and White stones to surround territory.");
@@ -38,6 +48,8 @@ void RulesMenu::draw_UI(sf::RenderWindow& appwindow) {
 	lines.push_back("The winner will be calculate by the above rule.");
 	lines.push_back("----------");
 	lines.push_back("You can put time limit. Whoever runs out of time first loses.");
+	lines.push_back("----------");
+	lines.push_back("Saving, loading, undoing and redoing move is disabled in move/time limit");
 
 
 

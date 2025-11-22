@@ -5,10 +5,11 @@
 #include <vector>
 
 GameConfig::GameConfig(int sizeState) {
+	vertical_offset = sf::Vector2f(0, 100);
 	boardTopLeft = (convertToFloat(virtualWindowSize) - sf::Vector2f(borderLimit, borderLimit)) * 0.5f;
 	
 	boardTopLeft.x += 20;
-	boardTopLeft.y = 50;
+	boardTopLeft.y = vertical_offset.y;
 
 	switch (sizeState) {
 		case 0:
@@ -56,6 +57,10 @@ void GameUI::init() {
 	PIECE_SCALE = sf::Vector2f(0.4, 0.4);
 
 	autoSaveToggle = 1;
+
+
+	vertical_offset = sf::Vector2f(0, 100);
+	horizontal_offset = sf::Vector2f(virtualWindowSize.x * 0.5f, 0);
 }
 
 //Gameplay initialization
@@ -112,6 +117,15 @@ void GameUI::draw_back_button(sf::RenderWindow& appWindow) {
 }
 
 void GameUI::draw_UI(sf::RenderWindow& appWindow) {
+	sf::Text menu_title(chinese_font);
+	menu_title.setString("GO GAME");
+	menu_title.setCharacterSize(40);
+	menu_title.setFillColor(ui_color);
+	menu_title.setPosition(horizontal_offset + vertical_offset * 0.5f);
+	setCenter(menu_title);
+
+	appWindow.draw(menu_title);
+
 	/*
 		Setting the board to be centered
 	*/
