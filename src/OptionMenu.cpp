@@ -157,6 +157,39 @@ void OptionMenu::setCenter(sf::Text& text, int mask) {
 	text.setOrigin(bounds.size * 0.5f);;
 }
 
+void OptionMenu::drawRadioButton(sf::RenderWindow& appWindow, double y, double a, double b, double c) {
+
+	const sf::Color beige(252, 229, 205), brown(40, 40, 40), bruh(89, 89, 89);
+
+	sf::Vector2f zero_percent = sf::Vector2f(a, y);
+	sf::Vector2f hundred_percent = sf::Vector2f(c, y);
+	sf::Vector2f current_percent = sf::Vector2f(b, y);
+
+	sf::CircleShape cyka0(volume_btn_size.x * 0.5f), cyka100(volume_btn_size.x * 0.5f);
+	cyka0.setPosition(zero_percent); cyka100.setPosition(hundred_percent);
+	cyka0.setOrigin(volume_btn_size * 0.5f); cyka100.setOrigin(volume_btn_size * 0.5f);
+	cyka0.setFillColor(beige); cyka100.setFillColor(brown);
+
+	sf::RectangleShape filled(sf::Vector2f(current_percent.x - zero_percent.x, volume_btn_size.y)),
+		unfilled(sf::Vector2f(hundred_percent.x - current_percent.x, volume_btn_size.y));
+	filled.setOrigin(sf::Vector2f(0, volume_btn_size.y * 0.5f));
+	unfilled.setOrigin(sf::Vector2f(0, volume_btn_size.y * 0.5f));
+	filled.setPosition(zero_percent); unfilled.setPosition(current_percent);
+	filled.setFillColor(beige); unfilled.setFillColor(brown);
+
+	sf::CircleShape chode(volume_btn_size.x * 0.8f);
+	chode.setPosition(current_percent);
+	chode.setOrigin(volume_btn_size * 0.8f);
+	chode.setFillColor(ui_color);
+	chode.setOutlineColor(bruh);
+	chode.setOutlineThickness(5.0f);
+
+
+	appWindow.draw(cyka0); appWindow.draw(cyka100);
+	appWindow.draw(filled); appWindow.draw(unfilled);
+	appWindow.draw(chode);
+}
+
 void OptionMenu::draw_feature_button(sf::RenderWindow& appwindow) {
 	sf::Text menu_title(chinese_font);
 	menu_title.setString("OPTIONS");
@@ -165,8 +198,6 @@ void OptionMenu::draw_feature_button(sf::RenderWindow& appwindow) {
 	menu_title.setPosition(horizontal_offset + vertical_offset * 0.5f);
 	setCenter(menu_title);
 	appwindow.draw(menu_title);
-
-
 
 	// draw the text
 	sf::Text music(chinese_font), sound(chinese_font), autoSave(chinese_font);
@@ -201,40 +232,26 @@ void OptionMenu::draw_feature_button(sf::RenderWindow& appwindow) {
 		sf::Vector2f current_percent =
 			vertical_offset + horizontal_offset + button_gap * float(threshold) + gap * float(r) + content_offset;
 
-		sf::CircleShape cyka0(volume_btn_size.x * 0.5f), cyka100(volume_btn_size.x * 0.5f);
-		cyka0.setPosition(zero_percent); cyka100.setPosition(hundred_percent);
-		cyka0.setOrigin(volume_btn_size * 0.5f); cyka100.setOrigin(volume_btn_size * 0.5f);
-		cyka0.setFillColor(beige); cyka100.setFillColor(brown);
-
-		sf::RectangleShape filled(sf::Vector2f(current_percent.x - zero_percent.x, volume_btn_size.y)),
-			unfilled(sf::Vector2f(hundred_percent.x - current_percent.x, volume_btn_size.y));
-		filled.setOrigin(sf::Vector2f(0, volume_btn_size.y * 0.5f));
-		unfilled.setOrigin(sf::Vector2f(0, volume_btn_size.y * 0.5f));
-		filled.setPosition(zero_percent); unfilled.setPosition(current_percent);
-		filled.setFillColor(beige); unfilled.setFillColor(brown);
-
-		sf::CircleShape chode(volume_btn_size.x * 0.8f);
-		chode.setPosition(current_percent);
-		chode.setOrigin(volume_btn_size * 0.8f);
-		chode.setFillColor(ui_color); 
-		chode.setOutlineColor(bruh);
-		chode.setOutlineThickness(5.0f);
-
-
-		appwindow.draw(cyka0); appwindow.draw(cyka100);
-		appwindow.draw(filled); appwindow.draw(unfilled);
-		appwindow.draw(chode);
+		drawRadioButton(appwindow, zero_percent.y, zero_percent.x, current_percent.x, hundred_percent.x);
 	}
 
 
 	delete autoSaveAlert;
 	autoSaveAlert = new sf::Text(chinese_font);
 	
-	autoSaveAlert->setString(autoSaveToggle ? "ON" : "OFF");
+	autoSaveAlert->setString("OFF");
 	autoSaveAlert->setPosition(vertical_offset + horizontal_offset + gap * 2.0f + content_offset);
 	setCenter(*autoSaveAlert, 2);
 
-	appwindow.draw(*autoSaveAlert);
+
+	sf::Vector2f zero_percent =
+		vertical_offset + horizontal_offset + gap * 2.0f + content_offset;
+	sf::Vector2f hundred_percent =
+		vertical_offset + horizontal_offset + gap * 2.0f + content_offset + button_gap * float(20);
+	sf::Vector2f current_percent =
+		vertical_offset + horizontal_offset + gap * 2.0f + content_offset + button_gap * float(20 * autoSaveToggle);
+
+	drawRadioButton(appwindow, zero_percent.y, zero_percent.x, current_percent.x, hundred_percent.x);
 }
 
 
@@ -283,12 +300,14 @@ void OptionMenu::draw_back_button(sf::RenderWindow& appwindow, sf::Vector2f mous
 
 int OptionMenu::tryClickingAt(sf::Vector2f mouse_pos) {
 	for (int r = 0; r <= 1; ++r) {
-		sf::Vector2f cao_boi =
+		sf::Vector2f fifty_percent =
 			vertical_offset + horizontal_offset + button_gap * float(50) + gap * float(r) + content_offset;
-		sf::Vector2f sz(button_gap.x * float(50), volume_btn_size.x * 0.5f);
-		if (abs(mouse_pos.x - cao_boi.x) <= sz.x && abs(mouse_pos.y - cao_boi.y) <= sz.y) {
+		sf::Vector2f sz(button_gap.x * float(70), volume_btn_size.x);
+		if (abs(mouse_pos.x - fifty_percent.x) <= sz.x && abs(mouse_pos.y - fifty_percent.y) <= sz.y) {
 			double chiu_bo = horizontal_offset.x + content_offset.x;
 			chiu_bo = (mouse_pos.x - chiu_bo) / button_gap.x;
+			if (chiu_bo < 0) chiu_bo = 0;
+			if (chiu_bo > 100) chiu_bo = 100;
 
 			int ans = round(chiu_bo / 10) * 10;
 			switch (r) {
@@ -302,7 +321,12 @@ int OptionMenu::tryClickingAt(sf::Vector2f mouse_pos) {
 		}
 	}
 
-	if (autoSaveAlert->getGlobalBounds().contains(mouse_pos)) {
+
+	sf::Vector2f fifty_percent =
+		vertical_offset + horizontal_offset + gap * 2.0f + content_offset + button_gap * float(10);
+	sf::Vector2f sz =
+		sf::Vector2f(button_gap.x * float(30), volume_btn_size.x);
+	if (abs(mouse_pos.x - fifty_percent.x) <= sz.x && abs(mouse_pos.y - fifty_percent.y) <= sz.y) {
 		int timeLimitPos = std::find(selection_section.begin(), selection_section.end(), "TIME LIMIT") - selection_section.begin();
 
 		//Time limit turned on -> No autosave

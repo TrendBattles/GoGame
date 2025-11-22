@@ -42,6 +42,8 @@ private:
 	std::vector<int> option_chosen;
 	std::vector<std::vector<std::string>> selection_option;
 	std::vector<sf::Text> buttons;
+
+	void drawRadioButton(sf::RenderWindow& appWindow, double y, double a, double b, double c);
 };
 
 #endif

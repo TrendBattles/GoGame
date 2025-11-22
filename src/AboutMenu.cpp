@@ -38,11 +38,15 @@ void AboutMenu::draw_UI(sf::RenderWindow& appwindow) {
 	lines.push_back("It's just a random college project.");
 	lines.push_back("We procrastinated this like crazy. Life is tough");
 	lines.push_back("At least we managed to push this out, cool I guess.");
+	lines.push_back("===========");
 	lines.push_back("DEV LOGS:");
 	lines.push_back("1 month before deadlines: adding chessboard");
 	lines.push_back("1 week before deadlines: adding the entire menu system");
 	lines.push_back("3 days before deadlines: adding the option system");
 	lines.push_back("2 days before deadlines: redesigning the entire project");
+	lines.push_back("===========");
+	lines.push_back("QUOTE OF THE DAY:");
+	lines.push_back("\"In my next magic trick, I will code a project worth half my grade in 2 hours.\"");
 
 
 	for (int i = 0; i < (int)lines.size(); ++i) {
