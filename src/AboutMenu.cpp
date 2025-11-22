@@ -1,6 +1,7 @@
 #include <AboutMenu.hpp>
 #include <iostream>
 #include <vector>
+#include <Helper.hpp>
 
 void AboutMenu::init() {
 	const std::filesystem::path CHINESE_FONT_PATH =
@@ -10,7 +11,7 @@ void AboutMenu::init() {
 		std::filesystem::absolute(std::string(PROJECT_DIR) + "assets/Font/english.otf");
 	english_font.openFromFile(ENGLISH_FONT_PATH.c_str());
 
-	horizontal_offset = sf::Vector2f(500, 0);
+	horizontal_offset = sf::Vector2f(virtualWindowSize.x * 0.5f, 0);
 	vertical_offset = sf::Vector2f(0, 150);
 	gap = sf::Vector2f(0, 40);
 	ui_color = sf::Color::White;

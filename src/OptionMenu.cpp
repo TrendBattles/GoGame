@@ -2,6 +2,7 @@
 #include <iostream>
 #include <vector>
 #include <fstream>
+#include <Helper.hpp>
 
 
 const std::filesystem::path CACHE_FILE =
@@ -17,14 +18,13 @@ void OptionMenu::init() {
 		std::filesystem::absolute(std::string(PROJECT_DIR) + "assets/Font/english.otf");
 	english_font.openFromFile(ENGLISH_FONT_PATH.c_str());
 
-	horizontal_offset = sf::Vector2f(500, 0);
+	horizontal_offset = sf::Vector2f(virtualWindowSize.x * 0.5f, 0);
 	vertical_offset = sf::Vector2f(0, 100);
 	gap = sf::Vector2f(0, 80);
 	ui_color = sf::Color::White;
 
 
 	text_offset = sf::Vector2f(-150, 0);
-	content_offset = sf::Vector2f(40, 0);
 	volume_btn_size = sf::Vector2f(30, 20);
 	button_gap = sf::Vector2f(35, 0);
 

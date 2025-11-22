@@ -14,7 +14,6 @@ Log:
 #include <filesystem>
 
 extern sf::RenderWindow appWindow;
-const int COLUMN = 9, ROW = 9;
 
 MediaPlayer sound_board;
 
@@ -104,7 +103,14 @@ void handle_menu() {
 				current_scene = GameScene::OPTION;
 				break;
 			case 2:
+				break;
+			case 3:
 				current_scene = GameScene::ABOUT;
+				break;
+			case 4:
+				std::cerr << "Closing the window" << std::endl;
+				appWindow.close();
+				break;
 		}
 	}
 }

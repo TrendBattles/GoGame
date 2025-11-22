@@ -1,6 +1,7 @@
 #include <Menu.hpp>
 #include <iostream>
 #include <vector>
+#include <Helper.hpp>
 
 void Menu::init() {
 
@@ -8,7 +9,7 @@ void Menu::init() {
 		std::filesystem::absolute(std::string(PROJECT_DIR) + "assets/Font/chinese.otf");
 	font.openFromFile(FONT_PATH.c_str());
 
-	horizontal_offset = sf::Vector2f(500, 0);
+	horizontal_offset = sf::Vector2f(virtualWindowSize.x * 0.5f, 0);
 	text_offset = horizontal_offset + sf::Vector2f(0, 100);
 	ui_color = sf::Color::White;
 
@@ -19,7 +20,9 @@ void Menu::init() {
 	
 	btn_list.push_back("PLAY");
 	btn_list.push_back("OPTION");
+	btn_list.push_back("RULES");
 	btn_list.push_back("ABOUT");
+	btn_list.push_back("QUIT");
 }
 
 void Menu::draw_game_text(sf::RenderWindow &appwindow) {

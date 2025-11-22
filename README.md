@@ -25,14 +25,12 @@ Work needed to be done next ❎: (with priority)
 
 -UI:
 
-Add Quit button (1)
+Background settings (3)
 
-Background settings (4)
+Game mode options (AI) (2)
 
-Game mode options (AI) (3)
+Game rules in menu. (1)
 
-Game rules in menu. (2)
-
-Probably responsive design (5)
+Probably responsive design (4)
 
 
