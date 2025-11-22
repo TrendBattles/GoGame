@@ -8,6 +8,7 @@ Log:
 #include <Menu.hpp>
 #include <OptionMenu.hpp>
 #include <AboutMenu.hpp>
+#include <RulesMenu.hpp>
 #include <MediaPlayer.hpp>
 #include <GameUI.hpp>
 #include <iostream>
@@ -27,7 +28,8 @@ enum GameScene {
 	MENU = 0b0001,
 	GAME = 0b0010,
 	OPTION = 0b0100,
-	ABOUT = 0b1000
+	RULES = 0b1000,
+	ABOUT = 0b10000
 };
 
 GameScene current_scene;
@@ -35,6 +37,8 @@ GameScene current_scene;
 Menu menu;
 OptionMenu optionmenu;
 AboutMenu aboutmenu;
+RulesMenu rulesmenu;
+
 GameUI gameui;
 int mouse_state;
 
@@ -50,6 +54,7 @@ void appStart() {
 	optionmenu.init();
 	aboutmenu.init();
 	gameui.init();
+	rulesmenu.init();
 
 	sound_board.init();
 	sound_board.setAudioType(optionmenu.getAttribute("MUSIC THEME") + 1);
@@ -103,6 +108,7 @@ void handle_menu() {
 				current_scene = GameScene::OPTION;
 				break;
 			case 2:
+				current_scene = GameScene::RULES;
 				break;
 			case 3:
 				current_scene = GameScene::ABOUT;
@@ -142,6 +148,22 @@ void handle_about_menu() {
 
 	if (mouse_state == MouseState::CLICK) {
 		int signal = aboutmenu.tryClickingAt(get_mouse_position());
+		switch (signal) {
+		case 0:
+			break;
+		case 1:
+			current_scene = GameScene::MENU;
+			break;
+		}
+	}
+}
+
+void handle_rules_scene() {
+	rulesmenu.draw_back_button(appWindow);
+	rulesmenu.draw_UI(appWindow);
+
+	if (mouse_state == MouseState::CLICK) {
+		int signal = rulesmenu.tryClickingAt(get_mouse_position());
 		switch (signal) {
 		case 0:
 			break;
@@ -221,6 +243,9 @@ void appLoop() {
 			break;
 		case GameScene::GAME:
 			handle_game_scene();
+			break;
+		case GameScene::RULES:
+			handle_rules_scene();
 			break;
 		case GameScene::OPTION:
 			handle_option_menu();
