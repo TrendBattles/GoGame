@@ -57,6 +57,8 @@ void OptionMenu::init() {
 	selection_option[3].push_back("3 min + 5s");
 	selection_option[3].push_back("10 min + 10s");
 	selection_option[3].push_back("30 min + 20s");
+
+	font_size.resize(selection_section.size());
 	loadConfig();
 }
 
@@ -254,9 +256,21 @@ void OptionMenu::draw_feature_button(sf::RenderWindow& appwindow) {
 	drawRadioButton(appwindow, zero_percent.y, zero_percent.x, current_percent.x, hundred_percent.x);
 }
 
+sf::FloatRect OptionMenu::expandHitbox(sf::FloatRect bounds, float margin)
+{
+	sf::Vector2f sz = bounds.size;
+	bounds.size *= margin;
+	bounds.position += sz * (1.0f - margin) * 0.5f;
+	return bounds;
+}
 
-void OptionMenu::draw_selection_button(sf::RenderWindow& appwindow) {
+void OptionMenu::draw_selection_button(sf::RenderWindow& appwindow, sf::Vector2f mouse_pos) {
 	// draw buttons
+
+	auto sigmoid = [&](int i) -> float { // take in a value in [0, 100] and return the value from [0, 1]
+		float x = (double)(i - 50) / 10;
+		return 1.0f / (1.0f + std::exp(-x));
+	};
 
 	buttons.clear();
 	for (int i = 0; i < (int)selection_section.size(); ++i) {
@@ -271,6 +285,15 @@ void OptionMenu::draw_selection_button(sf::RenderWindow& appwindow) {
 		current_option.setString(selection_option[i][option_chosen[i]]);
 		current_option.setFillColor(ui_color);
 		current_option.setPosition(horizontal_offset + vertical_offset + gap * float(3 + i) + content_offset);
+
+		if (expandHitbox(current_option.getGlobalBounds(), 3.0f).contains(mouse_pos)) {
+			font_size[i] = std::min(font_size[i] + 1, 100);
+		}
+		else font_size[i] = std::max(font_size[i] - 1, 0);
+
+		int current_size = 30 + round(sigmoid(font_size[i]) * 10);
+		current_option.setCharacterSize(current_size);
+
 		setCenter(current_option, 2);
 
 		appwindow.draw(current_option);
@@ -322,7 +345,6 @@ int OptionMenu::tryClickingAt(sf::Vector2f mouse_pos) {
 			chiu_bo = (mouse_pos.x - chiu_bo) / button_gap.x;
 			if (chiu_bo < 0) chiu_bo = 0;
 			if (chiu_bo > 100) chiu_bo = 100;
-
 			int ans = round(chiu_bo / 10) * 10;
 			switch (r) {
 				case 0:
@@ -353,7 +375,7 @@ int OptionMenu::tryClickingAt(sf::Vector2f mouse_pos) {
 	}
 
 	for (int i = 0; i < (int)selection_section.size(); ++i) {
-		if (buttons[i].getGlobalBounds().contains(mouse_pos)) {
+		if (expandHitbox(buttons[i].getGlobalBounds(), 3.0f).contains(mouse_pos)) {
 			int sz = selection_option[i].size();
 			//Rotating choices
 			option_chosen[i] = (option_chosen[i] + 1) % sz;
@@ -362,7 +384,6 @@ int OptionMenu::tryClickingAt(sf::Vector2f mouse_pos) {
 			if (selection_section[i] == "TIME LIMIT" && selection_option[i][option_chosen[i]] != "None") {
 				autoSaveToggle = 0;
 			}
-
 			saveConfig();
 		}
 	}

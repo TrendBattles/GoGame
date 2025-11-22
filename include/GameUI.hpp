@@ -29,7 +29,7 @@ public:
 
 	void draw_back_button(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos = sf::Vector2f(-1, -1));
 	void draw_UI(sf::RenderWindow& appWindow);
-	void draw_game_buttons(sf::RenderWindow& appWindow);
+	void draw_game_buttons(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos = sf::Vector2f(-1, -1));
 
 	int tryClickingAt(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos = sf::Vector2f{ 0, 0 });
 	void drawShadow(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos = sf::Vector2f{ 0, 0 });
@@ -85,6 +85,8 @@ private:
 	Popup messageBox, blackSide, whiteSide;
 
 	sf::Text createText(std::string message = "", bool centered = true, sf::Color textColor = sf::Color::White);
+
+	sf::FloatRect expandHitbox(sf::FloatRect bounds, float margin);
 };
 
 #endif

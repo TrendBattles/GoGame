@@ -7,7 +7,7 @@ class OptionMenu {
 public:
 	void init();
 	void draw_feature_button(sf::RenderWindow& appwindow);
-	void draw_selection_button(sf::RenderWindow& appwindow);
+	void draw_selection_button(sf::RenderWindow& appwindow, sf::Vector2f mouse_pos = sf::Vector2f(-1, -1));
 	void draw_back_button(sf::RenderWindow& appwindow, sf::Vector2f mouse_pos = sf::Vector2f(-1, -1));
 	int tryClickingAt(sf::Vector2f mousepos);
 
@@ -40,10 +40,12 @@ private:
 
 	std::vector<std::string> selection_section;
 	std::vector<int> option_chosen;
+	std::vector<int> font_size;
 	std::vector<std::vector<std::string>> selection_option;
 	std::vector<sf::Text> buttons;
 
 	void drawRadioButton(sf::RenderWindow& appWindow, double y, double a, double b, double c);
+	sf::FloatRect expandHitbox(sf::FloatRect bounds, float margin);
 };
 
 #endif

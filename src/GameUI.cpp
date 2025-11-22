@@ -209,19 +209,32 @@ void GameUI::draw_UI(sf::RenderWindow& appWindow) {
 	}
 }
 
-void GameUI::draw_game_buttons(sf::RenderWindow& appWindow) {
+
+sf::FloatRect GameUI::expandHitbox(sf::FloatRect bounds, float margin)
+{
+	sf::Vector2f sz = bounds.size;
+	bounds.size *= margin;
+	bounds.position += sz * (1.0f - margin) * 0.5f;
+	return bounds;
+}
+
+void GameUI::draw_game_buttons(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos) {
 	//Pass, resign, save, load button
 
-	auto Specific_Draw = [&](const std::string label, sf::Vector2f topLeft, int default_size = 20) -> void {
+	auto Specific_Draw = [&](const std::string label, sf::Vector2f topLeft, int default_size) -> void {
 		sf::Text passText(chinese_font);
 		passText.setString(label);
-		passText.setFillColor(sf::Color::White);
+		passText.setFillColor(ui_color);
 		passText.setCharacterSize(default_size);
 
 		sf::Vector2f textSize = passText.getLocalBounds().size;
 
 		passText.setOrigin(textSize * 0.5f);
 		passText.setPosition(topLeft);
+
+		if (expandHitbox(passText.getGlobalBounds(), 3).contains(mouse_pos))
+			passText.setFillColor(accent_color);
+
 		appWindow.draw(passText);
 	};
 	

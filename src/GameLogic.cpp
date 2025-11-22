@@ -124,7 +124,7 @@ void handle_menu() {
 
 void handle_option_menu() {
 	optionmenu.draw_feature_button(appWindow);
-	optionmenu.draw_selection_button(appWindow);
+	optionmenu.draw_selection_button(appWindow, get_mouse_position());
 	optionmenu.draw_back_button(appWindow, get_mouse_position());
 
 	if (mouse_state == MouseState::CLICK) {
@@ -189,7 +189,7 @@ void handle_rules_menu() {
 void handle_game_scene() {
 	gameui.draw_back_button(appWindow, get_mouse_position());
 	gameui.draw_UI(appWindow);
-	gameui.draw_game_buttons(appWindow);
+	gameui.draw_game_buttons(appWindow, get_mouse_position());
 
 	if (mouse_state == MouseState::CLICK) {
 		int signal = gameui.tryClickingAt(appWindow, get_mouse_position());
