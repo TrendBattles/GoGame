@@ -301,74 +301,83 @@ int GameUI::tryClickingAt(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos) {
 
 	if (!timeLimitSet) {
 		//No time limit
-		sf::Vector2f funcButton(90, 369);
+		sf::Vector2f horizontal_offset(virtualWindowSize.x * 0.5f, 0), content_offset(horizontal_offset.x - 100, 0);
+		sf::Vector2f vertical_offset(0, 400), vertical_gap(0, 75);
+
+
+		sf::Vector2f func_button = horizontal_offset - content_offset + vertical_offset;
+		sf::Vector2f hitbox(100, 35);
+
+		auto check_inside = [&](sf::Vector2f a, sf::Vector2f b) -> bool {
+			return (abs(a.x) <= b.x) && (abs(a.y) <= b.y);
+		};
+
 
 		//Save region
-		if ((mouse_pos.x - funcButton.x) * (mouse_pos.x - (funcButton.x + buttonSize.x)) <= 0 && (mouse_pos.y - funcButton.y) * (mouse_pos.y - (funcButton.y + buttonSize.y)) <= 0) {
+		if (check_inside(mouse_pos - func_button, hitbox)) {
 			saveGame();
 			return -1;
 		}
-
-		funcButton += sf::Vector2f(0, buttonSize.y + 20);
+		func_button += vertical_gap;
 
 		//Load region
-		if ((mouse_pos.x - funcButton.x) * (mouse_pos.x - (funcButton.x + buttonSize.x)) <= 0 && (mouse_pos.y - funcButton.y) * (mouse_pos.y - (funcButton.y + buttonSize.y)) <= 0) {
+		if (check_inside(mouse_pos - func_button, hitbox)) {
 			loadGame();
 			return -1;
 		}
 
-		funcButton += sf::Vector2f(0, buttonSize.y + 20);
+		func_button += vertical_gap;
 
 		//Pass region
-		if ((mouse_pos.x - funcButton.x) * (mouse_pos.x - (funcButton.x + buttonSize.x)) <= 0 && (mouse_pos.y - funcButton.y) * (mouse_pos.y - (funcButton.y + buttonSize.y)) <= 0) {
+			if (check_inside(mouse_pos - func_button, hitbox)) {
 			board.pass();
 
 			if (autoSaveToggle) saveGame();
 			return -1;
 		}
 
-		funcButton += sf::Vector2f(0, buttonSize.y + 20);
+		func_button += vertical_gap;
 
 		//Resign region
-		if ((mouse_pos.x - funcButton.x) * (mouse_pos.x - (funcButton.x + buttonSize.x)) <= 0 && (mouse_pos.y - funcButton.y) * (mouse_pos.y - (funcButton.y + buttonSize.y)) <= 0) {
+		if (check_inside(mouse_pos - func_button, hitbox)) {
 			board.resign();
 			return -1;
 		}
 
-		funcButton = sf::Vector2f(gameConfig.boardTopLeft.x + gameConfig.borderLimit + 70, 369);
+		func_button = horizontal_offset + content_offset + vertical_offset;
 
 		//Undo region
-		if ((mouse_pos.x - funcButton.x) * (mouse_pos.x - (funcButton.x + buttonSize.x)) <= 0 && (mouse_pos.y - funcButton.y) * (mouse_pos.y - (funcButton.y + buttonSize.y)) <= 0) {
+		if (check_inside(mouse_pos - func_button, hitbox)) {
 			board.undo();
 
 			if (autoSaveToggle) saveGame();
 			return -1;
 		}
 
-		funcButton += sf::Vector2f(0, buttonSize.y + 20);
+		func_button += vertical_gap;
 
 		//Redo region
-		if ((mouse_pos.x - funcButton.x) * (mouse_pos.x - (funcButton.x + buttonSize.x)) <= 0 && (mouse_pos.y - funcButton.y) * (mouse_pos.y - (funcButton.y + buttonSize.y)) <= 0) {
+		if (check_inside(mouse_pos - func_button, hitbox)) {
 			board.redo();
 
 			if (autoSaveToggle) saveGame();
 			return -1;
 		}
 
-		funcButton += sf::Vector2f(0, buttonSize.y + 20);
+		func_button += vertical_gap;
 
 		//Undo All region
-		if ((mouse_pos.x - funcButton.x) * (mouse_pos.x - (funcButton.x + buttonSize.x)) <= 0 && (mouse_pos.y - funcButton.y) * (mouse_pos.y - (funcButton.y + buttonSize.y)) <= 0) {
+		if (check_inside(mouse_pos - func_button, hitbox)) {
 			board.undoAll();
 
 			if (autoSaveToggle) saveGame();
 			return -1;
 		}
 
-		funcButton += sf::Vector2f(0, buttonSize.y + 20);
+		func_button += vertical_gap;
 
 		//Redo All region
-		if ((mouse_pos.x - funcButton.x) * (mouse_pos.x - (funcButton.x + buttonSize.x)) <= 0 && (mouse_pos.y - funcButton.y) * (mouse_pos.y - (funcButton.y + buttonSize.y)) <= 0) {
+		if (check_inside(mouse_pos - func_button, hitbox)) {
 			board.redoAll();
 
 			if (autoSaveToggle) saveGame();
