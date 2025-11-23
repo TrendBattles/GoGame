@@ -87,7 +87,7 @@ void GameUI::initGame() {
 
 	PIECE_SCALE = sf::Vector2f(gameConfig.stoneRadius() / (go_piece[0].getSize().x * 0.5f), gameConfig.stoneRadius() / (go_piece[0].getSize().y * 0.5f));
 
-	savedEndGame = false;
+	savedEndGame = playedEndGameSound = false;
 	endPopup.clearCache();
 }
 
@@ -260,9 +260,9 @@ void GameUI::draw_game_buttons(sf::RenderWindow& appWindow, sf::Vector2f mouse_p
 		Specific_Draw("REDO",
 			horizontal_offset + content_offset + vertical_offset + vertical_gap * 1.0f, 25);
 		Specific_Draw("UNDO ALL",
-			horizontal_offset + content_offset + vertical_offset + vertical_gap * 2.0f, 20);
+			horizontal_offset + content_offset + vertical_offset + vertical_gap * 2.0f, 25);
 		Specific_Draw("REDO ALL",
-			horizontal_offset + content_offset + vertical_offset + vertical_gap * 3.0f, 20);
+			horizontal_offset + content_offset + vertical_offset + vertical_gap * 3.0f, 25);
 	}
 	else {
 		Specific_Draw("PASS",
@@ -277,6 +277,7 @@ int GameUI::tryClickingAt(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos) {
 	if (!board.isInGame()) {
 		if (newGamePopup.clickedOn(mouse_pos)) {
 			resetGame();
+			return 4;
 		}
 
 		if (menuPopup.clickedOn(mouse_pos)) {
@@ -364,7 +365,7 @@ int GameUI::tryClickingAt(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos) {
 		func_button += vertical_gap;
 
 		//Pass region
-			if (check_inside(mouse_pos - func_button, hitbox)) {
+		if (check_inside(mouse_pos - func_button, hitbox)) {
 			board.pass();
 
 			if (autoSaveToggle) saveGame();
@@ -376,7 +377,7 @@ int GameUI::tryClickingAt(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos) {
 		//Resign region
 		if (check_inside(mouse_pos - func_button, hitbox)) {
 			board.resign();
-			return 3;
+			return -1;
 		}
 
 		func_button = horizontal_offset + content_offset + vertical_offset;
@@ -436,7 +437,7 @@ int GameUI::tryClickingAt(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos) {
 		//Resign region
 		if (check_inside(mouse_pos - func_button, hitbox)) {
 			board.resign();
-			return 3;
+			return -1;
 		}
 	}
 	
@@ -520,8 +521,6 @@ void GameUI::loadGame() {
 
 //Showing whose turn is it and game saves/loads
 void GameUI::loadTurnIndicator() {
-	messageBox = Popup();
-
 	messageBox.setPosition(sf::Vector2f(50, 100));
 	messageBox.setSize(sf::Vector2f(200, 240));
 	messageBox.setCornerRadius(30);
@@ -570,8 +569,13 @@ sf::Text GameUI::createText(std::string message, bool centered, sf::Color textCo
 }
 
 //This will displaying the timer of black/white and whose turn is it
-void GameUI::loadTime() {
-	blackSide = whiteSide = Popup();
+//Also return a signal to play end game sound
+bool GameUI::loadTimer() {
+	if (!board.isInGame()) {
+		bool state = playedEndGameSound;
+		playedEndGameSound = true;
+		return state;
+	}
 
 	int turn = board.getTurn();
 	sf::Time timePassed = deltaClock.restart();
@@ -580,6 +584,7 @@ void GameUI::loadTime() {
 		if (timeLimitSet && board.subtractTime(timePassed, turn) == false) {
 			board.setGame(false);
 			board.setWinByTime(turn ^ 1);
+			return false;
 		}
 	}
 	
@@ -588,8 +593,13 @@ void GameUI::loadTime() {
 	whiteSide.setSize(sf::Vector2f(200, 100));
 	whiteSide.setCornerRadius(20);
 
-	if (turn != 0) blackSide.setBackgroundColor(sf::Color::Transparent);
-	else whiteSide.setBackgroundColor(sf::Color::Transparent);
+	if (turn != 0) {
+		blackSide.setBackgroundColor();
+		whiteSide.setBackgroundColor(sf::Color(70, 63, 56, 150));
+	} else {
+		blackSide.setBackgroundColor(sf::Color(70, 63, 56, 150));
+		whiteSide.setBackgroundColor();
+	}
 
 	blackSide.setPosition(sf::Vector2f(gameConfig.boardTopLeft.x + gameConfig.borderLimit + 50, 100));
 	blackSide.addObject(createText("Black", true, sf::Color::White), sf::Vector2f(blackSide.getSize().x * 0.5f, 20));
@@ -598,26 +608,29 @@ void GameUI::loadTime() {
 	whiteSide.setPosition(sf::Vector2f(gameConfig.boardTopLeft.x + gameConfig.borderLimit + 50, 220));
 	whiteSide.addObject(createText("White", true, sf::Color::White), sf::Vector2f(whiteSide.getSize().x * 0.5f, 20));
 	whiteSide.addObject(createText(timeLimitSet ? convertTime(board.getTime(1)) : "--:--", true, sf::Color::White), { whiteSide.getSize().x * 0.5f, 60 });
+	
+	return true;
 }
 
 //In-game Annoucement
 void GameUI::annouceInGame(sf::RenderWindow& appWindow) {
-	//if (!board.isInGame()) return;
+	if (!board.isInGame()) return;
 
 	loadTurnIndicator();
 
 	messageBox.drawOn(appWindow);
-
-	loadTime();
+	messageBox.clearCache();
 
 	blackSide.drawOn(appWindow);
 	whiteSide.drawOn(appWindow);
+
+	blackSide.clearCache();
+	whiteSide.clearCache();
 }
 
 //End Popup
 
 void GameUI::loadEndPopup() {
-	endPopup = Popup();
 	endPopup.setSize(sf::Vector2f(500, 350));
 	endPopup.setCornerRadius(20);
 
@@ -651,17 +664,17 @@ void GameUI::loadEndPopup() {
 	}
 
 	//Buttons for new game and menu
-
-	newGamePopup = Popup();
 	newGamePopup.setSize(sf::Vector2f(200, 80));
 	newGamePopup.setCornerRadius(20);
 	newGamePopup.setBackgroundColor(sf::Color(106, 168, 79, 255));
 
-	menuPopup = newGamePopup;
-
 	newGamePopup.setPosition(endPopup.getPosition() + sf::Vector2f(36, 220));
 	newGamePopup.addObject(createText("New game", true, sf::Color::White, 30), newGamePopup.getSize() * 0.5f - sf::Vector2f(0, 5));
 	
+	menuPopup.setSize(sf::Vector2f(200, 80));
+	menuPopup.setCornerRadius(20);
+	menuPopup.setBackgroundColor(sf::Color(106, 168, 79, 255));
+
 	menuPopup.setPosition(endPopup.getPosition() + sf::Vector2f(endPopup.getSize().x - (menuPopup.getSize().x + 36), 220));
 	menuPopup.addObject(createText("Menu", true, sf::Color::White, 30), menuPopup.getSize() * 0.5f - sf::Vector2f(0, 6.7));
 }
@@ -680,6 +693,10 @@ void GameUI::annouceEndGame(sf::RenderWindow& appWindow) {
 	endPopup.drawOn(appWindow);
 	newGamePopup.drawOn(appWindow);
 	menuPopup.drawOn(appWindow);
+
+	endPopup.clearCache();
+	newGamePopup.clearCache();
+	menuPopup.clearCache();
 }
 
 void GameUI::autoSave() {

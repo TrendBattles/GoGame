@@ -15,7 +15,15 @@ Popup::Popup() {
 }
 
 void Popup::setSize(sf::Vector2f targetSize) {
+	//Negative sizes -> GET OUT
+	if (targetSize.x < 0 || targetSize.y < 0) return;
+
+	if (size == targetSize) return;
+
 	size = targetSize;
+	if (targetSize.x > 0 && targetSize.y > 0) {
+		textureBuffer.resize(convertToUInt(targetSize));
+	}
 }
 
 void Popup::setPosition(sf::Vector2f targetPosition) {
@@ -62,12 +70,6 @@ void Popup::setBackgroundColor(sf::Color bgColor) {
 
 //Display
 void Popup::drawBackground(sf::RenderWindow& appWindow) {
-	sf::RenderTexture textureBuffer;
-	
-	if (!textureBuffer.resize(convertToUInt(size))) {
-		return;
-	}
-
 	textureBuffer.clear(sf::Color::Transparent);
 
 	//Drawing a background with round corners (if set)

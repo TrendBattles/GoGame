@@ -52,7 +52,7 @@ public:
 
 	void setTimeLimit(int id = 0);
 
-	void loadTime();
+	bool loadTimer();
 private:
 	//Initial textures
 	sf::Font chinese_font, english_font;
@@ -78,7 +78,7 @@ private:
 	sf::Time notificationDuration = sf::seconds(2.5f); //Time limit for showing
 
 	//End-game texture
-	bool savedEndGame;
+	bool savedEndGame, playedEndGameSound;
 	Popup endPopup, newGamePopup, menuPopup;
 	
 	//In-game Annoucement

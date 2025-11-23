@@ -38,5 +38,6 @@ private:
 	float radius;
 	sf::Vector2f size, position;
 	sf::Color backgroundColor;
+	sf::RenderTexture textureBuffer;
 };
 #endif

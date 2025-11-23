@@ -8,7 +8,9 @@ enum SoundEffect {
 	MOVE = 0,
 	CAPTURE = 1,
 	ILLEGAL = 2,
-	CLICK = 3
+	CLICK = 3,
+	STARTGAME = 4,
+	ENDGAME = 5
 };
 
 class MediaPlayer {

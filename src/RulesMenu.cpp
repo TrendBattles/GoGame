@@ -47,7 +47,7 @@ void RulesMenu::draw_UI(sf::RenderWindow& appwindow) {
 	lines.push_back("You can put move limit. When exceeding the limit, the game ends.");
 	lines.push_back("The winner will be decided by the above rule.");
 	lines.push_back("==========");
-	lines.push_back("You can put time limit. Whoever runs out of time first loses.");
+	lines.push_back("You can put time limit. Whoever runs out of time first loses. Passing doesn't add time.");
 	lines.push_back("==========");
 	lines.push_back("Saving, loading, undoing and redoing moves are disabled in time limit.");
 

@@ -105,6 +105,7 @@ void handle_menu() {
 		switch (signal) {
 			case 0:
 				current_scene = GameScene::GAME;
+				sound_board.play_audio(SoundEffect::STARTGAME);
 				gameui.initGame();
 				break;
 			case 1:
@@ -140,6 +141,7 @@ void handle_option_menu() {
 				break;
 			case 2:
 				current_scene = GameScene::GAME;
+				sound_board.play_audio(SoundEffect::STARTGAME);
 				gameui.initGame();
 				break;
 		}
@@ -176,6 +178,7 @@ void handle_about_menu() {
 			break;
 		case 2:
 			current_scene = GameScene::GAME;
+			sound_board.play_audio(SoundEffect::STARTGAME);
 			gameui.initGame();
 			break;
 		}
@@ -199,6 +202,7 @@ void handle_rules_menu() {
 			break;
 		case 2:
 			current_scene = GameScene::GAME;
+			sound_board.play_audio(SoundEffect::STARTGAME);
 			gameui.initGame();
 			break;
 		}
@@ -231,6 +235,11 @@ void handle_game_scene() {
 	}
 
 	gameui.annouceInGame(appWindow);
+
+	if (!gameui.loadTimer()) {
+		sound_board.play_audio(SoundEffect::ENDGAME);
+	}
+
 	gameui.annouceEndGame(appWindow);
 
 	gameui.drawShadow(appWindow, get_mouse_position());

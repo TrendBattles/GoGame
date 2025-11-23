@@ -61,11 +61,17 @@ bool MediaPlayer::setAudioType(int t) {
 		std::filesystem::absolute(PREFIX + "IllegalMove.ogg");
 	const std::filesystem::path CLICK_SOUND =
 		std::filesystem::absolute(PREFIX + "Click.ogg");
+	const std::filesystem::path START_SOUND = 
+		std::filesystem::absolute(PREFIX + "Start.ogg");
+	const std::filesystem::path END_SOUND =
+		std::filesystem::absolute(PREFIX + "End.ogg");
 
 	audio_buffer_list.emplace_back(sf::SoundBuffer(MOVE_SOUND.c_str()));
 	audio_buffer_list.emplace_back(sf::SoundBuffer(CAPTURE_SOUND.c_str()));
 	audio_buffer_list.emplace_back(sf::SoundBuffer(ILLEGAL_SOUND.c_str()));
 	audio_buffer_list.emplace_back(sf::SoundBuffer(CLICK_SOUND.c_str()));
+	audio_buffer_list.emplace_back(sf::SoundBuffer(START_SOUND.c_str()));
+	audio_buffer_list.emplace_back(sf::SoundBuffer(END_SOUND.c_str()));
 
 	for (auto& i : audio_buffer_list) {
 		audio_list.emplace_back(sf::Sound(i));
