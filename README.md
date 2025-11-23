@@ -10,27 +10,28 @@ Game menu, game options: Thanh
 
 Textures: Thanh
 
+Effects: Thanh
+
+Gameplay notifications: Bao
+
 -Gameplay:
 
 Placing: Thanh, improved by Bao
 
 Game rules, functional buttons: Bao
 
-End-scoring: Bao
+Scoring: Bao
 
-Saving PGNs, Loading PGNs: Bao
-
+Timer: Bao
 
 Work needed to be done next ❎: (with priority)
 
 -UI:
 
-Background settings (3)
+Background settings(2)
 
-Game mode options (AI) (2)
+Game mode options (AI) (1)
 
-Game rules in menu. (1)
-
-Probably responsive design (4)
+Probably responsive design (3)
 
 
