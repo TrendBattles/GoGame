@@ -20,7 +20,7 @@ MediaPlayer sound_board;
 
 enum MouseState {
 	RELEASE = 0,
-	CLICK = 1,
+	CLICKING = 1,
 	HOLD = 2
 };
 
@@ -65,7 +65,7 @@ void appStart() {
 }
 
 int pollEvent() { // if window is closed, return 0
-	bool alreadyClick = mouse_state == MouseState::CLICK;
+	bool alreadyClick = mouse_state == MouseState::CLICKING;
 	bool hasEvent = false;
 
 	while (const std::optional event = appWindow.pollEvent()) {
@@ -78,7 +78,7 @@ int pollEvent() { // if window is closed, return 0
 			return 0;
 		}
 		else if (event->is <sf::Event::MouseButtonPressed>()) {
-			mouse_state = MouseState::CLICK;
+			mouse_state = MouseState::CLICKING;
 		}
 		else if (event->is <sf::Event::MouseButtonReleased>()) {
 			alreadyClick = false;
@@ -97,9 +97,12 @@ void handle_menu() {
 	menu.draw_game_text(appWindow);
 	menu.draw_button(appWindow, get_mouse_position());
 	
-	if (mouse_state == MouseState::CLICK) {
-		int new_signal = menu.tryClickingAt(get_mouse_position());
-		switch (new_signal) {
+	if (mouse_state == MouseState::CLICKING) {
+		int signal = menu.tryClickingAt(get_mouse_position());
+		if (signal >= 0) {
+			sound_board.play_audio(SoundEffect::CLICK);
+		}
+		switch (signal) {
 			case 0:
 				current_scene = GameScene::GAME;
 				gameui.initGame();
@@ -127,7 +130,7 @@ void handle_option_menu() {
 	optionmenu.draw_selection_button(appWindow, get_mouse_position());
 	optionmenu.draw_back_button(appWindow, get_mouse_position());
 
-	if (mouse_state == MouseState::CLICK) {
+	if (mouse_state == MouseState::CLICKING) {
 		int signal = optionmenu.tryClickingAt(get_mouse_position());
 		switch (signal) {
 			case 0:
@@ -139,6 +142,12 @@ void handle_option_menu() {
 				current_scene = GameScene::GAME;
 				gameui.initGame();
 				break;
+		}
+		if (signal >= 0) {
+			sound_board.play_audio(SoundEffect::CLICK);
+		}
+		if (signal == -2) {
+			sound_board.play_audio(SoundEffect::ILLEGAL);
 		}
 
 		if (sound_board.setAudioType(optionmenu.getAttribute("MUSIC THEME") + 1))
@@ -154,8 +163,11 @@ void handle_about_menu() {
 	aboutmenu.draw_back_button(appWindow, get_mouse_position());
 	aboutmenu.draw_UI(appWindow);
 
-	if (mouse_state == MouseState::CLICK) {
+	if (mouse_state == MouseState::CLICKING) {
 		int signal = aboutmenu.tryClickingAt(get_mouse_position());
+		if (signal >= 0) {
+			sound_board.play_audio(SoundEffect::CLICK);
+		}
 		switch (signal) {
 		case 0:
 			break;
@@ -174,8 +186,11 @@ void handle_rules_menu() {
 	rulesmenu.draw_back_button(appWindow, get_mouse_position());
 	rulesmenu.draw_UI(appWindow);
 
-	if (mouse_state == MouseState::CLICK) {
+	if (mouse_state == MouseState::CLICKING) {
 		int signal = rulesmenu.tryClickingAt(get_mouse_position());
+		if (signal >= 0){
+			sound_board.play_audio(SoundEffect::CLICK);
+		}
 		switch (signal) {
 		case 0:
 			break;
@@ -195,16 +210,18 @@ void handle_game_scene() {
 	gameui.draw_UI(appWindow);
 	gameui.draw_game_buttons(appWindow, get_mouse_position());
 
-	if (mouse_state == MouseState::CLICK) {
+	if (mouse_state == MouseState::CLICKING) {
 		int signal = gameui.tryClickingAt(appWindow, get_mouse_position());
 
 		if (signal != -1) {
 			switch (signal) {
 				case 10:
 					current_scene = GameScene::MENU;
+					sound_board.play_audio(SoundEffect::CLICK);
 					break;
 				case 20:
 					current_scene = GameScene::OPTION;
+					sound_board.play_audio(SoundEffect::CLICK);
 					break;
 				default:
 					sound_board.play_audio((SoundEffect)signal);

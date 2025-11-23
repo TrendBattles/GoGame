@@ -130,7 +130,7 @@ void GameUI::draw_back_button(sf::RenderWindow& appWindow, sf::Vector2f mouse_po
 
 	game_button.setCharacterSize(25);
 	game_button.setFillColor(ui_color);
-	game_button.setPosition(sf::Vector2f(1080, 20));
+	game_button.setPosition(sf::Vector2f(1070, 20));
 
 	mouse_pos.x = virtualWindowSize.x - mouse_pos.x;
 	if (mouse_pos.x >= 0 && mouse_pos.x <= 150 && mouse_pos.y >= 0 && mouse_pos.y <= 80) {
@@ -351,14 +351,14 @@ int GameUI::tryClickingAt(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos) {
 		//Save region
 		if (check_inside(mouse_pos - func_button, hitbox)) {
 			saveGame();
-			return -1;
+			return 3;
 		}
 		func_button += vertical_gap;
 
 		//Load region
 		if (check_inside(mouse_pos - func_button, hitbox)) {
 			loadGame();
-			return -1;
+			return 3;
 		}
 
 		func_button += vertical_gap;
@@ -368,7 +368,7 @@ int GameUI::tryClickingAt(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos) {
 			board.pass();
 
 			if (autoSaveToggle) saveGame();
-			return -1;
+			return 0;
 		}
 
 		func_button += vertical_gap;
@@ -376,7 +376,7 @@ int GameUI::tryClickingAt(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos) {
 		//Resign region
 		if (check_inside(mouse_pos - func_button, hitbox)) {
 			board.resign();
-			return -1;
+			return 3;
 		}
 
 		func_button = horizontal_offset + content_offset + vertical_offset;
@@ -386,7 +386,7 @@ int GameUI::tryClickingAt(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos) {
 			board.undo();
 
 			if (autoSaveToggle) saveGame();
-			return -1;
+			return 0;
 		}
 
 		func_button += vertical_gap;
@@ -396,7 +396,7 @@ int GameUI::tryClickingAt(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos) {
 			board.redo();
 
 			if (autoSaveToggle) saveGame();
-			return -1;
+			return 0;
 		}
 
 		func_button += vertical_gap;
@@ -406,7 +406,7 @@ int GameUI::tryClickingAt(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos) {
 			board.undoAll();
 
 			if (autoSaveToggle) saveGame();
-			return -1;
+			return 0;
 		}
 
 		func_button += vertical_gap;
@@ -416,7 +416,7 @@ int GameUI::tryClickingAt(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos) {
 			board.redoAll();
 
 			if (autoSaveToggle) saveGame();
-			return -1;
+			return 0;
 		}
 	}
 	else {
@@ -429,14 +429,14 @@ int GameUI::tryClickingAt(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos) {
 		//Pass region
 		if (check_inside(mouse_pos - func_button, hitbox)) {
 			board.pass();
-			return -1;
+			return 0;
 		}
 		func_button += vertical_gap;
 
 		//Resign region
 		if (check_inside(mouse_pos - func_button, hitbox)) {
 			board.resign();
-			return -1;
+			return 3;
 		}
 	}
 	
@@ -522,7 +522,7 @@ void GameUI::loadGame() {
 void GameUI::loadTurnIndicator() {
 	messageBox = Popup();
 
-	messageBox.setPosition(sf::Vector2f(70, 100));
+	messageBox.setPosition(sf::Vector2f(50, 100));
 	messageBox.setSize(sf::Vector2f(200, 240));
 	messageBox.setCornerRadius(30);
 
@@ -576,11 +576,11 @@ void GameUI::loadTime() {
 	int turn = board.getTurn();
 	sf::Time timePassed = deltaClock.restart();
 
-	if (timeLimitSet && board.subtractTime(timePassed, turn) == false) {
-		board.setGame(false);
-		board.setWinByTime(turn ^ 1);
-
-		return;
+	if (board.isInGame()) {
+		if (timeLimitSet && board.subtractTime(timePassed, turn) == false) {
+			board.setGame(false);
+			board.setWinByTime(turn ^ 1);
+		}
 	}
 	
 	blackSide.setSize(sf::Vector2f(200, 100));
@@ -590,8 +590,6 @@ void GameUI::loadTime() {
 
 	if (turn != 0) blackSide.setBackgroundColor(sf::Color::Transparent);
 	else whiteSide.setBackgroundColor(sf::Color::Transparent);
-
-
 
 	blackSide.setPosition(sf::Vector2f(gameConfig.boardTopLeft.x + gameConfig.borderLimit + 50, 100));
 	blackSide.addObject(createText("Black", true, sf::Color::White), sf::Vector2f(blackSide.getSize().x * 0.5f, 20));
@@ -604,7 +602,7 @@ void GameUI::loadTime() {
 
 //In-game Annoucement
 void GameUI::annouceInGame(sf::RenderWindow& appWindow) {
-	if (!board.isInGame()) return;
+	//if (!board.isInGame()) return;
 
 	loadTurnIndicator();
 

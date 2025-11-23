@@ -344,26 +344,7 @@ void OptionMenu::draw_back_button(sf::RenderWindow& appwindow, sf::Vector2f mous
 }
 
 int OptionMenu::tryClickingAt(sf::Vector2f mouse_pos) {
-	for (int r = 0; r <= 1; ++r) {
-		sf::Vector2f fifty_percent =
-			vertical_offset + horizontal_offset + button_gap * float(50) + gap * float(r) + content_offset;
-		sf::Vector2f sz(button_gap.x * float(70), volume_btn_size.x);
-		if (abs(mouse_pos.x - fifty_percent.x) <= sz.x && abs(mouse_pos.y - fifty_percent.y) <= sz.y) {
-			double chiu_bo = horizontal_offset.x + content_offset.x;
-			chiu_bo = (mouse_pos.x - chiu_bo) / button_gap.x;
-			if (chiu_bo < 0) chiu_bo = 0;
-			if (chiu_bo > 100) chiu_bo = 100;
-			int ans = round(chiu_bo / 10) * 10;
-			switch (r) {
-				case 0:
-					music_volume = ans;
-					break;
-				case 1:
-					sound_volume = ans;
-					break;
-			}
-		}
-	}
+	bool changed = fixAudio(mouse_pos);
 
 
 	sf::Vector2f fifty_percent =
@@ -377,9 +358,9 @@ int OptionMenu::tryClickingAt(sf::Vector2f mouse_pos) {
 		if (selection_option[timeLimitPos][option_chosen[timeLimitPos]] == "None") {
 			autoSaveToggle ^= 1;
 			saveConfig();
+			changed = true;
 		}
-
-		return -1;
+		else return -2;
 	}
 
 	for (int i = 0; i < (int)selection_section.size(); ++i) {
@@ -392,6 +373,7 @@ int OptionMenu::tryClickingAt(sf::Vector2f mouse_pos) {
 			if (selection_section[i] == "TIME LIMIT" && selection_option[i][option_chosen[i]] != "None") {
 				autoSaveToggle = 0;
 			}
+			changed = true;
 			saveConfig();
 		}
 	}
@@ -401,15 +383,19 @@ int OptionMenu::tryClickingAt(sf::Vector2f mouse_pos) {
 	mouse_pos.x = virtualWindowSize.x - mouse_pos.x;
 	if (mouse_pos.x >= 0 && mouse_pos.x <= 150 && mouse_pos.y >= 0 && mouse_pos.y <= 80)
 		return 2;
+
+	if (changed) return 0;
 	return -1;
 }
 
-void OptionMenu::fixAudio(sf::Vector2f mouse_pos) {
+bool OptionMenu::fixAudio(sf::Vector2f mouse_pos) {
+	bool changed = false;
 	for (int r = 0; r <= 1; ++r) {
 		sf::Vector2f fifty_percent =
 			vertical_offset + horizontal_offset + button_gap * float(50) + gap * float(r) + content_offset;
 		sf::Vector2f sz(button_gap.x * float(70), volume_btn_size.x);
 		if (abs(mouse_pos.x - fifty_percent.x) <= sz.x && abs(mouse_pos.y - fifty_percent.y) <= sz.y) {
+			changed = true;
 			double chiu_bo = horizontal_offset.x + content_offset.x;
 			chiu_bo = (mouse_pos.x - chiu_bo) / button_gap.x;
 			if (chiu_bo < 0) chiu_bo = 0;
@@ -428,6 +414,7 @@ void OptionMenu::fixAudio(sf::Vector2f mouse_pos) {
 	}
 
 	saveConfig();
+	return changed;
 }
 
 int OptionMenu::getAttribute(std::string name) {
