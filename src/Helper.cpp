@@ -33,6 +33,12 @@ sf::Vector2f convertToFloat(sf::Vector2u cur) {
 	return sf::Vector2f((float)cur.x, (float)cur.y);
 }
 
+sf::Vector2u convertToUInt(sf::Vector2f cur) {
+	return sf::Vector2u(cur.x, cur.y);
+}
+sf::Vector2i convertToInt(sf::Vector2f cur) {
+	return sf::Vector2i(cur.x, cur.y);
+}
 
 double squareDist(sf::Vector2f a) {
 	return sqr(a.x) + sqr(a.y);

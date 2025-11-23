@@ -107,6 +107,9 @@ void GameUI::setCenter(sf::Text& text) {
 
 
 void GameUI::draw_back_button(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos) {
+	//End game -> Only focus on end popup
+	if (!board.isInGame()) return;
+
 	sf::Text back_button(chinese_font);
 	back_button.setString("Menu");
 
@@ -270,25 +273,29 @@ void GameUI::draw_game_buttons(sf::RenderWindow& appWindow, sf::Vector2f mouse_p
 }
 
 int GameUI::tryClickingAt(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos) {
+	//End game -> Disable functions and only check New Game ?
+	if (!board.isInGame()) {
+		if (newGamePopup.clickedOn(mouse_pos)) {
+			resetGame();
+		}
+
+		if (menuPopup.clickedOn(mouse_pos)) {
+			return 10;
+		}
+
+		return -1;
+	}
+
 	//Go back
 	if (mouse_pos.x >= 0 && mouse_pos.x <= 150 && mouse_pos.y >= 0 && mouse_pos.y <= 80) {
 		return 10;
 	}
 
+	//Transit to options
 	sf::Vector2f tmp = mouse_pos;
 	tmp.x = virtualWindowSize.x - tmp.x;
 	if (tmp.x >= 0 && tmp.x <= 150 && tmp.y >= 0 && tmp.y <= 80) {
 		return 20;
-	}
-
-
-	//End game -> Disable functions and only check New Game ?
-	if (!board.isInGame()) {
-		if (endPopup.clickedOn( "New Game?", mouse_pos)) {
-			resetGame();
-		}
-
-		return -1;
 	}
 
 	const float RADIUS = gameConfig.stoneRadius();
@@ -330,7 +337,7 @@ int GameUI::tryClickingAt(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos) {
 
 	auto check_inside = [&](sf::Vector2f a, sf::Vector2f b) -> bool {
 		return (abs(a.x) <= b.x) && (abs(a.y) <= b.y);
-		};
+	};
 	if (!timeLimitSet) {
 		//No time limit
 		sf::Vector2f horizontal_offset(virtualWindowSize.x * 0.5f, 0), content_offset(horizontal_offset.x - 150, 0);
@@ -472,7 +479,7 @@ void GameUI::drawShadow(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos) {
 void GameUI::saveGame() {
 	switch (board.saveGame()) {
 		case FileStatus::Success:
-			fileNotification = "Saved\nsuccessfully";
+			fileNotification = "	 Saved\nsuccessfully";
 			break;
 		case FileStatus::FileNotFound:
 			fileNotification = "File not found";
@@ -481,7 +488,7 @@ void GameUI::saveGame() {
 			fileNotification = "Corrupted file";
 			break;
 		case FileStatus::WrongFormat:
-			fileNotification = "Wrong game's\nformat";
+			fileNotification = "Wrong game's\n		format";
 			break;
 	}
 
@@ -490,16 +497,19 @@ void GameUI::saveGame() {
 void GameUI::loadGame() {
 	switch (board.loadGame()) {
 		case FileStatus::Success:
-			fileNotification = "Loaded\nsuccessfully";
+			fileNotification = "   Loaded\nsuccessfully";
 			break;
 		case FileStatus::FileNotFound:
 			fileNotification = "File not found";
+			board.saveGame();
 			break;
 		case FileStatus::CorruptedFile:
 			fileNotification = "Corrupted file";
+			board.saveGame();
 			break;
 		case FileStatus::WrongFormat:
-			fileNotification = "Wrong game's\nformat";
+			fileNotification = "Wrong game's\n		format";
+			board.saveGame();
 			break;
 	}
 
@@ -512,33 +522,46 @@ void GameUI::loadGame() {
 void GameUI::loadTurnIndicator() {
 	messageBox = Popup();
 
-	messageBox.setPosition(sf::Vector2f(20, 100));
-	messageBox.setSize(sf::Vector2f(250, 240));
+	messageBox.setPosition(sf::Vector2f(70, 100));
+	messageBox.setSize(sf::Vector2f(200, 240));
+	messageBox.setCornerRadius(30);
 
-	if (board.getMoveLimit() > 0) {
-		messageBox.addObject(createText(board.getPassState() ? "Pass clicked" : "Pass unclicked", true, sf::Color::White), { messageBox.getSize().x * 0.5f, 10});
+	if (timeLimitSet) {
+		//Saving game states aren't allowed in time limit mode.
+		messageBox.addObject(createText(board.getPassState() ? "Pass clicked" : "Pass unclicked", true, sf::Color::White), { messageBox.getSize().x * 0.5f, 60 });
 
 
 		if (board.getMoveLimit() > 0) {
-			messageBox.addObject(createText("Moves left: " + std::to_string(board.getMoveLimit() - board.getPointer() / 2), true, sf::Color::White), { messageBox.getSize().x * 0.5f, 90});
+			messageBox.addObject(createText("Move " + std::to_string(board.getPointer() / 2 + 1) + "/" + std::to_string(board.getMoveLimit()), true, sf::Color::White), {messageBox.getSize().x * 0.5f, 140});
+		}
+		else {
+			messageBox.addObject(createText("Move " + std::to_string(board.getPointer() / 2 + 1), true, sf::Color::White), { messageBox.getSize().x * 0.5f, 140 });
+		}
+	}
+	else {
+		messageBox.addObject(createText(board.getPassState() ? "Pass clicked" : "Pass unclicked", true, sf::Color::White), { messageBox.getSize().x * 0.5f, 20 });
+
+
+		if (board.getMoveLimit() > 0) {
+			messageBox.addObject(createText("Move " + std::to_string(board.getPointer() / 2 + 1) + "/" + std::to_string(board.getMoveLimit()), true, sf::Color::White), { messageBox.getSize().x * 0.5f, 100 });
+		}
+		else {
+			messageBox.addObject(createText("Move " + std::to_string(board.getPointer() / 2 + 1), true, sf::Color::White), { messageBox.getSize().x * 0.5f, 100 });
 		}
 
 		if (notificationTimer.getElapsedTime() > notificationDuration) {
 			fileNotification = "";
 		}
 
-		messageBox.addObject(createText(fileNotification, true, sf::Color::White), { messageBox.getSize().x * 0.5f, 170 });
-	}
-	else {
-		messageBox.addObject(createText(board.getPassState() ? "Pass clicked" : "Pass unclicked", true, sf::Color::White), { messageBox.getSize().x * 0.5f, 90 });
+		messageBox.addObject(createText(fileNotification, true, sf::Color::White), { messageBox.getSize().x * 0.5f, 180 });
 	}
 }
 
-sf::Text GameUI::createText(std::string message, bool centered, sf::Color textColor) {
+sf::Text GameUI::createText(std::string message, bool centered, sf::Color textColor, int characterSize) {
 	sf::Text messageTexture(english_font);
 	messageTexture.setString(message);
 	messageTexture.setFillColor(textColor);
-	messageTexture.setCharacterSize(25);
+	messageTexture.setCharacterSize(characterSize);
 
 	if (centered) {
 		messageTexture.setOrigin(messageTexture.getGlobalBounds().size * 0.5f);
@@ -561,7 +584,9 @@ void GameUI::loadTime() {
 	}
 	
 	blackSide.setSize(sf::Vector2f(200, 100));
+	blackSide.setCornerRadius(20);
 	whiteSide.setSize(sf::Vector2f(200, 100));
+	whiteSide.setCornerRadius(20);
 
 	if (turn != 0) blackSide.setBackgroundColor(sf::Color::Transparent);
 	else whiteSide.setBackgroundColor(sf::Color::Transparent);
@@ -569,12 +594,12 @@ void GameUI::loadTime() {
 
 
 	blackSide.setPosition(sf::Vector2f(gameConfig.boardTopLeft.x + gameConfig.borderLimit + 50, 100));
-	blackSide.addObject(createText("Black", true, sf::Color::White), sf::Vector2f(blackSide.getSize().x * 0.5f, 10));
-	blackSide.addObject(createText(timeLimitSet ? convertTime(board.getTime(0)) : "--:--", true, sf::Color::White), { blackSide.getSize().x * 0.5f, 70 });
+	blackSide.addObject(createText("Black", true, sf::Color::White), sf::Vector2f(blackSide.getSize().x * 0.5f, 20));
+	blackSide.addObject(createText(timeLimitSet ? convertTime(board.getTime(0)) : "--:--", true, sf::Color::White), { blackSide.getSize().x * 0.5f, 60 });
 
 	whiteSide.setPosition(sf::Vector2f(gameConfig.boardTopLeft.x + gameConfig.borderLimit + 50, 220));
-	whiteSide.addObject(createText("White", true, sf::Color::White), sf::Vector2f(whiteSide.getSize().x * 0.5f, 10));
-	whiteSide.addObject(createText(timeLimitSet ? convertTime(board.getTime(1)) : "--:--", true, sf::Color::White), { whiteSide.getSize().x * 0.5f, 70 });
+	whiteSide.addObject(createText("White", true, sf::Color::White), sf::Vector2f(whiteSide.getSize().x * 0.5f, 20));
+	whiteSide.addObject(createText(timeLimitSet ? convertTime(board.getTime(1)) : "--:--", true, sf::Color::White), { whiteSide.getSize().x * 0.5f, 60 });
 }
 
 //In-game Annoucement
@@ -595,40 +620,52 @@ void GameUI::annouceInGame(sf::RenderWindow& appWindow) {
 
 void GameUI::loadEndPopup() {
 	endPopup = Popup();
-	endPopup.setSize(sf::Vector2f(350, 200));
+	endPopup.setSize(sf::Vector2f(500, 350));
+	endPopup.setCornerRadius(20);
 
 	endPopup.setPosition((convertToFloat(virtualWindowSize) - endPopup.getSize()) * 0.5f);
-
-	std::array <int, 2> score = board.getScore();
+	
+	endPopup.addObject(createText("GAME OVER", true, sf::Color::White, 40), { endPopup.getSize().x * 0.5f, 40 });
+;	std::array <int, 2> score = board.getScore();
 	
 	//Scoring cases
 	if (score[0] == -0x3f3f3f3f) {
-		endPopup.addObject(createText("Black ran out of time.", true, sf::Color::White), { endPopup.getSize().x * 0.5f, 20});
-		endPopup.addObject(createText("White wins.", true, sf::Color::White), { endPopup.getSize().x * 0.5f, 60 });
+		endPopup.addObject(createText("White wins by out of time.", true, sf::Color::White, 30), { endPopup.getSize().x * 0.5f, 140 });
 	}
 	else if (score[1] == -0x3f3f3f3f) {
-		endPopup.addObject(createText("White ran out of time.", true, sf::Color::White), { endPopup.getSize().x * 0.5f, 20 });
-		endPopup.addObject(createText("Black wins.", true, sf::Color::White), { endPopup.getSize().x * 0.5f, 60 });
+		endPopup.addObject(createText("Black wins by out of time.", true, sf::Color::White, 30), { endPopup.getSize().x * 0.5f, 140 });
 	}
 	else if (score[0] == 0x3f3f3f3f) {
-		endPopup.addObject(createText("Black wins by resignation.", true, sf::Color::White), { endPopup.getSize().x * 0.5f, 20 });
+		endPopup.addObject(createText("Black wins by resignation.", true, sf::Color::White, 30), { endPopup.getSize().x * 0.5f, 140 });
 	}
 	else if (score[1] == 0x3f3f3f3f) {
-		endPopup.addObject(createText("White wins by resignation.", true, sf::Color::White), { endPopup.getSize().x * 0.5f, 20 });
+		endPopup.addObject(createText("White wins by resignation.", true, sf::Color::White, 30), { endPopup.getSize().x * 0.5f, 140 });
 	}
 	else {
-		endPopup.addObject(createText("Black: " + std::to_string(score[0]), true, sf::Color::White), { endPopup.getSize().x * 0.5f, 20 });
-		endPopup.addObject(createText("White: " + std::to_string(score[1]), true, sf::Color::White), { endPopup.getSize().x * 0.5f, 60 });
+		endPopup.addObject(createText("Result: " + std::to_string(score[0]) + "-" + std::to_string(score[1]), true, sf::Color::White, 30), {endPopup.getSize().x * 0.5f, 120});
 
 		if (score[0] == score[1]) {
-			endPopup.addObject(createText("Draw" + std::to_string(score[0]), true, sf::Color::White), { endPopup.getSize().x * 0.5f, 100 });
+			endPopup.addObject(createText("Draw", true, sf::Color::White, 30), { endPopup.getSize().x * 0.5f, 160 });
 		}
 		else {
-			endPopup.addObject(createText(std::string((score[0] < score[1] ? "White" : "Black")) + " wins", true, sf::Color::White), { endPopup.getSize().x * 0.5f, 100});
+			endPopup.addObject(createText(std::string((score[0] < score[1] ? "White" : "Black")) + " wins", true, sf::Color::White, 30), { endPopup.getSize().x * 0.5f, 160});
 		}
 	}
 
-	endPopup.addObject(createText("New Game?", true, sf::Color::White), { endPopup.getSize().x * 0.5f, 150});
+	//Buttons for new game and menu
+
+	newGamePopup = Popup();
+	newGamePopup.setSize(sf::Vector2f(200, 80));
+	newGamePopup.setCornerRadius(20);
+	newGamePopup.setBackgroundColor(sf::Color(106, 168, 79, 255));
+
+	menuPopup = newGamePopup;
+
+	newGamePopup.setPosition(endPopup.getPosition() + sf::Vector2f(36, 220));
+	newGamePopup.addObject(createText("New game", true, sf::Color::White, 30), newGamePopup.getSize() * 0.5f - sf::Vector2f(0, 5));
+	
+	menuPopup.setPosition(endPopup.getPosition() + sf::Vector2f(endPopup.getSize().x - (menuPopup.getSize().x + 36), 220));
+	menuPopup.addObject(createText("Menu", true, sf::Color::White, 30), menuPopup.getSize() * 0.5f - sf::Vector2f(0, 6.7));
 }
 
 //End-game annoucement
@@ -643,6 +680,8 @@ void GameUI::annouceEndGame(sf::RenderWindow& appWindow) {
 	}
 
 	endPopup.drawOn(appWindow);
+	newGamePopup.drawOn(appWindow);
+	menuPopup.drawOn(appWindow);
 }
 
 void GameUI::autoSave() {

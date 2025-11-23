@@ -144,6 +144,10 @@ void handle_option_menu() {
 		if (sound_board.setAudioType(optionmenu.getAttribute("MUSIC THEME") + 1))
 			sound_board.play_background_music();
 	}
+
+	if (mouse_state == MouseState::HOLD) {
+		optionmenu.fixAudio(get_mouse_position());
+	}
 }
 
 void handle_about_menu() {
@@ -193,9 +197,6 @@ void handle_game_scene() {
 
 	if (mouse_state == MouseState::CLICK) {
 		int signal = gameui.tryClickingAt(appWindow, get_mouse_position());
-		if (signal != -1) {
-			std::cerr << signal << "\n";
-		}
 
 		if (signal != -1) {
 			switch (signal) {

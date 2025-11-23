@@ -49,7 +49,7 @@ void RulesMenu::draw_UI(sf::RenderWindow& appwindow) {
 	lines.push_back("==========");
 	lines.push_back("You can put time limit. Whoever runs out of time first loses.");
 	lines.push_back("==========");
-	lines.push_back("Saving, loading, undoing and redoing moves are disabled in time limit");
+	lines.push_back("Saving, loading, undoing and redoing moves are disabled in time limit.");
 
 	for (int i = 0; i < (int)lines.size(); ++i) {
 		sf::Text text(english_font);

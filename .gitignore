@@ -363,3 +363,9 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# THE FIX: Force Git to track SFML binaries
+!SFML/bin/
+!SFML/bin/*.dll
+!SFML/lib/
+!SFML/lib/*.lib

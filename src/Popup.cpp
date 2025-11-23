@@ -10,25 +10,28 @@ Popup::Popup() {
 		std::filesystem::absolute(std::string(PROJECT_DIR) + "assets/Font/english.otf");
 	english_font.openFromFile(ENGLISH_FONT_PATH.c_str());
 	
-	background.setFillColor(sf::Color(48, 48, 48, 200));
-	/*background.setOutlineThickness(2.f);
-	background.setOutlineColor(sf::Color(100, 100, 100, 160));*/
+	backgroundColor = sf::Color(70, 63, 56, 150);
+	radius = 0;
 }
 
 void Popup::setSize(sf::Vector2f targetSize) {
-	background.setSize(targetSize);
+	size = targetSize;
 }
 
 void Popup::setPosition(sf::Vector2f targetPosition) {
-	background.setPosition(targetPosition);
+	position = targetPosition;
+}
+
+void Popup::setCornerRadius(float R) {
+	radius = R;
 }
 
 sf::Vector2f Popup::getSize() {
-	return background.getSize();
+	return size;
 }
 
 sf::Vector2f Popup::getPosition() {
-	return background.getPosition();
+	return position;
 }
 
 //Add text into popup
@@ -54,25 +57,75 @@ void Popup::addObject(sf::Text builtMessage, sf::Vector2f offsetPosition) {
 
 
 void Popup::setBackgroundColor(sf::Color bgColor) {
-	background.setFillColor(bgColor);
+	backgroundColor = bgColor;
 }
 
 //Display
+void Popup::drawBackground(sf::RenderWindow& appWindow) {
+	sf::RenderTexture textureBuffer;
+	
+	if (!textureBuffer.resize(convertToUInt(size))) {
+		return;
+	}
+
+	textureBuffer.clear(sf::Color::Transparent);
+
+	//Drawing a background with round corners (if set)
+	//Save into a render texture first
+
+	//Alpha placeholder
+	int alpha = backgroundColor.a;
+	backgroundColor.a = 255;
+
+	sf::RectangleShape horizontal_rect, vertical_rect;
+	horizontal_rect.setFillColor(backgroundColor);
+	vertical_rect.setFillColor(backgroundColor);
+
+	horizontal_rect.setSize(sf::Vector2f(size.x, size.y - 2 * radius));
+	horizontal_rect.setPosition(sf::Vector2f(0, radius));
+
+	vertical_rect.setSize(sf::Vector2f(size.x - 2 * radius, size.y));
+	vertical_rect.setPosition(sf::Vector2f(radius, 0));
+
+	textureBuffer.draw(horizontal_rect);
+	textureBuffer.draw(vertical_rect);
+
+	for (float x : {radius, size.x - radius}) {
+		for (float y : {radius, size.y - radius}) {
+			sf::CircleShape overlapCircle(radius);
+			overlapCircle.setPosition(sf::Vector2f(x, y));
+			overlapCircle.setOrigin(overlapCircle.getGlobalBounds().size * 0.5f);
+			
+			overlapCircle.setFillColor(backgroundColor);
+
+			textureBuffer.draw(overlapCircle);
+		}
+	}
+	textureBuffer.display();
+
+	//Adding texture to a sprite
+	sf::Sprite finalPopup(textureBuffer.getTexture());
+	
+	//No more holders
+	backgroundColor.a = alpha;
+	finalPopup.setColor(backgroundColor);
+	finalPopup.setPosition(position);
+	
+	appWindow.draw(finalPopup);
+}
 void Popup::drawOn(sf::RenderWindow& appWindow) {
-	appWindow.draw(background);
+	drawBackground(appWindow);
 
 	for (sf::Text messageBox : textBoxList) {
-		messageBox.setPosition(messageBox.getPosition() + background.getPosition());
+		messageBox.setPosition(messageBox.getPosition() + position);
 		appWindow.draw(messageBox);
 	}
 }
 
 //Check if a text clicked on?
 bool Popup::clickedOn(std::string message, sf::Vector2f mouse_pos) {
-	sf::Vector2f popupTopLeft = background.getPosition();
-
 	for (sf::Text messageBox : textBoxList) {
-		messageBox.setPosition(messageBox.getPosition() + popupTopLeft);
+		messageBox.setPosition(messageBox.getPosition() + position);
 
 		if (messageBox.getString() != message) continue;
 		if (messageBox.getGlobalBounds().contains(mouse_pos)) {
@@ -81,6 +134,11 @@ bool Popup::clickedOn(std::string message, sf::Vector2f mouse_pos) {
 	}
 
 	return false;
+}
+
+//Check if this popup is clicked on (including the background)
+bool Popup::clickedOn(sf::Vector2f mouse_pos) {
+	return mouse_pos.x >= position.x && mouse_pos.x <= position.x + size.x && mouse_pos.y >= position.y && mouse_pos.y <= position.y + size.y;
 }
 
 

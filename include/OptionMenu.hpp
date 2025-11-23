@@ -9,7 +9,9 @@ public:
 	void draw_feature_button(sf::RenderWindow& appwindow);
 	void draw_selection_button(sf::RenderWindow& appwindow, sf::Vector2f mouse_pos = sf::Vector2f(-1, -1));
 	void draw_back_button(sf::RenderWindow& appwindow, sf::Vector2f mouse_pos = sf::Vector2f(-1, -1));
-	int tryClickingAt(sf::Vector2f mousepos);
+	int tryClickingAt(sf::Vector2f mouse_pos);
+
+	void fixAudio(sf::Vector2f mouse_pos);
 
 	int getMusicVolume();
 	int getSoundVolume();

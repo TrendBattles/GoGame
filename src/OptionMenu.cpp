@@ -235,6 +235,14 @@ void OptionMenu::draw_feature_button(sf::RenderWindow& appwindow) {
 			vertical_offset + horizontal_offset + button_gap * float(threshold) + gap * float(r) + content_offset;
 
 		drawRadioButton(appwindow, zero_percent.y, zero_percent.x, current_percent.x, hundred_percent.x);
+		
+		//Audio percent on the right side
+		sf::Text percentText(chinese_font);
+		percentText.setString(std::to_string(threshold));
+		percentText.setPosition(hundred_percent + content_offset * 2.0f);
+		percentText.setOrigin(percentText.getGlobalBounds().size * 0.5f);
+
+		appwindow.draw(percentText);
 	}
 
 
@@ -396,6 +404,31 @@ int OptionMenu::tryClickingAt(sf::Vector2f mouse_pos) {
 	return -1;
 }
 
+void OptionMenu::fixAudio(sf::Vector2f mouse_pos) {
+	for (int r = 0; r <= 1; ++r) {
+		sf::Vector2f fifty_percent =
+			vertical_offset + horizontal_offset + button_gap * float(50) + gap * float(r) + content_offset;
+		sf::Vector2f sz(button_gap.x * float(70), volume_btn_size.x);
+		if (abs(mouse_pos.x - fifty_percent.x) <= sz.x && abs(mouse_pos.y - fifty_percent.y) <= sz.y) {
+			double chiu_bo = horizontal_offset.x + content_offset.x;
+			chiu_bo = (mouse_pos.x - chiu_bo) / button_gap.x;
+			if (chiu_bo < 0) chiu_bo = 0;
+			if (chiu_bo > 100) chiu_bo = 100;
+
+			int ans = round(chiu_bo / 10) * 10;
+			switch (r) {
+			case 0:
+				music_volume = ans;
+				break;
+			case 1:
+				sound_volume = ans;
+				break;
+			}
+		}
+	}
+
+	saveConfig();
+}
 
 int OptionMenu::getAttribute(std::string name) {
 	for (int i = 0; i < (int)selection_section.size(); ++i) {

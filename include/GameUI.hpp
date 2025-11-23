@@ -79,12 +79,12 @@ private:
 
 	//End-game texture
 	bool savedEndGame;
-	Popup endPopup;
+	Popup endPopup, newGamePopup, menuPopup;
 	
 	//In-game Annoucement
 	Popup messageBox, blackSide, whiteSide;
 
-	sf::Text createText(std::string message = "", bool centered = true, sf::Color textColor = sf::Color::White);
+	sf::Text createText(std::string message = "", bool centered = true, sf::Color textColor = sf::Color::White, int characterSize = 25);
 
 	sf::FloatRect expandHitbox(sf::FloatRect bounds, float margin);
 };

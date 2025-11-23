@@ -14,6 +14,9 @@ std::string convertTime(sf::Time askTime);
 sf::Vector2f convertToFloat(sf::Vector2i cur);
 sf::Vector2f convertToFloat(sf::Vector2u cur);
 
+sf::Vector2u convertToUInt(sf::Vector2f cur);
+sf::Vector2i convertToInt(sf::Vector2f cur);
+
 double sqr(double x);
 double squareDist(sf::Vector2f a);
 double dist(sf::Vector2f a);
