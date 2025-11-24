@@ -9,7 +9,7 @@ double sqr(double x) {
 //Converting time to print on the screen
 std::string convertTime(sf::Time askTime) {
 	if (askTime <= sf::seconds(0.0f))
-		return "0";
+		return "0.0";
 	if (askTime >= sf::seconds(60.0f)) {
 		int seconds = std::ceil(askTime.asSeconds());
 		int minutes = seconds / 60;

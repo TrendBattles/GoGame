@@ -37,9 +37,9 @@ void RulesMenu::draw_UI(sf::RenderWindow& appwindow) {
 	lines.push_back("A stone/group with no liberties is captured (removed).");
 	lines.push_back("Repeating a board position is illegal (Ko rule).");
 	lines.push_back("The player with the most points on the board wins.");
-	lines.push_back("White will be given an 8-point lead to compensate.");
+	lines.push_back("White will be given an 4-point lead to compensate.");
 	lines.push_back("==========");
-	lines.push_back("Points = (Number of your stones on board) + (Number of prisoners) + (Territory area).");
+	lines.push_back("Points = (Number of your stones on board) + (Number of prisoners).");
 	lines.push_back("Note that you can't see your current points during the game.");
 	lines.push_back("==========");
 	lines.push_back("You can change board size. Currently, 9x9, 13x13 and 19x19 are supported.");

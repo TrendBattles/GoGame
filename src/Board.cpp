@@ -333,10 +333,10 @@ std::array <int, 2> Board::getScore() {
 	score[1] += getCapture()[1];
 
 	/*
-		Score = (number of pieces on board) + (number of captured pieces) + (empty cells covered entirely)
+		Score = (number of pieces on board) + (number of captured pieces)
 	*/
 	
-	int delta_x[4] = { -1, +1, 0, 0 };
+	/*int delta_x[4] = { -1, +1, 0, 0 };
 	int delta_y[4] = { 0, 0, -1, +1 };
 
 	std::vector <std::vector <int>> visited(row, std::vector <int>(column));
@@ -362,10 +362,10 @@ std::array <int, 2> Board::getScore() {
 			if (adjColorMask == 1) score[0] += (int)empty_component.size();
 			if (adjColorMask == 2) score[1] += (int)empty_component.size();
 		}
-	}
+	}*/
 
-	//The second player will get 8 points
-	score[1] += 8;
+	//The second player will get 4 points
+	score[1] += 4;
 
 	return score;
 }
@@ -536,4 +536,6 @@ bool Board::subtractTime(sf::Time deltaClock, int turn) {
 void Board::setWinByTime(int turn) {
 	score[turn] = 0;
 	score[turn ^ 1] = -0x3f3f3f3f;
+
+	timeRemaining[turn ^ 1] = sf::seconds(0.0f);
 }

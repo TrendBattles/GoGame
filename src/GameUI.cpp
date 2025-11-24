@@ -571,20 +571,14 @@ sf::Text GameUI::createText(std::string message, bool centered, sf::Color textCo
 //This will displaying the timer of black/white and whose turn is it
 //Also return a signal to play end game sound
 bool GameUI::loadTimer() {
-	if (!board.isInGame()) {
-		bool state = playedEndGameSound;
-		playedEndGameSound = true;
-		return state;
-	}
-
 	int turn = board.getTurn();
-	sf::Time timePassed = deltaClock.restart();
 
 	if (board.isInGame()) {
+		sf::Time timePassed = deltaClock.restart();
+
 		if (timeLimitSet && board.subtractTime(timePassed, turn) == false) {
 			board.setGame(false);
 			board.setWinByTime(turn ^ 1);
-			return false;
 		}
 	}
 	
@@ -609,12 +603,19 @@ bool GameUI::loadTimer() {
 	whiteSide.addObject(createText("White", true, sf::Color::White), sf::Vector2f(whiteSide.getSize().x * 0.5f, 20));
 	whiteSide.addObject(createText(timeLimitSet ? convertTime(board.getTime(1)) : "--:--", true, sf::Color::White), { whiteSide.getSize().x * 0.5f, 60 });
 	
+
+	if (!board.isInGame()) {
+		bool state = playedEndGameSound;
+		playedEndGameSound = true;
+		return state;
+	}
+
 	return true;
 }
 
 //In-game Annoucement
 void GameUI::annouceInGame(sf::RenderWindow& appWindow) {
-	if (!board.isInGame()) return;
+	//if (!board.isInGame()) return;
 
 	loadTurnIndicator();
 
