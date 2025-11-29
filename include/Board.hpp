@@ -67,8 +67,8 @@ private:
 
 	std::array <int, 2> score;
 
-	//KataGo Bot
-	//KataGoManager analysisBot;
+	//KataGo trace
+	KataGoManager gameTrace;
 };
 
 #endif

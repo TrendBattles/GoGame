@@ -2,6 +2,7 @@
 #define HELPER_HPP
 
 #include <SFML/Graphics.hpp>
+#include <utility>
 
 static sf::Vector2u windowSize = sf::Vector2u(1200, 800);
 static const sf::Vector2u virtualWindowSize = sf::Vector2u(1200, 800);
@@ -17,6 +18,10 @@ sf::Vector2f convertToFloat(sf::Vector2u cur);
 sf::Vector2u convertToUInt(sf::Vector2f cur);
 sf::Vector2i convertToInt(sf::Vector2f cur);
 
+
+std::string cellPosConversion(int x, int y, int row, int column);
+std::pair <int, int> cellPosGet(std::string coor, int row, int column);
+
 double sqr(double x);
 double squareDist(sf::Vector2f a);
 double dist(sf::Vector2f a);
@@ -24,7 +29,6 @@ double inverseDist(sf::Vector2f a);
 double squareDist(sf::Vector2f a, sf::Vector2f b);
 double dist(sf::Vector2f a, sf::Vector2f b);
 double inverseDist(sf::Vector2f a, sf::Vector2f b);
-
 
 
 #endif

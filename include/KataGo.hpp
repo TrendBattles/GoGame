@@ -21,8 +21,6 @@ public:
     std::string waitForReply(int maxTimeoutMiliseconds);
 
     int get_exit_status();
-
-    std::string parseMove(const std::string& gtpReply);
 private:
     // --- Windows Process Handles and Structures ---
     HANDLE hProcess = NULL;     // The main handle to the process itself

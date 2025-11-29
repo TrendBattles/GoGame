@@ -2,6 +2,22 @@
 
 Made by Le Kien Thanh and Nguyen Nguyen Gia Bao
 
+Requirement Specification:
+
+- Windows 11 (Recommended)
+
+- gcc 14.2.0 or later
+
+- CMake 3.22 or later
+
+- Visual Studio 2022 or later
+
+How to install:
+
+- Unzip KataGo.zip first.
+
+- Click on buildGame.bat and wait until it completes. Then you go!
+
 Progress so far ✅:
 
 -UI:

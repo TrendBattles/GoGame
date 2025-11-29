@@ -273,16 +273,3 @@ int KataGoManager::get_exit_status() {
     }
     return 0; // Default error/return value if handle is invalid
 }
-
-// Static Helper (Remains the same)
-std::string KataGoManager::parseMove(const std::string& gtpReply) {
-    // ... (Your previous parseMove implementation) ...
-    if (gtpReply.empty()) return "";
-    if (gtpReply[0] == '=') {
-        size_t spacePos = gtpReply.find(' ');
-        if (spacePos != std::string::npos) {
-            return gtpReply.substr(spacePos + 1);
-        }
-    }
-    return "";
-}

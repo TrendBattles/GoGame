@@ -371,4 +371,4 @@ FodyWeavers.xsd
 !SFML/lib/*.lib
 
 # Removing KataGo build first
-include/KataGo/
+KataGo

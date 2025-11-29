@@ -3,6 +3,7 @@
 #include <iostream>
 #include <vector>
 #include <fstream>
+#include <sstream>
 #include <bitset>
 
 
@@ -14,30 +15,36 @@ Board::Board() {
 
 	score = { -1, -1 };
 
-	//// --- Configuration --- (KataGo)
-	//const std::string BASE_DIR = std::string(PROJECT_DIR) + "include/KataGo/";
-	//analysisBot.set(BASE_DIR);
+	// --- Configuration --- (KataGo)
+	const std::string BASE_DIR = std::string(PROJECT_DIR) + "KataGo/";
+	gameTrace.set(BASE_DIR);
 
-	//// Wait a moment for startup
-	//std::this_thread::sleep_for(std::chrono::seconds(1));
+	// Wait a moment for startup
+	std::this_thread::sleep_for(std::chrono::seconds(1));
 
-	//// Check if it's still alive (Status should be -1)
-	//int status = analysisBot.get_exit_status();
-	//if (status == 0) {
-	//	std::cerr << "[FAIL] KataGo exited immediately (Pipe Issue).\n";
-	//} else {
-	//	std::cerr << "[PASS] KataGo is running! (Status: " << status << ")\n";
-	//}
+	// Check if it's still alive (Status should be -1)
+	int status = gameTrace.get_exit_status();
+	if (status == 0) {
+		std::cerr << "[FAIL] KataGo exited immediately (Pipe Issue).\n";
+	} else {
+		std::cerr << "[PASS] KataGo is running! (Status: " << status << ")\n";
+	}
 }
 
 
 
 void Board::setSize(int _i_row, int _i_column) {
+	if (row != -1) {
+		gameTrace.sendCommand("clear_board");
+		while (gameTrace.waitForReply(1000).empty());
+	}
+
 	if (_i_row != row || _i_column != column) {
 		row = _i_row;
 		column = _i_column;
 
-		//analysisBot.sendCommand("boardsize " + std::to_string(_i_row));
+		gameTrace.sendCommand("boardsize " + std::to_string(_i_row));
+		while (gameTrace.waitForReply(1000).empty());
 	}
 	
 
@@ -76,6 +83,10 @@ void Board::setState(int x, int y, int c) {
 	}
 
 	state_list[state_pointer].back() = '0';
+
+
+	gameTrace.sendCommand(std::string("play ") + (c == 1 ? "W " : "B ") + cellPosConversion(x, y, row, column));
+	while (gameTrace.waitForReply(1000).empty());
 }
 
 
@@ -262,25 +273,38 @@ bool Board::undo() {
 		current_turn = 1 ^ current_turn;
 		--state_pointer;
 
-		return true;
-	}
-	return false;
-}
-void Board::undoAll() {
-	state_pointer = 0;
-	current_turn = state_pointer & 1;
-}
-bool Board::redo() {
-	if (state_pointer + 1 < (int)state_list.size()) {
-		current_turn = 1 ^ current_turn;
-		++state_pointer;
+		gameTrace.sendCommand("undo");
+		while (gameTrace.waitForReply(1000).empty());
 
 		return true;
 	}
 	return false;
 }
+void Board::undoAll() {
+	while (undo());
+
+	current_turn = state_pointer & 1;
+}
+bool Board::redo() {
+	if (state_pointer + 1 < (int)state_list.size()) {
+		for (int i = 0; i < row * column; ++i) {
+			if (state_list[state_pointer][i] == '.' && state_list[state_pointer + 1][i] != '.') {
+				gameTrace.sendCommand(std::string("play ") + (current_turn ? "W " : "B ") + cellPosConversion(i / column, i % column, row, column));
+				while (gameTrace.waitForReply(1000).empty());
+
+				break;
+			}
+		}
+
+		current_turn = 1 ^ current_turn;
+		++state_pointer;
+		return true;
+	}
+	return false;
+}
 void Board::redoAll() {
-	state_pointer = (int)state_list.size() - 1;
+	while (redo());
+
 	current_turn = state_pointer & 1;
 }
 
@@ -319,10 +343,81 @@ std::array <int, 2> Board::getScore() {
 	/*
 		Final score by both sides
 		If +inf -> won by resignation
+		Else if -inf -> out of time
+		Else pass case
 	*/
 
-	score = { 0, 0 };
+	auto Split = [&](std::string inputStr) -> std::vector <std::string> {
+		std::istringstream stream(inputStr);
 
+		std::vector <std::string> result;
+		std::string token;
+
+		while (stream >> token) {
+			if (token != "=") result.push_back(token);
+		}
+
+		return result;
+	};
+
+	score = { 0, 0 };
+	
+	std::string currentState = getState();
+
+	gameTrace.sendCommand("final_status_list dead");
+	std::string deadStatus = "";
+	do {
+		deadStatus = gameTrace.waitForReply(1000);
+	} while (deadStatus.empty());
+	
+	std::vector <std::string> deadStones = Split(deadStatus);
+	for (std::string P : deadStones) {
+		std::pair <int, int> position = cellPosGet(P, row, column);
+
+		currentState[position.first * column + position.second] = '.';
+	}
+
+	state_list.push_back(currentState);
+	state_pointer = (int)state_list.size() - 1;
+
+	for (int i = 0; i < row * column; ++i) {
+		if (currentState[i] != '.') score[currentState[i] - '0'] += 1;
+	}
+
+
+	//Territory area
+	std::bitset <32 * 12> visited;
+	const int delta_x[4] = { -1, +1, 0, 0 };
+	const int delta_y[4] = { 0, 0, -1, +1 };
+
+	for (int i = 0; i < row; ++i) {
+		for (int j = 0; j < column; ++j) {
+			if (!emptyCell(i, j)) visited[i * column + j] = true;
+
+			if (visited[i * column + j]) continue;
+
+			std::vector <std::pair <int, int>> component = findComponent(i, j, -1);
+			int mask_color = 0;
+
+			for (std::pair <int, int> point : component) {
+				visited[point.first * column + point.second] = true;
+
+				for (int dir = 0; dir < 4; ++dir) {
+					int adj_x = point.first + delta_x[dir], adj_y = point.second + delta_y[dir];
+
+					if (outsideBoard(adj_x, adj_y)) continue;
+
+					if (!emptyCell(adj_x, adj_y)) mask_color |= 1 << getState(adj_x, adj_y);
+				}
+			}
+
+			if (mask_color == 1) score[0] += (int)component.size();
+			if (mask_color == 2) score[1] += (int)component.size();
+		}
+	}
+
+	//Komi = 4
+	score[1] += 4;
 	return score;
 }
 
@@ -410,6 +505,9 @@ int Board::loadGame() {
 	}
 
 	
+	//Avoid loading the game into the bot multiple times
+	bool different = state_list != stack_list;
+
 	state_pointer = stack_pointer;
 	state_list = stack_list;
 	moveLimit = stackLimit;
@@ -418,6 +516,22 @@ int Board::loadGame() {
 
 	current_turn = (state_pointer & 1);
 	playing = score[0] == -1 && score[1] == -1;
+
+	if (different && playing) {
+		gameTrace.sendCommand("clear_board");
+		while (gameTrace.waitForReply(1000).empty());
+
+		for (int i = 0; i + 1 < (int)state_list.size(); ++i) {
+			for (int p = 0; p < row * column; ++p) {
+				if (state_list[i][p] == '.' && state_list[i + 1][p] != '.') {
+					gameTrace.sendCommand(std::string("play ") + (i & 1 ? "W " : "B ") + cellPosConversion(p / column, p % column, row, column));
+					while (gameTrace.waitForReply(1000).empty());
+
+					break;
+				}
+			}
+		}
+	}
 
 	return FileStatus::Success;
 }
@@ -433,6 +547,11 @@ void Board::clearGame() {
 
 	state_list.assign(1, std::string(row * column, '.'));
 	state_list.back().push_back('0');
+
+	if (row != -1) {
+		gameTrace.sendCommand("clear_board");
+		while (gameTrace.waitForReply(1000).empty());
+	}
 }
 
 void Board::setWinByTime(int turn) {

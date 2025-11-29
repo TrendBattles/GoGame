@@ -42,6 +42,20 @@ sf::Vector2i convertToInt(sf::Vector2f cur) {
 	return sf::Vector2i(cur.x, cur.y);
 }
 
+//No character I in Go
+std::string cellPosConversion(int x, int y, int row, int column) {
+	return std::string(1, char(y + 'A' + (y + 'A' >= 'I'))) + std::to_string(row - x);
+}
+
+std::pair <int, int> cellPosGet(std::string coor, int row, int column) {
+	int y = coor[0] - 'A';
+	int x = coor[1] - '0';
+	if ((int)coor.length() == 3) x = x * 10 + (coor[2] - '0');
+
+	x = row - x;
+	return std::make_pair(x, y);
+}
+
 double squareDist(sf::Vector2f a) {
 	return sqr(a.x) + sqr(a.y);
 }
