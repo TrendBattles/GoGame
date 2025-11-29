@@ -80,10 +80,7 @@ void GameUI::initGame() {
 	autoLoad();
 
 	//Initialize the clock
-	if (timeLimitSet) {
-		board.resetClock();
-		deltaClock.restart();
-	}
+	Timer.resetClock();
 
 	PIECE_SCALE = sf::Vector2f(gameConfig.stoneRadius() / (go_piece[0].getSize().x * 0.5f), gameConfig.stoneRadius() / (go_piece[0].getSize().y * 0.5f));
 
@@ -244,7 +241,7 @@ void GameUI::draw_game_buttons(sf::RenderWindow& appWindow, sf::Vector2f mouse_p
 	sf::Vector2f horizontal_offset(virtualWindowSize.x * 0.5f, 0), content_offset(horizontal_offset.x - gameConfig.boardTopLeft.x * 0.5f, 0);
 	sf::Vector2f vertical_offset(0, 400), vertical_gap(0, 75);
 	
-	if (!timeLimitSet) {
+	if (!Timer.timeLimitToggle()) {
 		//Case for no time limit
 		Specific_Draw("SAVE", 
 			horizontal_offset - content_offset + vertical_offset + vertical_gap * 0.0f, 25);
@@ -311,7 +308,7 @@ int GameUI::tryClickingAt(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos) {
 			}
 
 			//Bonus time
-			if (timeLimitSet) board.addTime(board.getTurn());
+			Timer.addTime(board.getTurn());
 
 			std::string tmp = board.getState();
 			board.placePieceAt(r, c);
@@ -339,7 +336,7 @@ int GameUI::tryClickingAt(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos) {
 	auto check_inside = [&](sf::Vector2f a, sf::Vector2f b) -> bool {
 		return (abs(a.x) <= b.x) && (abs(a.y) <= b.y);
 	};
-	if (!timeLimitSet) {
+	if (!Timer.timeLimitToggle()) {
 		//No time limit
 		sf::Vector2f horizontal_offset(virtualWindowSize.x * 0.5f, 0), content_offset(horizontal_offset.x - 150, 0);
 		sf::Vector2f vertical_offset(0, 400), vertical_gap(0, 75);
@@ -525,7 +522,7 @@ void GameUI::loadTurnIndicator() {
 	messageBox.setSize(sf::Vector2f(200, 240));
 	messageBox.setCornerRadius(30);
 
-	if (timeLimitSet) {
+	if (Timer.timeLimitToggle()) {
 		//Saving game states aren't allowed in time limit mode.
 		messageBox.addObject(createText(board.getPassState() ? "Pass clicked" : "Pass unclicked", true, sf::Color::White), { messageBox.getSize().x * 0.5f, 60 });
 
@@ -574,10 +571,7 @@ bool GameUI::loadTimer() {
 	int turn = board.getTurn();
 
 	if (board.isInGame()) {
-		sf::Time timePassed = deltaClock.restart();
-
-		if (timeLimitSet && board.subtractTime(timePassed, turn) == false) {
-			board.setGame(false);
+		if (Timer.timeLimitToggle() && Timer.subtractTime(turn) == false) {
 			board.setWinByTime(turn ^ 1);
 		}
 	}
@@ -597,11 +591,11 @@ bool GameUI::loadTimer() {
 
 	blackSide.setPosition(sf::Vector2f(gameConfig.boardTopLeft.x + gameConfig.borderLimit + 50, 100));
 	blackSide.addObject(createText("Black", true, sf::Color::White), sf::Vector2f(blackSide.getSize().x * 0.5f, 20));
-	blackSide.addObject(createText(timeLimitSet ? convertTime(board.getTime(0)) : "--:--", true, sf::Color::White), { blackSide.getSize().x * 0.5f, 60 });
+	blackSide.addObject(createText(Timer.timeLimitToggle() ? convertTime(Timer.getTime(0)) : "--:--", true, sf::Color::White), {blackSide.getSize().x * 0.5f, 60});
 
 	whiteSide.setPosition(sf::Vector2f(gameConfig.boardTopLeft.x + gameConfig.borderLimit + 50, 220));
 	whiteSide.addObject(createText("White", true, sf::Color::White), sf::Vector2f(whiteSide.getSize().x * 0.5f, 20));
-	whiteSide.addObject(createText(timeLimitSet ? convertTime(board.getTime(1)) : "--:--", true, sf::Color::White), { whiteSide.getSize().x * 0.5f, 60 });
+	whiteSide.addObject(createText(Timer.timeLimitToggle() ? convertTime(Timer.getTime(1)) : "--:--", true, sf::Color::White), { whiteSide.getSize().x * 0.5f, 60 });
 	
 
 	if (!board.isInGame()) {
@@ -725,7 +719,5 @@ void GameUI::setMoveLimit(int x) {
 }
 
 void GameUI::setTimeLimit(int id) {
-	timeLimitSet = id > 0;
-
-	board.setTimeLimit(id);
+	Timer.setTimeLimit(id);
 }

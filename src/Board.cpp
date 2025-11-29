@@ -3,6 +3,7 @@
 #include <iostream>
 #include <vector>
 #include <fstream>
+#include <bitset>
 
 
 Board::Board() {
@@ -12,18 +13,37 @@ Board::Board() {
 	moveLimit = 0;
 
 	score = { -1, -1 };
+
+	//// --- Configuration --- (KataGo)
+	//const std::string BASE_DIR = std::string(PROJECT_DIR) + "include/KataGo/";
+	//analysisBot.set(BASE_DIR);
+
+	//// Wait a moment for startup
+	//std::this_thread::sleep_for(std::chrono::seconds(1));
+
+	//// Check if it's still alive (Status should be -1)
+	//int status = analysisBot.get_exit_status();
+	//if (status == 0) {
+	//	std::cerr << "[FAIL] KataGo exited immediately (Pipe Issue).\n";
+	//} else {
+	//	std::cerr << "[PASS] KataGo is running! (Status: " << status << ")\n";
+	//}
 }
 
 
 
 void Board::setSize(int _i_row, int _i_column) {
-	row = _i_row;
-	column = _i_column;
+	if (_i_row != row || _i_column != column) {
+		row = _i_row;
+		column = _i_column;
+
+		//analysisBot.sendCommand("boardsize " + std::to_string(_i_row));
+	}
+	
 
 	state_pointer = 0;
 	state_list.assign(1, std::string(row * column, '.'));
 	state_list.back().push_back('0');
-	numCapture.assign(1, { 0, 0 });
 }
 
 std::pair <int, int> Board::getSize() {
@@ -47,13 +67,9 @@ void Board::setState(int x, int y, int c) {
 	state_list.erase(state_list.begin() + state_pointer + 1, state_list.end());
 	std::vector <std::pair <int, int>> captured = capturedPositions(x, y, c);
 	
-	numCapture.erase(numCapture.begin() + state_pointer + 1, numCapture.end());
-	numCapture.push_back(numCapture.back());
-	
 
 	state_list.push_back(state_list.back());
 	state_list[++state_pointer][x * column + y] = c + '0';
-	numCapture[state_pointer][c] += (int)captured.size();
 
 	for (std::pair <int, int> point : captured) {
 		state_list[state_pointer][point.first * column + point.second] = '.';
@@ -84,11 +100,6 @@ bool Board::getTurn() {
 	return current_turn;
 }
 
-//Set the game to be continued or not
-void Board::setGame(bool gameOn) {
-	playing = gameOn;
-}
-
 void Board::setMoveLimit(int target) {
 	//Set move limit (50 minimum)
 	moveLimit = target;
@@ -107,9 +118,9 @@ std::vector <std::pair <int, int>> Board::findComponent(int x, int y, int cell_i
 	*/
 
 	std::vector <std::pair <int, int>> _cell_queue;
-	std::vector <std::vector <int>> visited(row, std::vector <int>(column));
+	std::bitset <32 * 12> visited;
 
-	visited[x][y] = true;
+	visited[x * column + y] = true;
 	_cell_queue.emplace_back(x, y);
 
 	const int delta_x[4] = { +1, -1, 0, 0 };
@@ -125,9 +136,9 @@ std::vector <std::pair <int, int>> Board::findComponent(int x, int y, int cell_i
 			if (outsideBoard(new_i, new_j)) continue;
 			if (getState(new_i, new_j) != cell_id) continue;
 
-			if (visited[new_i][new_j]) continue;
+			if (visited[new_i * column + new_j]) continue;
 
-			visited[new_i][new_j] = true;
+			visited[new_i * column + new_j] = true;
 			_cell_queue.emplace_back(new_i, new_j);
 		}
 	}
@@ -274,7 +285,6 @@ void Board::redoAll() {
 }
 
 bool Board::pass() {
-	//End-scoring?
 	if (getPassState()) {
 		playing = false;
 
@@ -284,9 +294,6 @@ bool Board::pass() {
 	state_list.erase(state_list.begin() + state_pointer + 1, state_list.end());
 	state_list.push_back(state_list.back());
 	state_list.back().back() = '1';
-
-	numCapture.erase(numCapture.begin() + state_pointer + 1, numCapture.end());
-	numCapture.push_back(numCapture.back());
 	
 	state_pointer = (int) state_list.size() - 1;
 
@@ -295,23 +302,15 @@ bool Board::pass() {
 }
 
 void Board::resign() { 
-	//std::cerr << "Player " << (current_turn ^ 1) + 1 << " won by resignation\n";
 	playing = false; 
 	
 	state_list.erase(state_list.begin() + state_pointer + 1, state_list.end());
 	state_list.push_back(state_list.back());
 
-	numCapture.erase(numCapture.begin() + state_pointer + 1, numCapture.end());
-	numCapture.push_back(numCapture.back());
-
 	state_pointer = (int)state_list.size() - 1;
 
 	score[current_turn ^ 1] = 0x3f3f3f3f;
 	score[current_turn] = 0;
-}
-
-std::array <int, 2> Board::getCapture() {
-	return numCapture[state_pointer];
 }
 
 std::array <int, 2> Board::getScore() {
@@ -321,51 +320,8 @@ std::array <int, 2> Board::getScore() {
 		Final score by both sides
 		If +inf -> won by resignation
 	*/
+
 	score = { 0, 0 };
-	
-	for (int i = 0; i < row; ++i) {
-		for (int j = 0; j < column; ++j) {
-			if (getState(i, j) != -1) score[getState(i, j)] += 1;
-		}
-	}
-	
-	score[0] += getCapture()[0];
-	score[1] += getCapture()[1];
-
-	/*
-		Score = (number of pieces on board) + (number of captured pieces)
-	*/
-	
-	/*int delta_x[4] = { -1, +1, 0, 0 };
-	int delta_y[4] = { 0, 0, -1, +1 };
-
-	std::vector <std::vector <int>> visited(row, std::vector <int>(column));
-
-	for (int i = 0; i < row; ++i) {
-		for (int j = 0; j < column; ++j) {
-			if (getState(i, j) != -1 || visited[i][j]) continue;
-
-			std::vector <std::pair <int, int>> empty_component = findComponent(i, j, -1);
-
-			int adjColorMask = 0;
-
-			for (std::pair <int, int> P : empty_component) {
-				visited[P.first][P.second] = true;
-
-				for (int dir = 0; dir < 4; ++dir) {
-					int adj_x = P.first + delta_x[dir], adj_y = P.second + delta_y[dir];
-
-					if (getState(adj_x, adj_y) != -1) adjColorMask |= 1 << getState(adj_x, adj_y);
-				}
-			}
-
-			if (adjColorMask == 1) score[0] += (int)empty_component.size();
-			if (adjColorMask == 2) score[1] += (int)empty_component.size();
-		}
-	}*/
-
-	//The second player will get 4 points
-	score[1] += 4;
 
 	return score;
 }
@@ -389,8 +345,6 @@ int Board::saveGame() {
 	fout << (int)state_list.size() << ' ' << state_pointer << ' ' << moveLimit << '\n';
 	for (std::string& st : state_list) fout << st << '\n';
 
-	for (std::array <int, 2>& data : numCapture) fout << data[0] << ' ' << data[1] << '\n';
-
 	fout << score[0] << ' ' << score[1] << '\n';
 	fout.close();
 
@@ -405,8 +359,6 @@ int Board::loadGame() {
 		Loading games
 	*/
 
-	system("cls");
-
 	if (!fin.is_open() || fin.eof()) {
 		return FileStatus::FileNotFound;
 	}
@@ -420,7 +372,10 @@ int Board::loadGame() {
 	std::array <int, 2> tempScore;
 
 	try {
-		fin >> stackSize >> stack_pointer >> stackLimit;
+		if (!(fin >> stackSize >> stack_pointer >> stackLimit)) {
+			throw std::runtime_error("Failed to read stack parameters (I/O failure/EOF)");
+		}
+
 		if (stackSize <= 0 || stackSize <= stack_pointer) throw std::invalid_argument("Zero-Negative stack size/Invalid stack pointer index.");
 		
 		if (stackLimit != moveLimit) throw std::invalid_argument("Different move limits");
@@ -428,21 +383,18 @@ int Board::loadGame() {
 		stack_list.assign(stackSize, "");
 
 		for (int i = 0; i < stackSize; ++i) {
-			fin >> stack_list[i];
-
-			if ((int)stack_list[i].length() != row * column + 1) throw std::invalid_argument("Incompatible board size.");
+			if (!(fin >> stack_list[i]) || (int)stack_list[i].length() != row * column + 1) {
+				throw std::runtime_error("Missing or incomplete board state in stack list.");
+			}
 
 			for (char x : stack_list[i]) {
 				if (x != '.' && x != '0' && x != '1') throw std::invalid_argument("Invalid cell state. Found " + std::to_string(x));
 			}
 		}
 
-		stackCapture.assign(stackSize, {0, 0});
-		for (int i = 0; i < stackSize; ++i) {
-			fin >> stackCapture[i][0] >> stackCapture[i][1];
+		if (!(fin >> tempScore[0] >> tempScore[1])) {
+			throw std::runtime_error("Missing/Invalid final score format");
 		}
-
-		fin >> tempScore[0] >> tempScore[1];
 	}
 	catch (const std::invalid_argument& e) {
 		std::cerr << "Format Error: " << e.what() << "\n";
@@ -461,7 +413,6 @@ int Board::loadGame() {
 	state_pointer = stack_pointer;
 	state_list = stack_list;
 	moveLimit = stackLimit;
-	numCapture = stackCapture;
 
 	score = tempScore;
 
@@ -473,7 +424,6 @@ int Board::loadGame() {
 
 void Board::clearGame() {
 	state_list.clear();
-	numCapture.clear();
 
 	current_turn = 0;
 	state_pointer = 0;
@@ -483,59 +433,11 @@ void Board::clearGame() {
 
 	state_list.assign(1, std::string(row * column, '.'));
 	state_list.back().push_back('0');
-	numCapture.assign(1, { 0, 0 });
-}
-
-void Board::setTimeLimit(int id) {
-	switch (id) {
-	case 0:
-		timeLimit = sf::seconds(0.0f);
-		timeAdd = sf::seconds(0.0f);
-		break;
-	case 1:
-		timeLimit = sf::seconds(60.0f);
-		timeAdd = sf::seconds(3.0f);
-		break;
-	case 2:
-		timeLimit = sf::seconds(180.0f);
-		timeAdd = sf::seconds(5.0f);
-		break;
-	case 3:
-		timeLimit = sf::seconds(600.0f);
-		timeAdd = sf::seconds(10.0f);
-		break;
-	case 4:
-		timeLimit = sf::seconds(1800.0f);
-		timeAdd = sf::seconds(20.0f);
-		break;
-	}
-}
-
-//Reset the game with time limit
-void Board::resetClock() {
-	timeRemaining[0] = timeRemaining[1] = timeLimit;
-}
-//Add time
-void Board::addTime(int turn) {
-	timeRemaining[turn] += timeAdd;
-}
-
-sf::Time Board::getTime(int turn) {
-	return timeRemaining[turn];
-}
-
-//Running clock
-bool Board::subtractTime(sf::Time deltaClock, int turn) {
-	if (timeRemaining[turn] > deltaClock) {
-		timeRemaining[turn] -= deltaClock;
-		return true;
-	}
-	return false;
 }
 
 void Board::setWinByTime(int turn) {
+	playing = false;
+
 	score[turn] = 0;
 	score[turn ^ 1] = -0x3f3f3f3f;
-
-	timeRemaining[turn ^ 1] = sf::seconds(0.0f);
 }

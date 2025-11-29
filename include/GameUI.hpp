@@ -3,6 +3,7 @@
 
 #include <SFML/Graphics.hpp>
 #include <Board.hpp>
+#include <BoardTimer.hpp>
 #include <PopUp.hpp>
 
 struct GameConfig {
@@ -69,10 +70,8 @@ private:
 	int autoSaveToggle;
 	int boardOption;
 
-	bool timeLimitSet;
+	BoardTimer Timer;
 
-	sf::Clock deltaClock;
-	
 	std::string fileNotification; //Save/Load notifications
 	sf::Clock notificationTimer;
 	sf::Time notificationDuration = sf::seconds(2.5f); //Time limit for showing
