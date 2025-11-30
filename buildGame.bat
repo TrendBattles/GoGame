@@ -4,7 +4,7 @@ cmake ..
 
 cmake --build . --config Release
 
-cd ../include/KataGo
+cd ../KataGo
 
 :: Send "quit" into KataGo. 
 :: It will start up, initialize the GPU (building the tuning data), and then immediately exit.

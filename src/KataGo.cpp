@@ -159,14 +159,8 @@ void KataGoManager::readOutputLoop() {
         // ReadFile blocks, but that is fine for a dedicated thread.
         // It returns TRUE if data is read, FALSE if pipe is broken/empty.
 
-        BOOL peekSuccess = PeekNamedPipe(hReadPipe, NULL, 0, NULL, &bytesAvail, NULL);
-
-        if (!peekSuccess) {
-            if (GetLastError() == ERROR_BROKEN_PIPE) {
-                //std::cerr << "[DEBUG] Pipe Disconnected (Process Exited).\n";
-                break; // Exit loop
-            }
-        }
+        // 1. Peek (Instant check)
+        if (!PeekNamedPipe(hReadPipe, NULL, 0, NULL, &bytesAvail, NULL)) break;
 
         // 2. DECIDE: Read or Sleep?
         if (bytesAvail > 0) {
@@ -177,18 +171,26 @@ void KataGoManager::readOutputLoop() {
 
             buffer[bytesRead] = '\0';
 
-            // PRINT EVERYTHING WE RECEIVE
-            //std::string rawData(buffer, bytesRead);
-            //std::cerr << "[RAW FROM KATAGO] " << rawData << "\n"; // <--- CRITICAL
+            // --- OPTIMIZATION START ---
 
-            std::lock_guard<std::mutex> lock(queueMutex);
+            // 1. Process string logic WITHOUT locking the mutex.
+            // 'lineBuffer' is only used by this thread, so it doesn't need a lock!
             lineBuffer.append(buffer, bytesRead);
+
             size_t pos = 0;
             while ((pos = lineBuffer.find('\n')) != std::string::npos) {
                 std::string line = lineBuffer.substr(0, pos);
-                if (!line.empty()) replyQueue.push(line);
+
+                if (!line.empty()) {
+                    // 2. Lock ONLY for the tiny moment we push to the shared queue.
+                    // This takes nanoseconds, freeing up your Main Thread instantly.
+                    std::lock_guard<std::mutex> lock(queueMutex);
+                    replyQueue.push(line);
+                }
+
                 lineBuffer.erase(0, pos + 1);
             }
+            // --- OPTIMIZATION END ---
         }
         else {
             // 3. NO DATA: Sleep briefly.
@@ -243,6 +245,7 @@ std::string KataGoManager::getReply() {
 
 std::string KataGoManager::waitForReply(int maxTimeoutMiliseconds) {
     //Getting response in time limit (counted as miliseconds)
+    //10 milliseconds cooldown
 
     sf::Clock deltaClock;
     deltaClock.restart();
@@ -255,6 +258,7 @@ std::string KataGoManager::waitForReply(int maxTimeoutMiliseconds) {
             response = placeholder;
         }
 
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     } while (response.empty() && deltaClock.getElapsedTime().asMilliseconds() < maxTimeoutMiliseconds);
 
     return response;

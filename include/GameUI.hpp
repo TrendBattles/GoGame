@@ -13,7 +13,7 @@ struct GameConfig {
 	float board_offset();
 	float stoneRadius();
 
-	int boardEdge = 576, borderLimit = 620;
+	int boardEdge = 576, borderLimit = 600;
 	int gridSize;
 
 	sf::Vector2f boardTopLeft;
