@@ -33,6 +33,7 @@ void OptionMenu::init() {
 	selection_section.push_back("MUSIC THEME");
 	selection_section.push_back("MOVE LIMIT");
 	selection_section.push_back("TIME LIMIT");
+	selection_section.push_back("GAME MODE");
 
 	option_chosen.resize(selection_section.size());
 	selection_option.resize(selection_section.size());
@@ -58,6 +59,11 @@ void OptionMenu::init() {
 	selection_option[3].push_back("10 min + 10s");
 	selection_option[3].push_back("30 min + 20s");
 
+
+	selection_option[4].push_back("PvP");
+	selection_option[4].push_back("AI (Easy)");
+	selection_option[4].push_back("AI (Medium)");
+	selection_option[4].push_back("AI (Hard)");
 	font_size.resize(selection_section.size());
 	loadConfig();
 }

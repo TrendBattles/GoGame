@@ -3,6 +3,7 @@
 #include <Helper.hpp>
 #include <iostream>
 #include <vector>
+#include <sstream>
 
 GameConfig::GameConfig(int sizeState) {
 	vertical_offset = sf::Vector2f(0, 100);
@@ -63,24 +64,18 @@ void GameUI::init() {
 
 	PIECE_SCALE = sf::Vector2f(0.4, 0.4);
 
-	autoSaveToggle = 1;
+	autoSaveToggle = 0;
 }
 
 //Gameplay initialization
-void GameUI::initGame() {
+void GameUI::initGame(int boardOption) {
 	board.clearGame();
 
 	gameConfig = GameConfig(boardOption);
 	board.setSize(gameConfig.gridSize, gameConfig.gridSize);
-	
+
 	//When initialized, force to remove the message
 	fileNotification = "";
-
-	//Loading the game
-	autoLoad();
-
-	//Initialize the clock
-	Timer.resetClock();
 
 	PIECE_SCALE = sf::Vector2f(gameConfig.stoneRadius() / (go_piece[0].getSize().x * 0.5f), gameConfig.stoneRadius() / (go_piece[0].getSize().y * 0.5f));
 
@@ -91,15 +86,70 @@ void GameUI::initGame() {
 void GameUI::resetGame() {
 	//Remove traces of the last game in the file
 	board.clearGame();
-	saveGame();
+	autoSave();
 
-	//Load the game
-	initGame();
+	//When initialized, force to remove the message
+	fileNotification = "";
+	savedEndGame = playedEndGameSound = false;
 }
 
 void GameUI::setCenter(sf::Text& text) {
 	sf::FloatRect bounds = text.getLocalBounds();
 	text.setOrigin(bounds.size * 0.5f);
+}
+
+void GameUI::drawLoadingScreen(sf::RenderWindow& appWindow) {
+	// 1. Setup Static variables for Animation
+	// We use 'static' so they keep their values between frames without needing member variables
+	static sf::Clock animationClock;
+	static float rotationAngle = 0.0f;
+
+	// Update rotation (Speed: 100 degrees per second)
+	float dt = animationClock.restart().asSeconds();
+	rotationAngle += 100.0f * dt;
+
+	while (rotationAngle >= 360.0f) rotationAngle -= 360.0f;
+
+	// 2. Clear Screen (Optional, usually done in main loop)
+	// appWindow.clear(sf::Color(20, 20, 20)); 
+
+	// --- A. Draw the Spinner (e.g., a Yin-Yang or simple circle) ---
+	// If you don't have a spinner texture, we can use a basic shape
+	sf::CircleShape spinner(30); // Radius 30
+	spinner.setOrigin(spinner.getGlobalBounds().size * 0.5f); // Set pivot to center
+	spinner.setPosition(sf::Vector2f(virtualWindowSize.x / 2.0f, virtualWindowSize.y / 2.0f - 50)); // Center screen
+
+	// Visual style
+	spinner.setPointCount(3); // Triangle looks like it's spinning clearly
+	spinner.setFillColor(sf::Color::Transparent);
+	spinner.setOutlineThickness(5);
+	spinner.setOutlineColor(sf::Color::Black);
+
+	// Apply rotation
+	spinner.setRotation(sf::degrees(rotationAngle));
+
+	appWindow.draw(spinner);
+
+	// --- B. Draw the Text ---
+	// Note: 'english_font' must be loaded in GameUI::init()
+	sf::Text text(english_font);
+	text.setString("Loading...");
+	text.setCharacterSize(30);
+	text.setOutlineThickness(2);
+	text.setOutlineColor(sf::Color::White);
+
+	// Center the text
+	sf::FloatRect bounds = text.getLocalBounds();
+	text.setOrigin(bounds.size * 0.5f);
+	text.setPosition(sf::Vector2f(appWindow.getSize().x / 2.0f, appWindow.getSize().y / 2.0f + 20));
+
+	// Optional: Make text Pulse (Fade in/out)
+	// using a sine wave based on total program time
+	static sf::Clock totalTime;
+	int alpha = 100 + 155 * std::abs(std::sin(totalTime.getElapsedTime().asSeconds() * 2));
+	text.setFillColor(sf::Color(0, 0, 0, alpha));
+
+	appWindow.draw(text);
 }
 
 
@@ -270,10 +320,14 @@ void GameUI::draw_game_buttons(sf::RenderWindow& appWindow, sf::Vector2f mouse_p
 }
 
 int GameUI::tryClickingAt(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos) {
-	//End game -> Disable functions and only check New Game ?
+	//End game -> Disable functions and only check	 ?
 	if (!board.isInGame()) {
+		//Add 100 for processing a new load thread
+
 		if (newGamePopup.clickedOn(mouse_pos)) {
 			resetGame();
+			moveController.setBoardSize(moveController.getBoardSize());
+
 			return 4;
 		}
 
@@ -310,12 +364,15 @@ int GameUI::tryClickingAt(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos) {
 			//Bonus time
 			Timer.addTime(board.getTurn());
 
+			//Placing 
+			moveController.playTurn(board.getTurn(), std::make_pair(r, c));
+
 			std::string tmp = board.getState();
 			board.placePieceAt(r, c);
-
+			
 
 			//AutoSaving
-			if (autoSaveToggle) saveGame();
+			autoSave();
 
 			std::string cur = board.getState();
 			int cnt = 0;
@@ -356,7 +413,7 @@ int GameUI::tryClickingAt(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos) {
 		//Load region
 		if (check_inside(mouse_pos - func_button, hitbox)) {
 			loadGame();
-			return 3;
+			return 3 + 100;
 		}
 
 		func_button += vertical_gap;
@@ -381,7 +438,7 @@ int GameUI::tryClickingAt(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos) {
 
 		//Undo region
 		if (check_inside(mouse_pos - func_button, hitbox)) {
-			board.undo();
+			board.undo(moveController);
 
 			if (autoSaveToggle) saveGame();
 			return 0;
@@ -391,7 +448,7 @@ int GameUI::tryClickingAt(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos) {
 
 		//Redo region
 		if (check_inside(mouse_pos - func_button, hitbox)) {
-			board.redo();
+			board.redo(moveController);
 
 			if (autoSaveToggle) saveGame();
 			return 0;
@@ -401,7 +458,7 @@ int GameUI::tryClickingAt(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos) {
 
 		//Undo All region
 		if (check_inside(mouse_pos - func_button, hitbox)) {
-			board.undoAll();
+			board.undoAll(moveController);
 
 			if (autoSaveToggle) saveGame();
 			return 0;
@@ -411,7 +468,7 @@ int GameUI::tryClickingAt(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos) {
 
 		//Redo All region
 		if (check_inside(mouse_pos - func_button, hitbox)) {
-			board.redoAll();
+			board.redoAll(moveController);
 
 			if (autoSaveToggle) saveGame();
 			return 0;
@@ -474,46 +531,58 @@ void GameUI::drawShadow(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos) {
 	}
 }
 
-void GameUI::saveGame() {
+//Saving successfully or not
+bool GameUI::saveGame() {
+	bool success = true;
+
 	switch (board.saveGame()) {
 		case FileStatus::Success:
 			fileNotification = "	 Saved\nsuccessfully";
 			break;
 		case FileStatus::FileNotFound:
 			fileNotification = "File not found";
+			success = false;
 			break;
 		case FileStatus::CorruptedFile:
 			fileNotification = "Corrupted file";
+			success = false;
 			break;
 		case FileStatus::WrongFormat:
 			fileNotification = "Wrong game's\n		format";
+			success = false;
 			break;
 	}
 
 	notificationTimer.restart();
+	return success;
 }
-void GameUI::loadGame() {
-	switch (board.loadGame()) {
+
+//Loading successfully or not
+bool GameUI::loadGame() {
+	bool success = true;
+
+	switch (board.loadGame(moveController)) {
 		case FileStatus::Success:
 			fileNotification = "   Loaded\nsuccessfully";
 			break;
 		case FileStatus::FileNotFound:
 			fileNotification = "File not found";
-			board.saveGame();
+			success = false;
 			break;
 		case FileStatus::CorruptedFile:
 			fileNotification = "Corrupted file";
-			board.saveGame();
+			success = false;
 			break;
 		case FileStatus::WrongFormat:
 			fileNotification = "Wrong game's\n		format";
-			board.saveGame();
+			success = false;
 			break;
 	}
 
 	savedEndGame = !board.isInGame();
-
 	notificationTimer.restart();
+
+	return success;
 }
 
 //Showing whose turn is it and game saves/loads
@@ -630,9 +699,9 @@ void GameUI::loadEndPopup() {
 	endPopup.setCornerRadius(20);
 
 	endPopup.setPosition((convertToFloat(virtualWindowSize) - endPopup.getSize()) * 0.5f);
-	
 	endPopup.addObject(createText("GAME OVER", true, sf::Color::White, 40), { endPopup.getSize().x * 0.5f, 40 });
-;	std::array <int, 2> score = board.getScore();
+	
+	std::array <int, 2> score = board.getScore();
 	
 	//Scoring cases
 	if (score[0] == -0x3f3f3f3f) {
@@ -676,7 +745,50 @@ void GameUI::loadEndPopup() {
 
 //End-game annoucement
 void GameUI::annouceEndGame(sf::RenderWindow& appWindow) {
-	if (board.isInGame()) return;
+	if (board.isInGame()) {
+		return;
+	}
+
+	////Requesting for removing dead stones
+	//if (!moveController.endgameRequest) {
+	//	moveController.endgameRequest = true;
+
+	//	std::string snapshotState = board.getState();
+	//	std::pair <int, int> snapshotSize = board.getSize();
+
+	//	std::thread([=]() {
+	//		// Set Board Size (The Blocking Operation!)
+	//		// Since we are on a background thread, blocking here is FINE.
+	//		// It won't freeze the "Loading..." animation.
+	//		auto minEndTime = std::chrono::steady_clock::now() + std::chrono::seconds(1);
+
+	//		moveController.markAsLoading();
+	//		moveController.finalState = snapshotState;
+
+	//		std::istringstream stream(moveController.requestDeadStones());
+	//		std::string token;
+
+	//		while (stream >> token) {
+	//			std::pair <int, int> cellPos = cellPosGet(token, snapshotSize.first, snapshotSize.second);
+
+	//			moveController.finalState[cellPos.first * snapshotSize.second + cellPos.second] = '.';
+	//		}
+
+	//		// Wait for the reminder 
+	//		std::this_thread::sleep_until(minEndTime);
+
+	//		// Signal Completion
+	//		// You need to add a method to MoveController to trigger the "Ready" flag
+
+	//		moveController.markAsReady();
+	//	}).detach();
+	//}
+
+	////Unfinished load
+	//if (!moveController.isAIReady() || moveController.finalState.empty()) {
+	//	drawLoadingScreen(appWindow);
+	//	return;
+	//}
 
 	loadEndPopup();
 
@@ -694,30 +806,23 @@ void GameUI::annouceEndGame(sf::RenderWindow& appWindow) {
 	menuPopup.clearCache();
 }
 
-void GameUI::autoSave() {
-	if (autoSaveToggle) {
-		saveGame();
-	}
+bool GameUI::autoSave() {
+	if (!autoSaveToggle) return true;
+
+	return saveGame();
 }
 
 
-void GameUI::autoLoad() {
-	if (autoSaveToggle) {
-		loadGame();
-	}
+bool GameUI::autoLoad() {
+	if (!autoSaveToggle) return true;
+
+	return loadGame();
 }
 
 void GameUI::setAutoSaveToggle(int x) {
 	autoSaveToggle = x;
 }
-void GameUI::setBoardOption(int x) {
-	boardOption = x;
-}
 
-void GameUI::setMoveLimit(int x) {
-	board.setMoveLimit(x);
-}
-
-void GameUI::setTimeLimit(int id) {
-	Timer.setTimeLimit(id);
+int GameUI::getAutoSaveToggle() {
+	return autoSaveToggle;
 }

@@ -4,7 +4,7 @@
 #include <SFML/Graphics.hpp>
 #include <vector>
 #include <utility>
-#include <KataGo.hpp>
+#include <MoveController.hpp>
 
 static enum FileStatus {
 	Success = 0,
@@ -39,22 +39,22 @@ public:
 	bool possibleToPlace(int x, int y);
 	void placePieceAt(int x, int y);
 
-	bool undo();
-	void undoAll();
-	bool redo();
-	void redoAll();
+	bool undo(MoveController& moveController);
+	void undoAll(MoveController& moveController);
+	bool redo(MoveController& moveController);
+	void redoAll(MoveController& moveController);
 	bool pass();
 	void resign();
 	
 	std::array <int, 2> getScore();
 
 	int saveGame();
-	int loadGame();
+	int loadGame(MoveController& moveController);
 	void clearGame();
 
 	void setWinByTime(int turn);
 private:
-	std::vector <std::string> state_list;
+	std::vector <std::string> state_list, moveHistory;
 
 	int state_pointer;
 
@@ -66,9 +66,5 @@ private:
 	int moveLimit;
 
 	std::array <int, 2> score;
-
-	//KataGo trace
-	KataGoManager gameTrace;
 };
-
 #endif

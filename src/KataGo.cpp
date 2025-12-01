@@ -61,7 +61,7 @@ void KataGoManager::set(const std::string& workingDir) {
     // NOTE: It is best practice to pass the absolute path here too, or at least 
     // ensure the first token is the full path for maximum reliability.
     // Let's combine the full path with the command line args for maximum compatibility.
-    const std::string FULL_COMMAND_WITH_PATH = ABS_EXE_PATH + " gtp -model model.bin.gz -config analysis.cfg";
+    const std::string FULL_COMMAND_WITH_PATH = ABS_EXE_PATH + " gtp -model model.txt.gz -config analysis.cfg";
     strcpy_s(mutableCmdLine, sizeof(mutableCmdLine), FULL_COMMAND_WITH_PATH.c_str());
 
     // --- LAUNCH ---

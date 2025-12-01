@@ -48,7 +48,9 @@ std::string cellPosConversion(int x, int y, int row, int column) {
 }
 
 std::pair <int, int> cellPosGet(std::string coor, int row, int column) {
-	int y = coor[0] - 'A';
+	if (coor == "---") return std::make_pair(-1, -1);
+
+	int y = coor[0] - 'A' - (coor[0] >= 'I');
 	int x = coor[1] - '0';
 	if ((int)coor.length() == 3) x = x * 10 + (coor[2] - '0');
 

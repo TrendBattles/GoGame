@@ -5,6 +5,12 @@
 #include <Board.hpp>
 #include <BoardTimer.hpp>
 #include <PopUp.hpp>
+#include <MoveController.hpp>
+
+
+extern Board board;
+extern BoardTimer Timer;
+extern MoveController moveController;
 
 struct GameConfig {
 	GameConfig(int stateSize = 0);
@@ -25,9 +31,10 @@ struct GameConfig {
 class GameUI {
 public:
 	void init();
-	void initGame();
+	void initGame(int boardOption = 0);
 	void resetGame();
 
+	void drawLoadingScreen(sf::RenderWindow& appWindow);
 	void draw_back_button(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos = sf::Vector2f(-1, -1));
 	void draw_UI(sf::RenderWindow& appWindow);
 	void draw_game_buttons(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos = sf::Vector2f(-1, -1));
@@ -35,8 +42,8 @@ public:
 	int tryClickingAt(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos = sf::Vector2f{ 0, 0 });
 	void drawShadow(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos = sf::Vector2f{ 0, 0 });
 
-	void loadGame();
-	void saveGame();
+	bool loadGame();
+	bool saveGame();
 
 	void loadTurnIndicator();
 	void annouceInGame(sf::RenderWindow& appWindow);
@@ -44,14 +51,11 @@ public:
 	void loadEndPopup();
 	void annouceEndGame(sf::RenderWindow& appWindow);
 
-	void autoSave();
-	void autoLoad();
+	bool autoSave();
+	bool autoLoad();
 
 	void setAutoSaveToggle(int x = 0);
-	void setBoardOption(int x = 0);
-	void setMoveLimit(int x = 50);
-
-	void setTimeLimit(int id = 0);
+	int getAutoSaveToggle();
 
 	bool loadTimer();
 private:
@@ -63,14 +67,10 @@ private:
 	void setCenter(sf::Text& text);
 
 	//In-game parameters
-	Board board;
 	GameConfig gameConfig;
 	sf::Vector2f PIECE_SCALE;
 
 	int autoSaveToggle;
-	int boardOption;
-
-	BoardTimer Timer;
 
 	std::string fileNotification; //Save/Load notifications
 	sf::Clock notificationTimer;

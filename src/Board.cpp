@@ -3,7 +3,6 @@
 #include <iostream>
 #include <vector>
 #include <fstream>
-#include <sstream>
 #include <bitset>
 
 
@@ -14,43 +13,26 @@ Board::Board() {
 	moveLimit = 0;
 
 	score = { -1, -1 };
-
-	// --- Configuration --- (KataGo)
-	const std::string BASE_DIR = std::string(PROJECT_DIR) + "KataGo/";
-	gameTrace.set(BASE_DIR);
-
-	// Wait a moment for startup
-	std::this_thread::sleep_for(std::chrono::seconds(1));
-
-	// Check if it's still alive (Status should be -1)
-	int status = gameTrace.get_exit_status();
-	if (status == 0) {
-		std::cerr << "[FAIL] KataGo exited immediately (Pipe Issue).\n";
-	} else {
-		std::cerr << "[PASS] KataGo is running! (Status: " << status << ")\n";
-	}
 }
 
 
 
 void Board::setSize(int _i_row, int _i_column) {
-	if (row != -1) {
-		gameTrace.sendCommand("clear_board");
-		while (gameTrace.waitForReply(1000).empty());
-	}
-
 	if (_i_row != row || _i_column != column) {
 		row = _i_row;
 		column = _i_column;
-
-		gameTrace.sendCommand("boardsize " + std::to_string(_i_row));
-		while (gameTrace.waitForReply(1000).empty());
 	}
 	
+	current_turn = 0;
+	state_pointer = 0;
+	playing = true;
 
+	score = { -1, -1 };
 	state_pointer = 0;
 	state_list.assign(1, std::string(row * column, '.'));
 	state_list.back().push_back('0');
+
+	moveHistory.assign(1, "---");
 }
 
 std::pair <int, int> Board::getSize() {
@@ -84,9 +66,8 @@ void Board::setState(int x, int y, int c) {
 
 	state_list[state_pointer].back() = '0';
 
-
-	gameTrace.sendCommand(std::string("play ") + (c == 1 ? "W " : "B ") + cellPosConversion(x, y, row, column));
-	while (gameTrace.waitForReply(1000).empty());
+	moveHistory.erase(moveHistory.begin() + state_pointer, moveHistory.end());
+	moveHistory.push_back(cellPosConversion(x, y, row, column));
 }
 
 
@@ -268,57 +249,54 @@ bool Board::getPassState() {
 	return state_list[state_pointer].back() - '0';
 }
 
-bool Board::undo() {
+bool Board::undo(MoveController& moveController) {
 	if (state_pointer > 0) {
 		current_turn = 1 ^ current_turn;
 		--state_pointer;
 
-		gameTrace.sendCommand("undo");
-		while (gameTrace.waitForReply(1000).empty());
+		moveController.undo();
 
 		return true;
 	}
 	return false;
 }
-void Board::undoAll() {
-	while (undo());
+void Board::undoAll(MoveController& moveController) {
+	while (undo(moveController));
 
 	current_turn = state_pointer & 1;
 }
-bool Board::redo() {
+bool Board::redo(MoveController& moveController) {
 	if (state_pointer + 1 < (int)state_list.size()) {
-		for (int i = 0; i < row * column; ++i) {
-			if (state_list[state_pointer][i] == '.' && state_list[state_pointer + 1][i] != '.') {
-				gameTrace.sendCommand(std::string("play ") + (current_turn ? "W " : "B ") + cellPosConversion(i / column, i % column, row, column));
-				while (gameTrace.waitForReply(1000).empty());
-
-				break;
-			}
-		}
-
 		current_turn = 1 ^ current_turn;
 		++state_pointer;
+
+		moveController.playTurn(current_turn ^ 1, cellPosGet(moveHistory[state_pointer], row, column));
+
 		return true;
 	}
 	return false;
 }
-void Board::redoAll() {
-	while (redo());
+void Board::redoAll(MoveController& moveController) {
+	while (redo(moveController));
 
 	current_turn = state_pointer & 1;
 }
 
 bool Board::pass() {
+	state_list.erase(state_list.begin() + state_pointer + 1, state_list.end());
+	moveHistory.erase(moveHistory.begin() + state_pointer + 1, moveHistory.end());
+
 	if (getPassState()) {
 		playing = false;
 
 		return true;
 	}
 
-	state_list.erase(state_list.begin() + state_pointer + 1, state_list.end());
+	
 	state_list.push_back(state_list.back());
 	state_list.back().back() = '1';
-	
+	moveHistory.push_back("---");
+
 	state_pointer = (int) state_list.size() - 1;
 
 	current_turn = 1 ^ current_turn;
@@ -333,6 +311,9 @@ void Board::resign() {
 
 	state_pointer = (int)state_list.size() - 1;
 
+	moveHistory.erase(moveHistory.begin() + state_pointer, moveHistory.end());
+	moveHistory.push_back("---");
+
 	score[current_turn ^ 1] = 0x3f3f3f3f;
 	score[current_turn] = 0;
 }
@@ -341,45 +322,75 @@ std::array <int, 2> Board::getScore() {
 	if (score[0] != -1 && score[1] != -1) return score;
 
 	/*
-		Final score by both sides
+		Final score by both sides (by inputting the final state)
 		If +inf -> won by resignation
 		Else if -inf -> out of time
 		Else pass case
 	*/
 
-	auto Split = [&](std::string inputStr) -> std::vector <std::string> {
-		std::istringstream stream(inputStr);
+	score = { 0, 0 };
 
-		std::vector <std::string> result;
-		std::string token;
+	//Removing dead stones
+	auto removeDeadStones = [&]() -> void {
+		state_list.push_back(state_list.back());
+		moveHistory.push_back("---");
+		state_pointer = (int)state_list.size() - 1;
+			
+		std::string& currentState = state_list.back();
 
-		while (stream >> token) {
-			if (token != "=") result.push_back(token);
+		std::vector <std::vector <int>> group_mark(row, std::vector <int>(column, -1));
+	
+		for (int i = 0; i < row; ++i) {
+			for (int j = 0; j < column; ++j) {
+				if (emptyCell(i, j)) continue;
+
+				if (group_mark[i][j] != -1) continue;
+
+				//Finding group chain
+				std::vector <std::pair <int, int>> component = findComponent(i, j, getState(i, j));
+				const int delta_x[4] = { +1, -1, 0, 0 };
+				const int delta_y[4] = { 0, 0, +1, -1 };
+
+				int eyes_count = 0;
+
+				std::bitset <32 * 12> adjacentEmptyToggle;
+				for (std::pair <int, int> point : component) {
+					for (int dir = 0; dir < 4; ++dir) {
+						int adj_x = point.first + delta_x[dir], adj_y = point.second + delta_y[dir];
+
+						if (!emptyCell(adj_x, adj_y) || adjacentEmptyToggle[adj_x * column + adj_y]) continue;
+						
+
+						std::vector <std::pair <int, int>> emptyComponent = findComponent(adj_x, adj_y, -1);
+						eyes_count += 1;
+
+						for (std::pair <int, int> emptyPoint : emptyComponent) {
+							int emptyId = emptyPoint.first * column + emptyPoint.second;
+
+							adjacentEmptyToggle[emptyId] = true;
+						}
+					}
+				}
+				
+				//eyes_count >= 2 => Alive
+				for (std::pair <int, int> point : component) {
+					group_mark[point.first][point.second] = eyes_count >= 2;
+				}
+			}
 		}
 
-		return result;
+		for (int i = 0; i < row; ++i) {
+			for (int j = 0; j < column; ++j) {
+				if (group_mark[i][j] == 0) {
+					currentState[i * column + j] = '.';
+				}
+			}
+		}
 	};
 
-	score = { 0, 0 };
-	
+	removeDeadStones();
+
 	std::string currentState = getState();
-
-	gameTrace.sendCommand("final_status_list dead");
-	std::string deadStatus = "";
-	do {
-		deadStatus = gameTrace.waitForReply(1000);
-	} while (deadStatus.empty());
-	
-	std::vector <std::string> deadStones = Split(deadStatus);
-	for (std::string P : deadStones) {
-		std::pair <int, int> position = cellPosGet(P, row, column);
-
-		currentState[position.first * column + position.second] = '.';
-	}
-
-	state_list.push_back(currentState);
-	state_pointer = (int)state_list.size() - 1;
-
 	for (int i = 0; i < row * column; ++i) {
 		if (currentState[i] != '.') score[currentState[i] - '0'] += 1;
 	}
@@ -437,8 +448,10 @@ int Board::saveGame() {
 		stack size - pointer
 		state_list
 	*/
+
 	fout << (int)state_list.size() << ' ' << state_pointer << ' ' << moveLimit << '\n';
 	for (std::string& st : state_list) fout << st << '\n';
+	for (std::string& placeMove : moveHistory) fout << placeMove << '\n';
 
 	fout << score[0] << ' ' << score[1] << '\n';
 	fout.close();
@@ -446,7 +459,7 @@ int Board::saveGame() {
 	return FileStatus::Success;
 }
 
-int Board::loadGame() {
+int Board::loadGame(MoveController& moveController) {
 	const std::string fileName = std::string(PROJECT_DIR) + "assets/game.cache";
 	std::ifstream fin(fileName);
 
@@ -461,7 +474,7 @@ int Board::loadGame() {
 	int stackSize; 
 	int stack_pointer;
 	int stackLimit;
-	std::vector <std::string> stack_list;
+	std::vector <std::string> stack_list, stack_move;
 
 	std::vector <std::array <int, 2>> stackCapture;
 	std::array <int, 2> tempScore;
@@ -487,6 +500,23 @@ int Board::loadGame() {
 			}
 		}
 
+		stack_move.assign(stackSize, "");
+
+		for (int i = 0; i < stackSize; ++i) {
+			if (!(fin >> stack_move[i]) || (int)stack_move[i].length() < 2 || (int)stack_move[i].length() > 3) {
+				throw std::runtime_error("Missing or invalid move.");
+			}
+			
+			if (stack_move[i] == "---") continue;
+
+			std::pair <int, int> cellPos = cellPosGet(stack_move[i], row, column);
+	
+			if (cellPos.first < 0 || cellPos.first >= row || cellPos.second < 0 || cellPos.second >= column) {
+				throw std::runtime_error("Invalid position.");
+			}
+		}
+		
+
 		if (!(fin >> tempScore[0] >> tempScore[1])) {
 			throw std::runtime_error("Missing/Invalid final score format");
 		}
@@ -504,39 +534,78 @@ int Board::loadGame() {
 		return FileStatus::CorruptedFile;
 	}
 
-	
-	//Avoid loading the game into the bot multiple times
-	bool different = state_list != stack_list;
-
 	state_pointer = stack_pointer;
 	state_list = stack_list;
 	moveLimit = stackLimit;
+	moveHistory = stack_move;
 
 	score = tempScore;
 
 	current_turn = (state_pointer & 1);
 	playing = score[0] == -1 && score[1] == -1;
+	
 
-	if (different && playing) {
-		gameTrace.sendCommand("clear_board");
-		while (gameTrace.waitForReply(1000).empty());
+	auto WriteFile = [&]() -> void {
+		std::string pgn = "(;GM[1]FF[4]";
 
-		for (int i = 0; i + 1 < (int)state_list.size(); ++i) {
-			for (int p = 0; p < row * column; ++p) {
-				if (state_list[i][p] == '.' && state_list[i + 1][p] != '.') {
-					gameTrace.sendCommand(std::string("play ") + (i & 1 ? "W " : "B ") + cellPosConversion(p / column, p % column, row, column));
-					while (gameTrace.waitForReply(1000).empty());
+		pgn += "SZ[" + std::to_string(row) + "]";
+		pgn += "KM[4.0]RU[Chinese]";
 
-					break;
-				}
+		for (int i = 1; i <= state_pointer; ++i) {
+			pgn.push_back(';');
+
+			if (moveHistory[i] == "---") {
+				pgn += (i & 1) ? "B[]" : "W[]";
+			}
+			else {
+				std::pair <int, int> cellPos = cellPosGet(moveHistory[i], row, column);
+				
+				pgn += (i & 1) ? "B[" : "W[";
+				pgn.push_back(cellPos.second + 'a');
+				pgn.push_back(cellPos.first + 'a');
+
+				pgn.push_back(']');
 			}
 		}
-	}
+
+		pgn.push_back(')');
+
+		const std::string pgn_path = std::string(PROJECT_DIR) + "KataGo/data.sgf";
+		std::ofstream fout(pgn_path);
+
+		fout << pgn;
+		
+		fout.close();
+	};
+
+	WriteFile();
+
+	std::thread([&]() {
+		// Set Board Size (The Blocking Operation!)
+		// Since we are on a background thread, blocking here is FINE.
+		// It won't freeze the "Loading..." animation.
+		auto minEndTime = std::chrono::steady_clock::now() + std::chrono::seconds(2);
+
+		moveController.markAsLoading();
+
+		moveController.setBoardSize(row);
+		moveController.loadState();
+
+		// Wait for the reminder 
+		std::this_thread::sleep_until(minEndTime);
+
+		// Signal Completion
+		// You need to add a method to MoveController to trigger the "Ready" flag
+
+		moveController.markAsReady();
+	}).detach();
 
 	return FileStatus::Success;
 }
 
 void Board::clearGame() {
+	if (row == -1) return;
+
 	state_list.clear();
 
 	current_turn = 0;
@@ -547,11 +616,7 @@ void Board::clearGame() {
 
 	state_list.assign(1, std::string(row * column, '.'));
 	state_list.back().push_back('0');
-
-	if (row != -1) {
-		gameTrace.sendCommand("clear_board");
-		while (gameTrace.waitForReply(1000).empty());
-	}
+	moveHistory.assign(1, "---");
 }
 
 void Board::setWinByTime(int turn) {

@@ -11,8 +11,11 @@ Log:
 #include <RulesMenu.hpp>
 #include <MediaPlayer.hpp>
 #include <GameUI.hpp>
+#include <MoveController.hpp>
 #include <iostream>
 #include <filesystem>
+#include <chrono>
+
 
 extern sf::RenderWindow appWindow;
 
@@ -25,11 +28,14 @@ enum MouseState {
 };
 
 enum GameScene {
-	MENU = 0b0001,
-	GAME = 0b0010,
-	OPTION = 0b0100,
-	RULES = 0b1000,
-	ABOUT = 0b10000
+	MENU =		0b000001,
+	GAME =		0b000010,
+	OPTION =	0b000100,
+	RULES =		0b001000,
+	ABOUT =		0b010000,
+	LOADING =	0b100000,
+	STARTLOAD =	0b100001,
+	ENDLOAD =	0b100010
 };
 
 GameScene current_scene;
@@ -40,6 +46,10 @@ AboutMenu aboutmenu;
 RulesMenu rulesmenu;
 
 GameUI gameui;
+Board board;
+BoardTimer Timer;
+MoveController moveController;
+
 int mouse_state;
 
 sf::Vector2f get_mouse_position() {
@@ -49,6 +59,8 @@ sf::Vector2f get_mouse_position() {
 void appStart() {
 	mouse_state = MouseState::RELEASE;
 	current_scene = GameScene::MENU;
+
+	moveController.init();
 
 	menu.init();
 	optionmenu.init();
@@ -104,9 +116,7 @@ void handle_menu() {
 		}
 		switch (signal) {
 			case 0:
-				current_scene = GameScene::GAME;
-				sound_board.play_audio(SoundEffect::STARTGAME);
-				gameui.initGame();
+				current_scene = GameScene::STARTLOAD;
 				break;
 			case 1:
 				current_scene = GameScene::OPTION;
@@ -140,9 +150,7 @@ void handle_option_menu() {
 				current_scene = GameScene::MENU;
 				break;
 			case 2:
-				current_scene = GameScene::GAME;
-				sound_board.play_audio(SoundEffect::STARTGAME);
-				gameui.initGame();
+				current_scene = GameScene::STARTLOAD;
 				break;
 		}
 		if (signal >= 0) {
@@ -159,6 +167,9 @@ void handle_option_menu() {
 	if (mouse_state == MouseState::HOLD) {
 		optionmenu.fixAudio(get_mouse_position());
 	}
+
+	sound_board.setAudioVolume(optionmenu.getSoundVolume());
+	sound_board.setMusicVolume(optionmenu.getMusicVolume());
 }
 
 void handle_about_menu() {
@@ -177,9 +188,7 @@ void handle_about_menu() {
 			current_scene = GameScene::MENU;
 			break;
 		case 2:
-			current_scene = GameScene::GAME;
-			sound_board.play_audio(SoundEffect::STARTGAME);
-			gameui.initGame();
+			current_scene = GameScene::STARTLOAD;
 			break;
 		}
 	}
@@ -201,9 +210,7 @@ void handle_rules_menu() {
 			current_scene = GameScene::MENU;
 			break;
 		case 2:
-			current_scene = GameScene::GAME;
-			sound_board.play_audio(SoundEffect::STARTGAME);
-			gameui.initGame();
+			current_scene = GameScene::STARTLOAD;
 			break;
 		}
 	}
@@ -216,6 +223,13 @@ void handle_game_scene() {
 
 	if (mouse_state == MouseState::CLICKING) {
 		int signal = gameui.tryClickingAt(appWindow, get_mouse_position());
+
+		if (signal >= 100) {
+			//Thresold for creating a new loading thread
+			
+			current_scene = GameScene::LOADING;
+			signal -= 100;
+		}
 
 		if (signal != -1) {
 			switch (signal) {
@@ -245,21 +259,49 @@ void handle_game_scene() {
 	gameui.drawShadow(appWindow, get_mouse_position());
 }
 
-void globalSetFunction() {
-	//Sound settings
-	sound_board.setAudioVolume(optionmenu.getSoundVolume());
-	sound_board.setMusicVolume(optionmenu.getMusicVolume());
-
-	//Game UI
+void startLoading() {
+	board.setMoveLimit(50 * optionmenu.getAttribute("MOVE LIMIT"));
 	gameui.setAutoSaveToggle(optionmenu.getSaveToggle());
-	gameui.setBoardOption(optionmenu.getAttribute("BOARD SIZE"));
-	gameui.setMoveLimit(50 * optionmenu.getAttribute("MOVE LIMIT"));
-	gameui.setTimeLimit(optionmenu.getAttribute("TIME LIMIT"));
+	gameui.initGame(optionmenu.getAttribute("BOARD SIZE"));
+	
+	current_scene = GameScene::LOADING;
+
+	//When the game is not automatically saaved, we create a new loading thread.
+	if (!gameui.autoLoad()) {
+		std::thread([=]() {
+			// Set Board Size (The Blocking Operation!)
+			// Since we are on a background thread, blocking here is FINE.
+			// It won't freeze the "Loading..." animation.
+			auto minEndTime = std::chrono::steady_clock::now() + std::chrono::seconds(2);
+
+			moveController.markAsLoading();
+
+			moveController.setBoardSize(board.getSize().first);
+
+			// Wait for the reminder 
+			std::this_thread::sleep_until(minEndTime);
+
+			// Signal Completion
+			// You need to add a method to MoveController to trigger the "Ready" flag
+
+			moveController.markAsReady();
+		}).detach();
+	}
+}
+
+void waitLoading() {
+	gameui.drawLoadingScreen(appWindow);
+
+	if (!moveController.isAIReady()) return;
+
+	Timer.setTimeLimit(optionmenu.getAttribute("TIME LIMIT"));
+	Timer.resetClock();
+
+	sound_board.play_audio(SoundEffect::STARTGAME);
+	current_scene = GameScene::GAME;
 }
 
 void appLoop() {
-	globalSetFunction();
-
 	if (pollEvent() == 0) {
 		return;
 	}
@@ -294,6 +336,12 @@ void appLoop() {
 			break;
 		case GameScene::ABOUT:
 			handle_about_menu();
+			break;
+		case GameScene::LOADING:
+			waitLoading();
+			break;
+		case GameScene::STARTLOAD:
+			startLoading();
 			break;
 	}
 

@@ -34,7 +34,7 @@ target_sources(GoGame PRIVATE
   "src/OptionMenu.cpp" 
   "src/AboutMenu.cpp" 
   "src/GameUI.cpp" "src/Popup.cpp" "src/RulesMenu.cpp" "src/KataGo.cpp"
- "src/BoardTimer.cpp")
+ "src/BoardTimer.cpp" "src/MoveController.cpp")
 
 
 set(SFML_DIR "${CMAKE_SOURCE_DIR}/SFML/lib/cmake/SFML")
