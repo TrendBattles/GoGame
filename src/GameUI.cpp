@@ -3,6 +3,8 @@
 #include <Helper.hpp>
 #include <iostream>
 #include <vector>
+#include <random>
+#include <chrono>
 #include <sstream>
 
 GameConfig::GameConfig(int sizeState) {
@@ -73,7 +75,7 @@ void GameUI::initGame(int boardOption) {
 
 	gameConfig = GameConfig(boardOption);
 	board.setSize(gameConfig.gridSize, gameConfig.gridSize);
-
+	
 	//When initialized, force to remove the message
 	fileNotification = "";
 
@@ -88,9 +90,26 @@ void GameUI::resetGame() {
 	board.clearGame();
 	autoSave();
 
+	//Time reset
+	Timer.resetClock();
+
 	//When initialized, force to remove the message
 	fileNotification = "";
 	savedEndGame = playedEndGameSound = false;
+}
+
+void GameUI::setGameMode(int id) {
+	moveController.setGameMode(id);
+	board.setBotTurn(moveController.getBotTurn());
+
+	if (id == 0) {
+		nameHolder[0] = "Black";
+		nameHolder[1] = "White";
+	}
+	else {
+		nameHolder[moveController.getBotTurn()] = "AI";
+		nameHolder[moveController.getBotTurn() ^ 1] = "Player";
+	}
 }
 
 void GameUI::setCenter(sf::Text& text) {
@@ -320,7 +339,7 @@ void GameUI::draw_game_buttons(sf::RenderWindow& appWindow, sf::Vector2f mouse_p
 }
 
 int GameUI::tryClickingAt(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos) {
-	//End game -> Disable functions and only check	 ?
+	//End game -> Disable functions and only check newGame and menu
 	if (!board.isInGame()) {
 		//Add 100 for processing a new load thread
 
@@ -349,6 +368,9 @@ int GameUI::tryClickingAt(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos) {
 	if (tmp.x >= 0 && tmp.x <= 150 && tmp.y >= 0 && tmp.y <= 80) {
 		return 20;
 	}
+
+	//If bot is playing, you cannot interact with any function.
+	if (moveController.isBotRespondingMove()) return -1;
 
 	const float RADIUS = gameConfig.stoneRadius();
 
@@ -500,7 +522,7 @@ int GameUI::tryClickingAt(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos) {
 }
 
 void GameUI::drawShadow(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos) {
-	if (!board.isInGame()) return;
+	if (!board.isInGame() || board.getTurn() == moveController.getBotTurn()) return;
 
 	const float RADIUS = gameConfig.stoneRadius();
 
@@ -659,11 +681,11 @@ bool GameUI::loadTimer() {
 	}
 
 	blackSide.setPosition(sf::Vector2f(gameConfig.boardTopLeft.x + gameConfig.borderLimit + 50, 100));
-	blackSide.addObject(createText("Black", true, sf::Color::White), sf::Vector2f(blackSide.getSize().x * 0.5f, 20));
+	blackSide.addObject(createText(nameHolder[0], true, sf::Color::White), sf::Vector2f(blackSide.getSize().x * 0.5f, 20));
 	blackSide.addObject(createText(Timer.timeLimitToggle() ? convertTime(Timer.getTime(0)) : "--:--", true, sf::Color::White), {blackSide.getSize().x * 0.5f, 60});
 
 	whiteSide.setPosition(sf::Vector2f(gameConfig.boardTopLeft.x + gameConfig.borderLimit + 50, 220));
-	whiteSide.addObject(createText("White", true, sf::Color::White), sf::Vector2f(whiteSide.getSize().x * 0.5f, 20));
+	whiteSide.addObject(createText(nameHolder[1], true, sf::Color::White), sf::Vector2f(whiteSide.getSize().x * 0.5f, 20));
 	whiteSide.addObject(createText(Timer.timeLimitToggle() ? convertTime(Timer.getTime(1)) : "--:--", true, sf::Color::White), { whiteSide.getSize().x * 0.5f, 60 });
 	
 
@@ -705,16 +727,16 @@ void GameUI::loadEndPopup() {
 	
 	//Scoring cases
 	if (score[0] == -0x3f3f3f3f) {
-		endPopup.addObject(createText("White wins by out of time.", true, sf::Color::White, 30), { endPopup.getSize().x * 0.5f, 140 });
+		endPopup.addObject(createText(nameHolder[0] + " wins by out of time.", true, sf::Color::White, 30), { endPopup.getSize().x * 0.5f, 140 });
 	}
 	else if (score[1] == -0x3f3f3f3f) {
-		endPopup.addObject(createText("Black wins by out of time.", true, sf::Color::White, 30), { endPopup.getSize().x * 0.5f, 140 });
+		endPopup.addObject(createText(nameHolder[1] + " wins by out of time.", true, sf::Color::White, 30), { endPopup.getSize().x * 0.5f, 140 });
 	}
 	else if (score[0] == 0x3f3f3f3f) {
-		endPopup.addObject(createText("Black wins by resignation.", true, sf::Color::White, 30), { endPopup.getSize().x * 0.5f, 140 });
+		endPopup.addObject(createText(nameHolder[0] + " wins by resignation.", true, sf::Color::White, 30), { endPopup.getSize().x * 0.5f, 140 });
 	}
 	else if (score[1] == 0x3f3f3f3f) {
-		endPopup.addObject(createText("White wins by resignation.", true, sf::Color::White, 30), { endPopup.getSize().x * 0.5f, 140 });
+		endPopup.addObject(createText(nameHolder[1] + " wins by resignation.", true, sf::Color::White, 30), { endPopup.getSize().x * 0.5f, 140 });
 	}
 	else {
 		endPopup.addObject(createText("Result: " + std::to_string(score[0]) + "-" + std::to_string(score[1]), true, sf::Color::White, 30), {endPopup.getSize().x * 0.5f, 120});
@@ -723,7 +745,7 @@ void GameUI::loadEndPopup() {
 			endPopup.addObject(createText("Draw", true, sf::Color::White, 30), { endPopup.getSize().x * 0.5f, 160 });
 		}
 		else {
-			endPopup.addObject(createText(std::string((score[0] < score[1] ? "White" : "Black")) + " wins", true, sf::Color::White, 30), { endPopup.getSize().x * 0.5f, 160});
+			endPopup.addObject(createText(std::string((score[0] < score[1] ? nameHolder[1] : nameHolder[0])) + " wins", true, sf::Color::White, 30), {endPopup.getSize().x * 0.5f, 160});
 		}
 	}
 
@@ -749,47 +771,6 @@ void GameUI::annouceEndGame(sf::RenderWindow& appWindow) {
 		return;
 	}
 
-	////Requesting for removing dead stones
-	//if (!moveController.endgameRequest) {
-	//	moveController.endgameRequest = true;
-
-	//	std::string snapshotState = board.getState();
-	//	std::pair <int, int> snapshotSize = board.getSize();
-
-	//	std::thread([=]() {
-	//		// Set Board Size (The Blocking Operation!)
-	//		// Since we are on a background thread, blocking here is FINE.
-	//		// It won't freeze the "Loading..." animation.
-	//		auto minEndTime = std::chrono::steady_clock::now() + std::chrono::seconds(1);
-
-	//		moveController.markAsLoading();
-	//		moveController.finalState = snapshotState;
-
-	//		std::istringstream stream(moveController.requestDeadStones());
-	//		std::string token;
-
-	//		while (stream >> token) {
-	//			std::pair <int, int> cellPos = cellPosGet(token, snapshotSize.first, snapshotSize.second);
-
-	//			moveController.finalState[cellPos.first * snapshotSize.second + cellPos.second] = '.';
-	//		}
-
-	//		// Wait for the reminder 
-	//		std::this_thread::sleep_until(minEndTime);
-
-	//		// Signal Completion
-	//		// You need to add a method to MoveController to trigger the "Ready" flag
-
-	//		moveController.markAsReady();
-	//	}).detach();
-	//}
-
-	////Unfinished load
-	//if (!moveController.isAIReady() || moveController.finalState.empty()) {
-	//	drawLoadingScreen(appWindow);
-	//	return;
-	//}
-
 	loadEndPopup();
 
 	if (!savedEndGame) {
@@ -807,14 +788,14 @@ void GameUI::annouceEndGame(sf::RenderWindow& appWindow) {
 }
 
 bool GameUI::autoSave() {
-	if (!autoSaveToggle) return true;
+	if (!autoSaveToggle) return false;
 
 	return saveGame();
 }
 
 
 bool GameUI::autoLoad() {
-	if (!autoSaveToggle) return true;
+	if (!autoSaveToggle) return false;
 
 	return loadGame();
 }
@@ -825,4 +806,58 @@ void GameUI::setAutoSaveToggle(int x) {
 
 int GameUI::getAutoSaveToggle() {
 	return autoSaveToggle;
+}
+
+void GameUI::botPlay() {
+	if (!board.isInGame()) return;
+
+	if (board.getTurn() != moveController.getBotTurn()) return;
+
+	if (!moveController.botMoveRequest) {
+		moveController.botMoveRequest = true;
+		moveController.botTimePassed.restart();
+
+		if (moveController.getGameMode() == 1) {
+			std::mt19937_64 rng(std::chrono::steady_clock::now().time_since_epoch().count());
+
+			std::vector <std::pair <int, int>> candidates;
+
+			for (int i = 0; i < board.getSize().first; ++i) {
+				for (int j = 0; j < board.getSize().second; ++j) {
+					if (board.possibleToPlace(i, j)) candidates.emplace_back(i, j);
+				}
+			}
+
+			if (candidates.empty()) {
+				moveController.positionResponse = "pass";
+			}
+			else {
+				int chosenID = rng() % (int)candidates.size();
+
+				moveController.positionResponse = cellPosConversion(candidates[chosenID].first, candidates[chosenID].second, board.getSize().first, board.getSize().second);
+			}
+		}
+		else {
+			moveController.positionResponse = moveController.genMove();
+		}
+	}
+
+	//If we haven't reached at least 3 seconds, the bot won't respond
+	sf::Time timePassed = moveController.botTimePassed.getElapsedTime();
+	if (timePassed < sf::seconds(3.0f)) return;
+	if (moveController.positionResponse.empty()) return;
+
+
+	if (moveController.positionResponse == "pass") {
+		moveController.playTurn(board.getTurn(), std::make_pair(-1, -1));
+		board.pass();
+	}
+	else {
+		std::pair <int, int> chosenPos = cellPosGet(moveController.positionResponse, board.getSize().first, board.getSize().second);
+		moveController.playTurn(board.getTurn(), chosenPos);
+		board.placePieceAt(chosenPos.first, chosenPos.second);
+	}
+
+	moveController.positionResponse = "";
+	moveController.botMoveRequest = false;
 }

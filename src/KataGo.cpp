@@ -204,8 +204,10 @@ void KataGoManager::readOutputLoop() {
 
 void KataGoManager::sendCommand(const std::string& cmd) {
     if (hWritePipe == NULL) return;
-
+    
     std::string fullCmd = cmd + "\n";
+    std::cerr << fullCmd;
+
     DWORD bytesWritten;
 
     if (!WriteFile(
@@ -218,9 +220,6 @@ void KataGoManager::sendCommand(const std::string& cmd) {
         std::cerr << "WriteFile failed: Error " << GetLastError() << "\n";
         // Do not throw; let the main loop handle the failure status
     }
-
-    // 2. FORCE FLUSH (Add this line)
-    FlushFileBuffers(hWritePipe);
 }
 
 bool KataGoManager::hasReply() {

@@ -92,6 +92,10 @@ bool Board::getTurn() {
 	return current_turn;
 }
 
+void Board::setBotTurn(int id) {
+	botTurn = id;
+}
+
 void Board::setMoveLimit(int target) {
 	//Set move limit (50 minimum)
 	moveLimit = target;
@@ -218,7 +222,13 @@ bool Board::possibleToPlace(int x, int y) {
 	for (std::pair <int, int> point : captured) {
 		current_state[point.first * column + point.second] = '.';
 	}
-	return state_pointer == 0 || current_state != state_list[state_pointer - 1];
+
+	int different = 0;
+	for (int i = 0; i < row * column; ++i) {
+		different += current_state[i] != state_list[state_pointer - 1][i];
+	}
+
+	return state_pointer == 0 || different > 0;
 }
 
 //Full board state at the pointer
@@ -250,11 +260,14 @@ bool Board::getPassState() {
 }
 
 bool Board::undo(MoveController& moveController) {
-	if (state_pointer > 0) {
-		current_turn = 1 ^ current_turn;
-		--state_pointer;
+	int jump = botTurn != -1 ? 2 : 1;
+
+	if (state_pointer >= jump) {
+		state_pointer -= jump;
+		current_turn = state_pointer & 1;
 
 		moveController.undo();
+		if (jump == 2) moveController.undo();
 
 		return true;
 	}
@@ -266,10 +279,13 @@ void Board::undoAll(MoveController& moveController) {
 	current_turn = state_pointer & 1;
 }
 bool Board::redo(MoveController& moveController) {
-	if (state_pointer + 1 < (int)state_list.size()) {
-		current_turn = 1 ^ current_turn;
-		++state_pointer;
+	int jump = botTurn != -1 ? 2 : 1;
 
+	if (state_pointer + jump < (int)state_list.size()) {
+		state_pointer += jump;
+		current_turn = state_pointer & 1;
+
+		if (jump == 2) moveController.playTurn(current_turn, cellPosGet(moveHistory[state_pointer - 1], row, column));
 		moveController.playTurn(current_turn ^ 1, cellPosGet(moveHistory[state_pointer], row, column));
 
 		return true;
@@ -351,7 +367,7 @@ std::array <int, 2> Board::getScore() {
 				const int delta_x[4] = { +1, -1, 0, 0 };
 				const int delta_y[4] = { 0, 0, +1, -1 };
 
-				int eyes_count = 0;
+				int eyes_count = 0, total_empty = 0;
 
 				std::bitset <32 * 12> adjacentEmptyToggle;
 				for (std::pair <int, int> point : component) {
@@ -363,6 +379,7 @@ std::array <int, 2> Board::getScore() {
 
 						std::vector <std::pair <int, int>> emptyComponent = findComponent(adj_x, adj_y, -1);
 						eyes_count += 1;
+						total_empty += (int)emptyComponent.size();
 
 						for (std::pair <int, int> emptyPoint : emptyComponent) {
 							int emptyId = emptyPoint.first * column + emptyPoint.second;
@@ -372,9 +389,9 @@ std::array <int, 2> Board::getScore() {
 					}
 				}
 				
-				//eyes_count >= 2 => Alive
+				
 				for (std::pair <int, int> point : component) {
-					group_mark[point.first][point.second] = eyes_count >= 2;
+					group_mark[point.first][point.second] = total_empty >= 2;
 				}
 			}
 		}
@@ -454,6 +471,8 @@ int Board::saveGame() {
 	for (std::string& placeMove : moveHistory) fout << placeMove << '\n';
 
 	fout << score[0] << ' ' << score[1] << '\n';
+	fout << botTurn << '\n';
+
 	fout.close();
 
 	return FileStatus::Success;
@@ -478,6 +497,7 @@ int Board::loadGame(MoveController& moveController) {
 
 	std::vector <std::array <int, 2>> stackCapture;
 	std::array <int, 2> tempScore;
+	int tempBotTurn;
 
 	try {
 		if (!(fin >> stackSize >> stack_pointer >> stackLimit)) {
@@ -486,7 +506,7 @@ int Board::loadGame(MoveController& moveController) {
 
 		if (stackSize <= 0 || stackSize <= stack_pointer) throw std::invalid_argument("Zero-Negative stack size/Invalid stack pointer index.");
 		
-		if (stackLimit != moveLimit) throw std::invalid_argument("Different move limits");
+		if (stackLimit != moveLimit) throw std::invalid_argument("Different move limits.");
 
 		stack_list.assign(stackSize, "");
 
@@ -496,7 +516,7 @@ int Board::loadGame(MoveController& moveController) {
 			}
 
 			for (char x : stack_list[i]) {
-				if (x != '.' && x != '0' && x != '1') throw std::invalid_argument("Invalid cell state. Found " + std::to_string(x));
+				if (x != '.' && x != '0' && x != '1') throw std::invalid_argument("Invalid cell state. Found " + std::to_string(x) + ".");
 			}
 		}
 
@@ -518,7 +538,13 @@ int Board::loadGame(MoveController& moveController) {
 		
 
 		if (!(fin >> tempScore[0] >> tempScore[1])) {
-			throw std::runtime_error("Missing/Invalid final score format");
+			throw std::runtime_error("Missing/Invalid final score format.");
+		}
+		if (!(fin >> tempBotTurn)) {
+			throw std::runtime_error("Missing bot turn information.");
+		}
+		if (tempBotTurn != botTurn) {
+			throw std::invalid_argument("Invalid bot turn.");
 		}
 	}
 	catch (const std::invalid_argument& e) {

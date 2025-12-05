@@ -221,6 +221,8 @@ void handle_game_scene() {
 	gameui.draw_UI(appWindow);
 	gameui.draw_game_buttons(appWindow, get_mouse_position());
 
+	gameui.botPlay();
+
 	if (mouse_state == MouseState::CLICKING) {
 		int signal = gameui.tryClickingAt(appWindow, get_mouse_position());
 
@@ -262,6 +264,7 @@ void handle_game_scene() {
 void startLoading() {
 	board.setMoveLimit(50 * optionmenu.getAttribute("MOVE LIMIT"));
 	gameui.setAutoSaveToggle(optionmenu.getSaveToggle());
+	gameui.setGameMode(optionmenu.getAttribute("GAME MODE"));
 	gameui.initGame(optionmenu.getAttribute("BOARD SIZE"));
 	
 	current_scene = GameScene::LOADING;

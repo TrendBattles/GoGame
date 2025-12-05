@@ -1,6 +1,7 @@
 #include <math.h>
 #include <SFML/Graphics.hpp>
 #include <filesystem>
+#include <iostream>
 
 double sqr(double x) {
 	return x * x;
@@ -52,6 +53,7 @@ std::pair <int, int> cellPosGet(std::string coor, int row, int column) {
 
 	int y = coor[0] - 'A' - (coor[0] >= 'I');
 	int x = coor[1] - '0';
+
 	if ((int)coor.length() == 3) x = x * 10 + (coor[2] - '0');
 
 	x = row - x;

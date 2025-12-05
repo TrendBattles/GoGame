@@ -25,6 +25,8 @@ public:
 	bool outsideBoard(int x, int y);
 	bool getTurn();
 	
+	void setBotTurn(int id);
+	
 	void setMoveLimit(int target = 50);
 	int getMoveLimit();
 	bool isInGame();
@@ -66,5 +68,6 @@ private:
 	int moveLimit;
 
 	std::array <int, 2> score;
+	int botTurn;
 };
 #endif

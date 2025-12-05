@@ -15,29 +15,41 @@ enum GameMode {
 	Medium = 2,
 	Hard = 3
 };
+
 class MoveController {
 public:
 	void init();
 
+	int getBotTurn();
+	void setGameMode(int id);
+	int getGameMode();
+
 	void markAsReady();
 	void markAsLoading();
 	bool isAIReady();
+	bool isBotRespondingMove();
+	
 
 	void setBoardSize(int size);
 	int getBoardSize();
 
-	void setGameMode(int id = 0);
 	void playTurn(int turn, std::pair <int, int> position);
 
 	void undo();
-
 	void loadState();
+
+	std::string genMove();
+
+	sf::Clock botTimePassed;
+	bool botMoveRequest;
+	std::string positionResponse;
+
 private:
 	KataGoManager referee;
 	GameMode modeID;
+	int botTurn;
 
 	int gridSize;
-
 	std::atomic <bool> isReady{ true };
 };
 #endif

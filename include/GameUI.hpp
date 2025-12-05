@@ -34,6 +34,8 @@ public:
 	void initGame(int boardOption = 0);
 	void resetGame();
 
+	void setGameMode(int id);
+
 	void drawLoadingScreen(sf::RenderWindow& appWindow);
 	void draw_back_button(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos = sf::Vector2f(-1, -1));
 	void draw_UI(sf::RenderWindow& appWindow);
@@ -58,6 +60,7 @@ public:
 	int getAutoSaveToggle();
 
 	bool loadTimer();
+	void botPlay();
 private:
 	//Initial textures
 	sf::Font chinese_font, english_font;
@@ -79,6 +82,7 @@ private:
 	//End-game texture
 	bool savedEndGame, playedEndGameSound;
 	Popup endPopup, newGamePopup, menuPopup;
+	std::string nameHolder[2];
 	
 	//In-game Annoucement
 	Popup messageBox, blackSide, whiteSide;
