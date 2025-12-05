@@ -16,9 +16,12 @@ How to install:
 
 - Unzip KataGo.zip first.
 
-- Click on buildGame.bat and wait until it completes. Then you go!
+- Click on buildGame.bat and wait until it completes.
 
-Progress so far ✅:
+- The game is built in "build" folder. Find that folder and click on GoGame.exe
+
+
+Work division:
 
 -UI:
 
@@ -38,16 +41,7 @@ Game rules, functional buttons: Bao
 
 Scoring: Bao
 
-Timer: Bao
+Timer: Bao (Thanh suggested)
 
-Work needed to be done next ❎: (with priority)
-
--UI:
-
-Background settings(2)
-
-Game mode options (AI) (1)
-
-Probably responsive design (3)
-
+AI Mode: Bao 
 
