@@ -20,6 +20,7 @@ class MoveController {
 public:
 	void init();
 
+	void setBotTurn(int id);
 	int getBotTurn();
 	void setGameMode(int id);
 	int getGameMode();

@@ -95,6 +95,15 @@ bool Board::getTurn() {
 void Board::setBotTurn(int id) {
 	botTurn = id;
 }
+int Board::getBotTurn() {
+	return botTurn;
+}
+void Board::setGameMode(int id) {
+	modeID = id;
+}
+int Board::getGameMode() {
+	return modeID;
+}
 
 void Board::setMoveLimit(int target) {
 	//Set move limit (50 minimum)
@@ -223,12 +232,12 @@ bool Board::possibleToPlace(int x, int y) {
 		current_state[point.first * column + point.second] = '.';
 	}
 
-	int different = 0;
+	int Incompatible = 0;
 	for (int i = 0; i < row * column; ++i) {
-		different += current_state[i] != state_list[state_pointer - 1][i];
+		Incompatible += current_state[i] != state_list[state_pointer - 1][i];
 	}
 
-	return state_pointer == 0 || different > 0;
+	return state_pointer == 0 || Incompatible > 0;
 }
 
 //Full board state at the pointer
@@ -471,7 +480,7 @@ int Board::saveGame() {
 	for (std::string& placeMove : moveHistory) fout << placeMove << '\n';
 
 	fout << score[0] << ' ' << score[1] << '\n';
-	fout << botTurn << '\n';
+	fout << botTurn << ' ' << modeID << '\n';
 
 	fout.close();
 
@@ -497,7 +506,7 @@ int Board::loadGame(MoveController& moveController) {
 
 	std::vector <std::array <int, 2>> stackCapture;
 	std::array <int, 2> tempScore;
-	int tempBotTurn;
+	int tempBotTurn, tempModeID;
 
 	try {
 		if (!(fin >> stackSize >> stack_pointer >> stackLimit)) {
@@ -506,7 +515,7 @@ int Board::loadGame(MoveController& moveController) {
 
 		if (stackSize <= 0 || stackSize <= stack_pointer) throw std::invalid_argument("Zero-Negative stack size/Invalid stack pointer index.");
 		
-		if (stackLimit != moveLimit) throw std::invalid_argument("Different move limits.");
+		if (stackLimit != moveLimit) throw std::invalid_argument("Incompatible move limit.");
 
 		stack_list.assign(stackSize, "");
 
@@ -543,8 +552,12 @@ int Board::loadGame(MoveController& moveController) {
 		if (!(fin >> tempBotTurn)) {
 			throw std::runtime_error("Missing bot turn information.");
 		}
-		if (tempBotTurn != botTurn) {
-			throw std::invalid_argument("Invalid bot turn.");
+		if (!(fin >> tempModeID)) {
+			throw std::runtime_error("Missing game mode information.");
+		}
+
+		if (modeID != tempModeID) {
+			throw std::invalid_argument("Incompatible game mode.");
 		}
 	}
 	catch (const std::invalid_argument& e) {
@@ -564,7 +577,7 @@ int Board::loadGame(MoveController& moveController) {
 	state_list = stack_list;
 	moveLimit = stackLimit;
 	moveHistory = stack_move;
-
+	botTurn = tempBotTurn;
 	score = tempScore;
 
 	current_turn = (state_pointer & 1);

@@ -28,7 +28,9 @@ void MoveController::init() {
 	botTurn = -1;
 }
 
-
+void MoveController::setBotTurn(int id) {
+	botTurn = id;
+}
 int MoveController::getBotTurn() {
 	return botTurn;
 }
@@ -139,13 +141,17 @@ void MoveController::loadState() {
 
 std::string MoveController::genMove() {
 	//If the program hasn't requested the move generation, ask to do that.
-	referee.sendCommand(std::string("genmove ") + (botTurn ? "W" : "B"));
+	if (!botMoveRequest) {
+		botMoveRequest = true;
+		botTimePassed.restart();
+		referee.sendCommand(std::string("genmove ") + (botTurn ? "W" : "B"));
+	}
 
 
 	//If we haven't reached 3 seconds, don't get the response yet
 	if (botTimePassed.getElapsedTime() < sf::seconds(3.0f)) return "";
 
-	if (modeID != GameMode::PvP && modeID != GameMode::Easy) positionResponse = referee.getReply();
+	positionResponse = referee.getReply();
 	
 	//If we haven't got the reply, try later.
 	if (positionResponse.empty()) return "";
@@ -156,8 +162,6 @@ std::string MoveController::genMove() {
 		positionResponse = positionResponse.substr(2);
 		positionResponse.pop_back();
 	}
-	
-	botMoveRequest = false;
 
 	return positionResponse;
 }

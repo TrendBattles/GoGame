@@ -101,6 +101,7 @@ void GameUI::resetGame() {
 void GameUI::setGameMode(int id) {
 	moveController.setGameMode(id);
 	board.setBotTurn(moveController.getBotTurn());
+	board.setGameMode(moveController.getGameMode());
 
 	if (id == 0) {
 		nameHolder[0] = "Black";
@@ -357,6 +358,9 @@ int GameUI::tryClickingAt(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos) {
 		return -1;
 	}
 
+	//If bot is playing, you cannot interact with any function.
+	if (moveController.isBotRespondingMove()) return -1;
+
 	//Go back
 	if (mouse_pos.x >= 0 && mouse_pos.x <= 150 && mouse_pos.y >= 0 && mouse_pos.y <= 80) {
 		return 10;
@@ -368,9 +372,6 @@ int GameUI::tryClickingAt(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos) {
 	if (tmp.x >= 0 && tmp.x <= 150 && tmp.y >= 0 && tmp.y <= 80) {
 		return 20;
 	}
-
-	//If bot is playing, you cannot interact with any function.
-	if (moveController.isBotRespondingMove()) return -1;
 
 	const float RADIUS = gameConfig.stoneRadius();
 
@@ -604,6 +605,17 @@ bool GameUI::loadGame() {
 	savedEndGame = !board.isInGame();
 	notificationTimer.restart();
 
+	moveController.setBotTurn(board.getBotTurn());
+
+	if (moveController.getGameMode() == 0) {
+		nameHolder[0] = "Black";
+		nameHolder[1] = "White";
+	}
+	else {
+		nameHolder[moveController.getBotTurn()] = "AI";
+		nameHolder[moveController.getBotTurn() ^ 1] = "Player";
+	}
+
 	return success;
 }
 
@@ -797,6 +809,11 @@ bool GameUI::autoSave() {
 bool GameUI::autoLoad() {
 	if (!autoSaveToggle) return false;
 
+	bool success = loadGame();
+	if (success) return true;
+	
+	if (!autoSave()) return false;
+
 	return loadGame();
 }
 
@@ -814,10 +831,9 @@ void GameUI::botPlay() {
 	if (board.getTurn() != moveController.getBotTurn()) return;
 
 	if (!moveController.botMoveRequest) {
-		moveController.botMoveRequest = true;
-		moveController.botTimePassed.restart();
-
 		if (moveController.getGameMode() == 1) {
+			moveController.botMoveRequest = true;
+			moveController.botTimePassed.restart();
 			std::mt19937_64 rng(std::chrono::steady_clock::now().time_since_epoch().count());
 
 			std::vector <std::pair <int, int>> candidates;
@@ -845,18 +861,28 @@ void GameUI::botPlay() {
 	//If we haven't reached at least 3 seconds, the bot won't respond
 	sf::Time timePassed = moveController.botTimePassed.getElapsedTime();
 	if (timePassed < sf::seconds(3.0f)) return;
+
+	if (moveController.getGameMode() != 1) {
+		moveController.positionResponse = moveController.genMove();
+	}
+
 	if (moveController.positionResponse.empty()) return;
 
 
 	if (moveController.positionResponse == "pass") {
-		moveController.playTurn(board.getTurn(), std::make_pair(-1, -1));
+		if (moveController.getGameMode() == 1) moveController.playTurn(board.getTurn(), std::make_pair(-1, -1));
+		
 		board.pass();
 	}
 	else {
 		std::pair <int, int> chosenPos = cellPosGet(moveController.positionResponse, board.getSize().first, board.getSize().second);
-		moveController.playTurn(board.getTurn(), chosenPos);
+		
+		if (moveController.getGameMode() == 1) moveController.playTurn(board.getTurn(), chosenPos);
+		
 		board.placePieceAt(chosenPos.first, chosenPos.second);
 	}
+
+	autoSave();
 
 	moveController.positionResponse = "";
 	moveController.botMoveRequest = false;

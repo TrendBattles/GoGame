@@ -26,6 +26,9 @@ public:
 	bool getTurn();
 	
 	void setBotTurn(int id);
+	int getBotTurn();
+	void setGameMode(int id);
+	int getGameMode();
 	
 	void setMoveLimit(int target = 50);
 	int getMoveLimit();
@@ -68,6 +71,6 @@ private:
 	int moveLimit;
 
 	std::array <int, 2> score;
-	int botTurn;
+	int botTurn, modeID;
 };
 #endif
