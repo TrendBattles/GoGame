@@ -294,8 +294,8 @@ bool Board::redo(MoveController& moveController) {
 		state_pointer += jump;
 		current_turn = state_pointer & 1;
 
-		if (jump == 2) moveController.playTurn(current_turn, cellPosGet(moveHistory[state_pointer - 1], row, column));
-		moveController.playTurn(current_turn ^ 1, cellPosGet(moveHistory[state_pointer], row, column));
+		if (jump == 2) moveController.playTurn(current_turn, cellPosGet(moveHistory[state_pointer - 1], row, column), -1);
+		moveController.playTurn(current_turn ^ 1, cellPosGet(moveHistory[state_pointer], row, column), modeID);
 
 		return true;
 	}

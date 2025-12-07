@@ -12,7 +12,7 @@
 class KataGoManager {
 public:
     KataGoManager();
-    void set(const std::string& workingDir);
+    void set(const std::string& workingDir, const std::string& modelName);
     ~KataGoManager();
 
     void sendCommand(const std::string& cmd);

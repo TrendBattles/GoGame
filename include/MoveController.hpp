@@ -34,7 +34,7 @@ public:
 	void setBoardSize(int size);
 	int getBoardSize();
 
-	void playTurn(int turn, std::pair <int, int> position);
+	void playTurn(int turn, std::pair <int, int> position, int botID);
 
 	void undo();
 	void loadState();
@@ -46,7 +46,7 @@ public:
 	std::string positionResponse;
 
 private:
-	KataGoManager referee;
+	KataGoManager mediumBot, hardBot;
 	GameMode modeID;
 	int botTurn;
 

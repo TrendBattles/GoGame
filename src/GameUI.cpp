@@ -104,8 +104,8 @@ void GameUI::setGameMode(int id) {
 	board.setGameMode(moveController.getGameMode());
 
 	if (id == 0) {
-		nameHolder[0] = "Black";
-		nameHolder[1] = "White";
+		nameHolder[0] = "Player 1";
+		nameHolder[1] = "Player 2";
 	}
 	else {
 		nameHolder[moveController.getBotTurn()] = "AI";
@@ -388,7 +388,7 @@ int GameUI::tryClickingAt(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos) {
 			Timer.addTime(board.getTurn());
 
 			//Placing 
-			moveController.playTurn(board.getTurn(), std::make_pair(r, c));
+			moveController.playTurn(board.getTurn(), std::make_pair(r, c), -1);
 
 			std::string tmp = board.getState();
 			board.placePieceAt(r, c);
@@ -870,14 +870,14 @@ void GameUI::botPlay() {
 
 
 	if (moveController.positionResponse == "pass") {
-		if (moveController.getGameMode() == 1) moveController.playTurn(board.getTurn(), std::make_pair(-1, -1));
+		moveController.playTurn(board.getTurn(), std::make_pair(-1, -1), moveController.getGameMode());
 		
 		board.pass();
 	}
 	else {
 		std::pair <int, int> chosenPos = cellPosGet(moveController.positionResponse, board.getSize().first, board.getSize().second);
 		
-		if (moveController.getGameMode() == 1) moveController.playTurn(board.getTurn(), chosenPos);
+		moveController.playTurn(board.getTurn(), chosenPos, moveController.getGameMode());
 		
 		board.placePieceAt(chosenPos.first, chosenPos.second);
 	}

@@ -9,17 +9,26 @@
 void MoveController::init() {
 	// --- Configuration --- (KataGo)
 	const std::string BASE_DIR = std::string(PROJECT_DIR) + "KataGo/";
-	referee.set(BASE_DIR);
+	hardBot.set(BASE_DIR, "model_hard.txt.gz");
+	mediumBot.set(BASE_DIR, "model_medium.txt.gz");
 
 	// Wait a moment for startup
 	std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
 	// Check if it's still alive (Status should be -1)
-	int status = referee.get_exit_status();
+	int status = hardBot.get_exit_status();
 	if (status == 0) {
-		std::cerr << "[FAIL] KataGo exited immediately (Pipe Issue).\n";
+		std::cerr << "[FAIL] KataGo Hard exited immediately (Pipe Issue).\n";
 	} else {
-		std::cerr << "[PASS] KataGo is running! (Status: " << status << ")\n";
+		std::cerr << "[PASS] KataGo Hard is running! (Status: " << status << ")\n";
+	}
+
+	status = mediumBot.get_exit_status();
+	if (status == 0) {
+		std::cerr << "[FAIL] KataGo Medium exited immediately (Pipe Issue).\n";
+	}
+	else {
+		std::cerr << "[PASS] KataGo Medium is running! (Status: " << status << ")\n";
 	}
 
 	gridSize = -1;
@@ -64,26 +73,45 @@ bool MoveController::isBotRespondingMove() {
 
 void MoveController::setBoardSize(int size) {
 	if (gridSize != -1) {
-		referee.sendCommand("clear_board");
+		hardBot.sendCommand("clear_board");
+		mediumBot.sendCommand("clear_board");
+		
 
 		std::string reply = "";
 		do {
-			reply = referee.waitForReply(5000);
+			reply = hardBot.waitForReply(5000);
 		} while (reply.empty());
 
-		std::cerr << reply << "\n";
+
+		std::cerr << "clear " << (reply[0] == '=' ? "OK" : "FAIL") << "\n";
+
+		reply = "";
+		do {
+			reply = mediumBot.waitForReply(5000);
+		} while (reply.empty());
+
+		std::cerr << "clear " << (reply[0] == '=' ? "OK" : "FAIL") << "\n";
 	}
 
 	if (gridSize != size) {
 		gridSize = size;
-		referee.sendCommand("boardsize " + std::to_string(size));
+		mediumBot.sendCommand("boardsize " + std::to_string(size));
+		hardBot.sendCommand("boardsize " + std::to_string(size));
 
 		std::string reply = "";
 		do {
-			reply = referee.waitForReply(5000);
+			reply = hardBot.waitForReply(5000);
 		} while (reply.empty());
 
-		std::cerr << reply << '\n';
+
+		std::cerr << "set " << (reply[0] == '=' ? "OK" : "FAIL") << "\n";
+
+		reply = "";
+		do {
+			reply = mediumBot.waitForReply(5000);
+		} while (reply.empty());
+
+		std::cerr << "set " << (reply[0] == '=' ? "OK" : "FAIL") << "\n";
 	}
 
 	//Reset bot's spent time
@@ -95,48 +123,76 @@ int MoveController::getBoardSize() {
 	return gridSize;
 }
 
-void MoveController::playTurn(int turn, std::pair <int, int> position) {
+void MoveController::playTurn(int turn, std::pair <int, int> position, int botID) {
 	//Input the game states into the KataGo
 	if (position == std::make_pair(-1, -1)) {
-		referee.sendCommand(std::string("play") + (turn ? " W " : " B ") + "pass");
+		if (GameMode::Hard != botID) hardBot.sendCommand(std::string("play") + (turn ? " W " : " B ") + "pass");
+		if (GameMode::Medium != botID) mediumBot.sendCommand(std::string("play") + (turn ? " W " : " B ") + "pass");
 	}
 	else {
-		referee.sendCommand(std::string("play") + (turn ? " W " : " B ") + cellPosConversion(position.first, position.second, gridSize, gridSize));
+		if (GameMode::Hard != botID) hardBot.sendCommand(std::string("play") + (turn ? " W " : " B ") + cellPosConversion(position.first, position.second, gridSize, gridSize));
+		if (GameMode::Medium != botID) mediumBot.sendCommand(std::string("play") + (turn ? " W " : " B ") + cellPosConversion(position.first, position.second, gridSize, gridSize));
 	}
 
 	std::string reply = "";
-	do {
-		reply = referee.waitForReply(5000);
-	} while (reply.empty());
+	
+	while (reply.empty() && GameMode::Hard != botID) {
+		reply = hardBot.waitForReply(5000);
+	} 
 
-	std::cerr << reply << '\n';
+	std::cerr << "play " << (GameMode::Hard == botID || reply[0] == '=' ? "OK" : "FAIL") << "\n";
+
+	reply = "";
+	while (reply.empty() && GameMode::Medium != botID) {
+		reply = mediumBot.waitForReply(5000);
+	}
+
+	std::cerr << "play " << (GameMode::Medium == botID || reply[0] == '=' ? "OK" : "FAIL") << "\n";
 }
 
 void MoveController::undo() {
-	referee.sendCommand("undo");
+	hardBot.sendCommand("undo");
+	mediumBot.sendCommand("undo");
 
 	//Undoing the game state
 
 	std::string reply = "";
-	do {
-		reply = referee.waitForReply(5000);
-	} while (reply.empty());
 
-	std::cerr << reply << '\n';
+	while (reply.empty()) {
+		reply = hardBot.waitForReply(5000);
+	}
+
+	std::cerr << "undo " << (reply[0] == '=' ? "OK" : "FAIL") << "\n";
+
+	reply = "";
+	while (reply.empty()) {
+		reply = mediumBot.waitForReply(5000);
+	}
+
+	std::cerr << "undo " << (reply[0] == '=' ? "OK" : "FAIL") << "\n";
 }
 
 void MoveController::loadState() {
 	const std::string pgn_path = std::string(PROJECT_DIR) + "KataGo/data.sgf";
 
 	//Load the game data from the saved game states.
-	referee.sendCommand("loadsgf " + pgn_path);
+	mediumBot.sendCommand("loadsgf " + pgn_path);
+	hardBot.sendCommand("loadsgf " + pgn_path);
 
 	std::string reply = "";
-	do {
-		reply = referee.waitForReply(5000);
-	} while (reply.empty());
 
-	std::cerr << reply << '\n';
+	while (reply.empty()) {
+		reply = hardBot.waitForReply(5000);
+	}
+
+	std::cerr << "save " << (reply[0] == '=' ? "OK" : "FAIL") << "\n";
+
+	reply = "";
+	while (reply.empty()) {
+		reply = mediumBot.waitForReply(5000);
+	}
+
+	std::cerr << "save " << (reply[0] == '=' ? "OK" : "FAIL") << "\n";
 }
 
 std::string MoveController::genMove() {
@@ -144,21 +200,25 @@ std::string MoveController::genMove() {
 	if (!botMoveRequest) {
 		botMoveRequest = true;
 		botTimePassed.restart();
-		referee.sendCommand(std::string("genmove ") + (botTurn ? "W" : "B"));
+
+
+		if (modeID == GameMode::Hard) hardBot.sendCommand(std::string("genmove ") + (botTurn ? "W" : "B"));
+		if (modeID == GameMode::Medium) mediumBot.sendCommand(std::string("genmove ") + (botTurn ? "W" : "B"));
 	}
 
 
 	//If we haven't reached 3 seconds, don't get the response yet
 	if (botTimePassed.getElapsedTime() < sf::seconds(3.0f)) return "";
 
-	positionResponse = referee.getReply();
-	
+	if (modeID == GameMode::Hard) positionResponse = hardBot.getReply();
+	if (modeID == GameMode::Medium) positionResponse = mediumBot.getReply();
+
 	//If we haven't got the reply, try later.
 	if (positionResponse.empty()) return "";
 
 
 	//Reset the request status
-	if (modeID != GameMode::PvP && modeID != GameMode::Easy) {
+	if (modeID == GameMode::Medium || modeID == GameMode::Hard) {
 		positionResponse = positionResponse.substr(2);
 		positionResponse.pop_back();
 	}
