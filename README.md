@@ -14,16 +14,16 @@ Requirement Specification:
 
 How to install:
 
-- Unzip KataGo.zip first.
+- Unzip KataGo.zip first, the folder should be ./KataGo/, NOT ./KataGo/KataGo/
 
 - Click on buildGame.bat and wait until it completes.
 
-- The game is built in "build" folder. Find that folder and click on GoGame.exe
+- The game is built in "./build" folder. Find that folder and click on GoGame.exe.
 
 
 Work division:
 
--UI:
+- UI:
 
 Game menu, game options: Thanh
 
@@ -33,7 +33,7 @@ Effects: Thanh
 
 Gameplay notifications: Bao
 
--Gameplay:
+- Gameplay:
 
 Placing: Thanh, improved by Bao
 
