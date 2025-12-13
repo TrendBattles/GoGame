@@ -96,18 +96,13 @@ void KataGoManager::set(const std::string& workingDir, const std::string& modelN
 // Destructor (Crucial for reliable shutdown and handle cleanup)
 KataGoManager::~KataGoManager() {
     if (hProcess != NULL) {
-        // 1. Stop the reading loop gracefully
-        keepRunning = false;
-
-        // 2. Join the thread (It will finish in ~10ms now)
-        if (readThread.joinable()) {
-            readThread.join();
-        }
-
-        // 3. Send quit to KataGo (optional cleanup)
-        // Note: You can try sending "quit", but since we stopped reading, 
-        // we won't see the reply. That's fine.
         sendCommand("quit");
+        waitForReply(2000);
+
+        keepRunning = false;
+        if (readThread.joinable())
+            readThread.join();
+
 
         // 4. Standard Process Cleanup
         WaitForSingleObject(hProcess, 1000); // Short wait
@@ -160,7 +155,11 @@ void KataGoManager::readOutputLoop() {
         // It returns TRUE if data is read, FALSE if pipe is broken/empty.
 
         // 1. Peek (Instant check)
-        if (!PeekNamedPipe(hReadPipe, NULL, 0, NULL, &bytesAvail, NULL)) break;
+        if (!PeekNamedPipe(hReadPipe, NULL, 0, NULL, &bytesAvail, NULL)) {
+            if (!keepRunning) break;
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            continue;
+        }
 
         // 2. DECIDE: Read or Sleep?
         if (bytesAvail > 0) {
@@ -261,6 +260,14 @@ std::string KataGoManager::waitForReply(int maxTimeoutMiliseconds) {
     } while (response.empty() && deltaClock.getElapsedTime().asMilliseconds() < maxTimeoutMiliseconds);
 
     return response;
+}
+void KataGoManager::clearQueue() {
+    // 1. You MUST lock the mutex before touching replyQueue
+    std::lock_guard<std::mutex> lock(queueMutex);
+
+    // 2. Your method works perfectly here:
+    std::queue<std::string> dummyQueue;
+    replyQueue = std::move(dummyQueue);
 }
 
 int KataGoManager::get_exit_status() {

@@ -278,6 +278,7 @@ void startLoading() {
 			auto minEndTime = std::chrono::steady_clock::now() + std::chrono::seconds(2);
 
 			moveController.markAsLoading();
+			moveController.clearRequest();
 
 			moveController.setBoardSize(board.getSize().first);
 

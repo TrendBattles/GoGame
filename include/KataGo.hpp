@@ -19,6 +19,7 @@ public:
     bool hasReply();
     std::string getReply();
     std::string waitForReply(int maxTimeoutMiliseconds);
+    void clearQueue();
 
     int get_exit_status();
 private:

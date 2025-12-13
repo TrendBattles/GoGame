@@ -37,6 +37,12 @@ void MoveController::init() {
 	botTurn = -1;
 }
 
+void MoveController::clearRequest() {
+	//Cleaning leftover replies
+	mediumBot.clearQueue();
+	hardBot.clearQueue();
+}
+
 void MoveController::setBotTurn(int id) {
 	botTurn = id;
 }
