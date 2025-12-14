@@ -218,7 +218,7 @@ void handle_rules_menu() {
 
 void handle_game_scene() {
 	gameui.draw_back_button(appWindow, get_mouse_position());
-	gameui.draw_UI(appWindow);
+	gameui.draw_UI(appWindow, optionmenu.getAttribute("MUSIC THEME"));
 	gameui.draw_game_buttons(appWindow, get_mouse_position());
 
 	gameui.botPlay();
@@ -314,10 +314,10 @@ void appLoop() {
 	sf::Color BG_COLOR = sf::Color::White;
 	switch (cur_theme) {
 	case 0:
-		BG_COLOR = sf::Color(0, 126, 110);
+		BG_COLOR = sf::Color(0, 183, 181);
 		break;
 	case 1:		
-		BG_COLOR = sf::Color(84, 8, 99);
+		BG_COLOR = sf::Color(166, 105, 147);
 		break;
 	case 2: 
 		BG_COLOR = sf::Color(118, 21, 60);

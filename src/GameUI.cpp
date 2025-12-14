@@ -207,7 +207,7 @@ void GameUI::draw_back_button(sf::RenderWindow& appWindow, sf::Vector2f mouse_po
 	appWindow.draw(game_button);
 }
 
-void GameUI::draw_UI(sf::RenderWindow& appWindow) {
+void GameUI::draw_UI(sf::RenderWindow& appWindow, int themeID) {
 	switch (gameConfig.gridSize) {
 	case 9:
 		gameConfig.setBorderLimit(640);
@@ -232,7 +232,19 @@ void GameUI::draw_UI(sf::RenderWindow& appWindow) {
 
 	sf::RectangleShape rect(sf::Vector2f(gameConfig.borderLimit, gameConfig.borderLimit));
 	rect.setPosition(gameConfig.boardTopLeft);
-	rect.setFillColor(sf::Color(246, 178, 107));
+
+	switch (themeID) {
+	case 0:
+		rect.setFillColor(sf::Color(1, 135, 144));
+		break;
+	case 1:
+		rect.setFillColor(sf::Color(115, 53, 127));
+		break;
+	case 2:
+		rect.setFillColor(sf::Color(246, 178, 107));
+		break;
+	}
+	
 
 	appWindow.draw(rect);
 	

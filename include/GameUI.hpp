@@ -38,7 +38,7 @@ public:
 
 	void drawLoadingScreen(sf::RenderWindow& appWindow);
 	void draw_back_button(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos = sf::Vector2f(-1, -1));
-	void draw_UI(sf::RenderWindow& appWindow);
+	void draw_UI(sf::RenderWindow& appWindow, int themeID);
 	void draw_game_buttons(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos = sf::Vector2f(-1, -1));
 
 	int tryClickingAt(sf::RenderWindow& appWindow, sf::Vector2f mouse_pos = sf::Vector2f{ 0, 0 });

@@ -64,6 +64,7 @@ void OptionMenu::init() {
 	selection_option[4].push_back("AI (Easy)");
 	selection_option[4].push_back("AI (Medium)");
 	selection_option[4].push_back("AI (Hard)");
+
 	font_size.resize(selection_section.size());
 	loadConfig();
 }
