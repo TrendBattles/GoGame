@@ -751,10 +751,10 @@ void GameUI::loadEndPopup() {
 	
 	//Scoring cases
 	if (score[0] == -0x3f3f3f3f) {
-		endPopup.addObject(createText(nameHolder[0] + " wins by out of time.", true, sf::Color::White, 30), { endPopup.getSize().x * 0.5f, 140 });
+		endPopup.addObject(createText(nameHolder[1] + " wins by out of time.", true, sf::Color::White, 30), { endPopup.getSize().x * 0.5f, 140 });
 	}
 	else if (score[1] == -0x3f3f3f3f) {
-		endPopup.addObject(createText(nameHolder[1] + " wins by out of time.", true, sf::Color::White, 30), { endPopup.getSize().x * 0.5f, 140 });
+		endPopup.addObject(createText(nameHolder[0] + " wins by out of time.", true, sf::Color::White, 30), { endPopup.getSize().x * 0.5f, 140 });
 	}
 	else if (score[0] == 0x3f3f3f3f) {
 		endPopup.addObject(createText(nameHolder[0] + " wins by resignation.", true, sf::Color::White, 30), { endPopup.getSize().x * 0.5f, 140 });
@@ -895,6 +895,8 @@ void GameUI::botPlay() {
 	}
 
 	autoSave();
+	
+	Timer.addTime(moveController.getBotTurn());
 
 	moveController.positionResponse = "";
 	moveController.botMoveRequest = false;
